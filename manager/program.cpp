@@ -1,0 +1,163 @@
+#include <sstream>
+
+#include <stdarg.h>
+
+#include <cassert>
+
+#include "thread_util.h"
+#include "program.h"
+
+
+using namespace std;
+
+/**
+ * Constructor
+ * @param executablePath - path to the program that will be run
+ *
+ * Creates two pipes - one for each direction between the parent process and the AI program
+ * Forks the process. 
+ *	The child process closes unused sides of the pipe, and then calls exec to replace itself with the AI program
+ *	The parent process closes unused sides of the pipe, and sets up member variables - associates streams with the pipe fd's for convenience.
+ */
+Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0)
+{
+	int readPipe[2]; int writePipe[2];
+	assert(pipe(readPipe) == 0);
+	assert(pipe(writePipe) == 0);
+
+	pid = fork();
+	if (pid == 0)
+	{
+		close(readPipe[0]);  //close end that parent reads from
+		close(writePipe[1]); //close end that parent writes to
+
+		//TODO: Fix possible bug here if the process is already a daemon
+		assert(writePipe[0] != 0 && readPipe[1] != 1);
+		dup2(writePipe[0],0); close(writePipe[0]); //pipe end child reads from goes to STDIN
+		dup2(readPipe[1], 1); close(readPipe[1]); //pipe end child writes to goes to STDOUT
+
+		//TODO: Somehow force the exec'd process to be unbuffered
+		setbuf(stdin, NULL); //WARNING: These lines don't appear to have any affect
+		setbuf(stdout, NULL); //You should add them at the start of the wrapped program.
+					//If your wrapped program is not written in C/C++, you will probably have a problem
+				
+
+
+		execl(executablePath, executablePath, (char*)(NULL)); ///Replace process with desired executable
+		fprintf(stderr, "Program::Program - Could not run program \"%s\"!\n", executablePath);
+		exit(EXIT_FAILURE); //We will probably have to terminate the whole program if this happens
+	}
+	else
+	{
+		close(writePipe[0]); //close end that child writes to
+		close(readPipe[1]); //close end that child reads from
+
+		input = fdopen(readPipe[0],"r"); output = fdopen(writePipe[1],"w");
+		setbuf(input, NULL);
+		setbuf(output, NULL);
+	}
+	
+}
+
+/**
+ * Destructor
+ * Writes EOF to the wrapped program and then closes all streams
+ * Kills the wrapped program if it does not exit within 1 second.
+ */
+Program::~Program()
+{
+	if (kill(pid, 0) == 0) //Check if the process created is still running...
+	{
+		fputc(EOF, output); //If it was, tell it to stop with EOF
+		sleep(1); //Give it 1 second to respond...
+		if (kill(pid, 0) == 0) //Check if its still running
+		{
+			kill(pid, 9); //Slay the infidel mercilessly!
+		}
+	}
+	fclose(input);
+	fclose(output);
+	
+}
+
+
+
+
+
+/**
+ * Sends a message to the wrapped AI program
+ * WARNING: Always prints a new line after the message (so don't include a new line)
+ *	This is because everything is always line buffered.
+ */
+bool Program::SendMessage(const char * print, ...)
+{
+	if (kill(pid, 0) != 0) //Is the process running...
+		return false; 
+
+	va_list ap;
+	va_start(ap, print);
+
+	vfprintf(output, print, ap);
+	fprintf(output, "\n");
+
+	
+
+	va_end(ap);
+
+	return true;
+}
+
+
+/**
+ * Retrieves a message from the wrapped AI program, waiting a maximum amount of time
+ * @param buffer - C++ string to store the resultant message in
+ * @param timeout - Maximum amount of time to wait before failure. If timeout <= 0, then GetMessage will wait indefinately.
+ * @returns true if the response was recieved within the specified time, false if it was not, or an EOF was recieved, or the process was not running.
+ */
+bool Program::GetMessage(string & buffer, double timeout)
+{
+	if (kill(pid, 0) != 0)
+		return false;
+
+	assert(&buffer != NULL);
+	GetterThread getterThread(input, buffer);
+	assert(&(getterThread.buffer) != NULL);
+	TimerThread timerThread(timeout*1000000);
+
+	getterThread.Start();
+	if (timeout > 0)
+		timerThread.Start();
+
+	
+	while (!getterThread.Finished())
+	{
+		if (timeout > 0 && timerThread.Finished())
+		{
+			getterThread.Stop();
+			timerThread.Stop();
+			return false;
+		}
+	}
+
+	getterThread.Stop();
+	timerThread.Stop();
+
+	
+
+	if (buffer.size() == 1 && buffer[0] == EOF)
+		return false;
+	return true;
+
+
+}
+
+/**
+ * Returns true iff the process is running
+ * @returns what I just said, fool
+ */
+bool Program::Running() const
+{
+	return (kill(pid,0) == 0);
+}
+
+

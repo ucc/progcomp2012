@@ -1,0 +1,148 @@
+<html>
+<head>
+  <title>Stratego Based Programming Competition</title>
+</head>
+
+<body>
+
+<h1> Quick Details</h1>
+<p> The git repository is listed on <a href="http://git.ucc.asn.au/"/>The UCC git page</a> as "progcomp2012.git" </p>
+<p> We will use the same mailing list as last year (progcomp). </p>
+<p> </p>
+<p> There is a #progcomp irc channel on the ucc irc server where you can ask questions or help with setting things up. </p>
+
+<h1> Stratego </h1>
+<p> <a href="http://www.edcollins.com/stratego/"/>This site</a> explains what Stratego is. </p>
+<p> I have never played this game. But it sounds cool. So naturally I decided to make a competition based on it. </p>
+<p> My original idea was to force people to write AI for <a href="http://matches.ucc.asn.au/Astral"/>Astral</a>, but then I realised that that was a terrible idea. </p>
+
+<p> There is in fact, already a <a href="http://www.strategousa.org/wiki/index.php/2010_Computer_Stratego_World_Championship"/>World Stratego Championship</a>. However, you have to use Metaforge. Using stdin/stdout will probably make it slightly easier for us. And its better to work out how to do these things ourselves. </p>
+
+<h2> Programming Competition </h2>
+<p> Create an AI to play Stratego. </p>
+<p> Yes, I <i> know </i> people are inherently lazy and won't be bothered to do this. But so far in setting this up I have learn quite a lot about inter-process communication, so thats good. </p>
+<p> Programs are written independently and interface through stdin/stdout with a manager program, which queries them on setup and moves. </p>
+<h3> The Manager Program </h3>
+<p> The manager program takes two executable paths, one to each of the AI programs to pit against each other. <p>
+<p> It first requests each program to print the setup of its pieces to stdout. Then the programs take turns (Red, then blue, etc) to move one piece. </p>
+<p> The first program is Red (top of the board), the second is Blue (bottom of the board). </p>
+<p> I have now added graphics, but you can disable them by commenting out the "#define GRAPHICS" in the file "common.h" </p>
+<p> EDIT: You also have to remove graphics.o from the Makefile dependencies, and there are probably other annoying things. Its probably easiest just to install the SDL and OpenGL libraries to be honest </p>
+
+
+<h2> Messaging Protocol and Rules </h2>
+<h3> Setup </h3>
+<h4> Query </h4>
+<p> The manager program prints one line in the following format to each program: </p>
+<p>	COLOUR OPPONENT BOARD_WIDTH BOARD_HEIGHT </p>
+<p> At the moment BOARD_WIDTH and BOARD_HEIGHT are always 14. The arguments are followed by a newline. </p>
+<p> OPPONENT will be the identity of the opposing AI program. </p>
+<h4> Response </h4>
+<p> The AI program queried must print <i>four</i> (4) lines containing its initial setup. Each character represents a unit or empty space. The characters are as follows: </p>
+<p> </p>
+<table border="1">
+<tr> <th>Rank</th> <th>Character</th> <th>Number</th> </tr>
+<tr> <td>Marshal</td> <td>M</td> <td>1</td> </tr>
+<tr> <td>General</td> <td>G</td> <td>1</td> </tr>
+<tr> <td>Colonel</td> <td>C</td> <td>2</td> </tr>
+<tr> <td>Major</td> <td>m</td> <td>3</td> </tr>
+<tr> <td>Captain</td> <td>C</td> <td>4</td> </tr>
+<tr> <td>Lietenant</td> <td>L</td> <td>4</td> </tr>
+<tr> <td>Sergeant</td> <td>S</td> <td>4</td> </tr>
+<tr> <td>Miner</td> <td>n</td> <td>5</td> </tr>
+<tr> <td>Scout</td> <td>s</td> <td>8</td> </tr>
+<tr> <td>Spy</td> <td>y</td> <td>1</td> </tr>
+<tr> <td>Bomb</td> <td>B</td> <td>6</td> </tr>
+<tr> <td>Flag</td> <td>F</td> <td>1</td> </tr>
+<tr> <td>Unoccupied</td> <td>.</td> <td> </td> </tr> 
+<tr> <td>Obstacle</td> <td>+</td> <td> </td> </tr>
+</table> 
+<p> The AI program can't place any obstacles, and must at least place the Flag for its setup to be valid. </p>
+<p> RED will always occupy the top four rows of the board, and BLUE occupies the bottom four rows. </p>
+
+
+<h3> Turns </h3>
+<h4> Query </h4>
+<p> RED starts the game. The manager queries RED to make the <i>first</i> move by printing: </p>
+<p>	START </p>
+<p> Followed by a WIDTH*HEIGHT grid. '*' or '#' characters are used to indicate positions of unknown (BLUE/RED) enemy units. </p>
+
+<h4> Response </h4>
+<p> The AI program must respond with a <i> single </i> line of the following form: </p>
+<p>	X Y DIRECTION [MULTIPLIER]</p>
+<p> Where X and Y represent valid co-ordinates, upon which there is a piece of the AI program's colour. </p>
+<p> DIRECTION must be either "UP", "DOWN", "LEFT", or "RIGHT", and is, obviously, the way the piece is supposed to move </p>
+<p> MULTIPLIER is optional, and should only be given if the AI program is moving a Scout. Scouts may move multiple times in the same direction if possible. </p>
+<p> </p>
+
+<h4> Outcome </h4>
+<p> The manager program will indicate the result of a move by responding with: </p>
+<p>	X Y DIRECTION [MULTIPLIER] OUTCOME </p>
+<p> Where X, Y, DIRECTION and MULTIPLIER are as above. </p>
+<p> OUTCOME signals the result of the turn, and will be one of the following: </p>
+<table border="1">
+	<tr> <th> OUTCOME </th> <th> Description </th>	</tr>
+	<tr> <td> OK </td> <td> The piece was successfully moved, nothing eventful happened </td> </tr>
+	<tr> <td> FLAG </td> <td> The piece moved onto the opposing Flag; the game will end shortly </td> </tr>
+	<tr> <td> KILLS </td> <td> The piece landed on a square occupied by an enemy, and destroyed it, moving into the square </td> </tr>
+	<tr> <td> DIES </td> <td> The piece landed on a square occupied by an enemy, and was destroyed. The piece is removed from the board. </td> </tr>
+	<tr> <td> BOTHDIE </td> <td> The piece landed on a square occupied by an enemy, and <i>both</i> pieces were destroyed. </td> </tr>
+	<tr> <td> ILLEGAL </td> <td> The moving player attempted to make an illegal move, and has hence lost the game. The game will end shortly. </td> </tr>
+</table>
+		
+
+<h4> Additional Turns </h4>
+<p> The Outcome of each turn is printed to <i>both</i> AI programs. </p>
+<p> The state of the board is then printed to BLUE, who makes a move, then the process repeats. </p>
+
+<p> </p>
+
+<h4> Overview </h4>
+<p> This is a description of the signals the AI programs recieve, in order:
+<ol>
+	<li> Previous turn's outcome (other player's move) OR "START" if it is the first turn </li>
+	<li> A WIDTH*HEIGHT grid indicating the board state, with the AI program's own pieces revealed </li>
+	<li> After the AI program makes a move, the outcome is printed to it, and the other program, which continues from step 1 </li>
+</ol>
+
+<h3> End Game </h3>
+<h4> Query </h4>
+<p> At the end of the game, the manager program outputs the following: </p>
+<p>	VICTORY </p>
+<p> To the winning AI program, and </p>
+<p>	DEFEAT </p>
+<p> To the losing program. </p>
+<p> Both programs then have 2 seconds to exit succesfully, or the manager will kill them. </p>
+<h3> Invalid Responses and Timeouts </h3>
+<p> If any program fails to respond correctly, or gives an invalid move, or does not respond within 1 second, it will lose by default. </p>
+<p> In this case, the message </p>
+<p>	ILLEGAL </p>
+<p> will be sent to the malfunctioning program, and </p>
+<p>	DEFAULT </p>
+<p> to the other program </p>
+<p> Both programs then have 2 seconds to exit succesfully, or the manager will kill them. </p>
+
+<h2> Modifications/Clarifications to Rules </h2>
+<p> Refer to <a href="http://www.edcollins.com/stratego/"/>This site</a> for the original rules again </p>
+<p> Currently, the pieces taking part in the combat are not revealed; only the outcome of the combat is revealed. In a human game, the pieces would normally be revealed. I am planning to reveal the pieces, since not revealing pieces significantly reduces the value of low ranked pieces (normally used for working out enemy piece values). </p>
+<p> It is up to the AI program to keep track of pieces. The manager program will only reveal the identity of the AI program's own pieces; the other player's pieces will be marked with * or # characters. </p>
+<p> In a traditional game, two pieces of equal value will both be destroyed in combat. Currently, only one piece is destroyed and the outcome is randomly chosen. </p>
+
+<h2> Example Program </h2>
+<p> I have written a spectacularly boring AI which randomly selects a unit, and then randomly selects a direction in which to move it. </p>
+<p> I should probably make a more interesting example if I want people to actually care about this. </p>
+
+<p> I am working on another AI, but things seem to die and explode every time I try to use it... </p>
+
+<h2> Longterm Scoring </h2>
+<p> I haven't started a system for pairing AI's and keeping track of scores and winners etc yet </p>
+<p> I'll probably have a bash script that chooses who will play, and stores all the scores in files. I've done this before for a BrainF*** based "survival of the fittest" style thing, so I can probably recycle it </p>
+<p> </p>
+<p> I believe it will make things more interesting if programs are allowed to keep state of who they have played, and the various tactics used. </p>
+<p> Its kind of hard to implement this... at the moment programs are killed every time a game finishes</p>
+<p> Perhaps it will be easier if each program is allowed access to one directory, where it can create and read files? </p>
+<p> This would allow me to keep the manager program which actually plays the games seperate from the program for scoring and matching of opponents </p>
+<p> There'd probably be security issues with that though. </p>
+</body>
+
+</html>
