@@ -84,11 +84,12 @@
 	<tr> <th> OUTCOME </th> <th> Description </th>	</tr>
 	<tr> <td> OK </td> <td> The piece was successfully moved, nothing eventful happened </td> </tr>
 	<tr> <td> FLAG </td> <td> The piece moved onto the opposing Flag; the game will end shortly </td> </tr>
-	<tr> <td> KILLS </td> <td> The piece landed on a square occupied by an enemy, and destroyed it, moving into the square </td> </tr>
-	<tr> <td> DIES </td> <td> The piece landed on a square occupied by an enemy, and was destroyed. The piece is removed from the board. </td> </tr>
-	<tr> <td> BOTHDIE </td> <td> The piece landed on a square occupied by an enemy, and <i>both</i> pieces were destroyed. </td> </tr>
+	<tr> <td> KILLS RANK1 RANK2 </td> <td> The piece landed on a square occupied by an enemy, and destroyed it, moving into the square </td> </tr>
+	<tr> <td> DIES RANK1 RANK2</td> <td> The piece landed on a square occupied by an enemy, and was destroyed. The piece is removed from the board. </td> </tr>
+	<tr> <td> BOTHDIE RANK1 RANK2</td> <td> The piece landed on a square occupied by an enemy, and <i>both</i> pieces were destroyed. </td> </tr>
 	<tr> <td> ILLEGAL </td> <td> The moving player attempted to make an illegal move, and has hence lost the game. The game will end shortly. </td> </tr>
 </table>
+<p> If printed, RANK1 and RANK2 indicate the ranks of the moved piece and the defending piece (the piece who occupied the destination square) respectively. </p>
 		
 
 <h4> Additional Turns </h4>

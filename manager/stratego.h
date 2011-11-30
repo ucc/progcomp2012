@@ -89,6 +89,8 @@ class Piece
 		
 };
 
+#include "movementresult.h"
+
 /**
  * A Stratego board
  */
@@ -112,12 +114,11 @@ class Board
 
 		typedef enum {UP, DOWN, LEFT, RIGHT} Direction;
 
-		typedef enum {OK, DIES, KILLS, BOTH_DIE, NO_BOARD, INVALID_POSITION, NO_SELECTION, NOT_YOUR_UNIT, IMMOBILE_UNIT, INVALID_DIRECTION, POSITION_FULL, VICTORY, BAD_RESPONSE, NO_MOVE} MovementResult; //The possible results from a move
-		//WARNING: Some of the MovementResults are returned by the Controller class in "controller.h", in Controller::MakeMove
+		
 		
 		static bool LegalResult(const MovementResult & result)
 		{
-			return (result == OK || result == DIES || result == KILLS || result == BOTH_DIE);
+			return (result == MovementResult::OK || result == MovementResult::DIES || result == MovementResult::KILLS || result == MovementResult::BOTH_DIE);
 		}	
 
 		MovementResult MovePiece(int x, int y, const Direction & direction, int multiplier=1,const Piece::Colour & colour=Piece::NONE); //Move piece from position in direction

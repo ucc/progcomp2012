@@ -15,9 +15,9 @@ class Controller : public Program
 		Controller(const Piece::Colour & newColour, const char * executablePath) : Program(executablePath), colour(newColour) {}
 		virtual ~Controller() {}
 
-		Board::MovementResult Setup(const char * opponentName); //Requests the AI program for the initial positioning of its pieces.
+		MovementResult Setup(const char * opponentName); //Requests the AI program for the initial positioning of its pieces.
 
-		Board::MovementResult MakeMove(std::string & buffer); //Queries the AI program for a response to the state of Board::theBoard
+		MovementResult MakeMove(std::string & buffer); //Queries the AI program for a response to the state of Board::theBoard
 
 		const Piece::Colour colour; //Colour identifying the side of the AI program.
 

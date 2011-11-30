@@ -6,12 +6,14 @@
 using namespace std;
 
 #include <stdio.h>
-
+void quit();
 Forfax forfax;
 int main(int argc, char ** argv)
 {
 	setbuf(stdin, NULL);
 	setbuf(stdout, NULL);
+
+	atexit(&quit);
 
 	if (!forfax.Setup())
 		exit(EXIT_SUCCESS);
@@ -24,4 +26,9 @@ int main(int argc, char ** argv)
 	return 0;
 
 	
+}
+
+void quit()
+{
+	cerr << " Forfax quit\n";
 }

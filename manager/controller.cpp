@@ -8,9 +8,10 @@ using namespace std;
 
 /**
  * Queries the AI program to setup its pieces
+ * @param opponentName - string containing the name/id of the opponent AI program
  * @returns the result of the response
  */
-Board::MovementResult Controller::Setup(const char * opponentName)
+MovementResult Controller::Setup(const char * opponentName)
 {
 	int y;
 	switch (colour)
@@ -48,12 +49,12 @@ Board::MovementResult Controller::Setup(const char * opponentName)
 		if (!GetMessage(line, 2.5))
 		{
 			fprintf(stderr, "Timeout on setup\n");
-			return Board::BAD_RESPONSE;
+			return MovementResult::BAD_RESPONSE;
 		}
 		if ((int)(line.size()) != Board::theBoard.Width())
 		{
 			fprintf(stderr, "Bad length of \"%s\" on setup\n", line.c_str());
-			return Board::BAD_RESPONSE;
+			return MovementResult::BAD_RESPONSE;
 		}
 	
 		for (int x = 0; x < (int)(line.size()); ++x)
@@ -69,7 +70,7 @@ Board::MovementResult Controller::Setup(const char * opponentName)
 				if (usedUnits[type] > Piece::maxUnits[(int)type])
 				{
 					fprintf(stderr, "Too many units of type %c\n", Piece::tokens[(int)(type)]);
-					return Board::BAD_RESPONSE;
+					return MovementResult::BAD_RESPONSE;
 				}
 	
 				Board::theBoard.AddPiece(x, y+ii, type, colour);
@@ -79,10 +80,10 @@ Board::MovementResult Controller::Setup(const char * opponentName)
 
 	if (usedUnits[(int)Piece::FLAG] <= 0)
 	{
-		return Board::BAD_RESPONSE; //You need to include a flag!
+		return MovementResult::BAD_RESPONSE; //You need to include a flag!
 	}
 
-	return Board::OK;
+	return MovementResult::OK;
 }
 
 
@@ -90,11 +91,11 @@ Board::MovementResult Controller::Setup(const char * opponentName)
  * Queries the AI program to respond to a state of Board::theBoard
  * @returns The result of the response and/or move if made
  */
-Board::MovementResult Controller::MakeMove(string & buffer)
+MovementResult Controller::MakeMove(string & buffer)
 {
 	
 	if (!Running())
-		return Board::NO_MOVE; //AI has quit
+		return MovementResult::NO_MOVE; //AI has quit
 	Board::theBoard.Print(output, colour);
 
 	
@@ -103,7 +104,7 @@ Board::MovementResult Controller::MakeMove(string & buffer)
 	buffer.clear();
 	if (!GetMessage(buffer,2))
 	{
-		return Board::NO_MOVE; //AI did not respond. It will lose by default.
+		return MovementResult::NO_MOVE; //AI did not respond. It will lose by default.
 	}
 
 	int x; int y; string direction="";
@@ -133,29 +134,39 @@ Board::MovementResult Controller::MakeMove(string & buffer)
 	else
 	{
 		fprintf(stderr, "BAD_RESPONSE \"%s\"\n", buffer.c_str());
-		return Board::BAD_RESPONSE; //AI gave bogus direction - it will lose by default.	
+		return MovementResult::BAD_RESPONSE; //AI gave bogus direction - it will lose by default.	
 	}
 
 	int multiplier = 1;
 	if (s.peek() != EOF)
 		s >> multiplier;
-	Board::MovementResult moveResult = Board::theBoard.MovePiece(x, y, dir, multiplier, colour);
-	switch (moveResult)
+	MovementResult moveResult = Board::theBoard.MovePiece(x, y, dir, multiplier, colour);
+
+	s.clear(); 	s.str("");
+
+	//I stored the ranks in the wrong order; rank 1 is the marshal, 2 is the general etc...
+	//So I am reversing them in the output... great work
+	s << (Piece::BOMB - moveResult.attackerRank) << " " << (Piece::BOMB - moveResult.defenderRank) << "\n";	
+	switch (moveResult.type)
 	{
-		case Board::OK:
+		case MovementResult::OK:
 			buffer += " OK";
 			break;
-		case Board::VICTORY:
+		case MovementResult::VICTORY:
 			buffer += " FLAG";
 			break;
-		case Board::KILLS:
-			buffer += " KILLS";
+		case MovementResult::KILLS:
+			buffer += " KILLS ";
+			buffer += s.str();
+
 			break;
-		case Board::DIES:
-			buffer += " DIES";
+		case MovementResult::DIES:
+			buffer += " DIES ";
+			buffer += s.str();
 			break;
-		case Board::BOTH_DIE:
-			buffer += " BOTHDIE";
+		case MovementResult::BOTH_DIE:
+			buffer += " BOTHDIE ";
+			buffer += s.str();
 			break;	
 		default:
 			buffer += " ILLEGAL";
@@ -164,7 +175,7 @@ Board::MovementResult Controller::MakeMove(string & buffer)
 	}
 
 	if (!Board::LegalResult(moveResult))
-		return Board::OK; //HACK - Legal results returned!
+		return MovementResult::OK; //HACK - Legal results returned!
 	else
 		return moveResult; 	
 

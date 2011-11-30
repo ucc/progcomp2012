@@ -24,6 +24,8 @@ class Program
 
 		bool Running() const;
 
+		
+
 	protected:
 		FILE * input;	//Stream used for sending information TO the process
 		FILE * output; //Stream used for retrieving information FROM the process

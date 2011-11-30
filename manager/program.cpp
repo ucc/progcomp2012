@@ -10,6 +10,7 @@
 
 using namespace std;
 
+
 /**
  * Constructor
  * @param executablePath - path to the program that will be run
@@ -21,6 +22,8 @@ using namespace std;
  */
 Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0)
 {
+	
+
 	int readPipe[2]; int writePipe[2];
 	assert(pipe(readPipe) == 0);
 	assert(pipe(writePipe) == 0);
@@ -88,6 +91,7 @@ Program::~Program()
  * Sends a message to the wrapped AI program
  * WARNING: Always prints a new line after the message (so don't include a new line)
  *	This is because everything is always line buffered.
+ * @returns true if the message was successfully sent; false if it was not (ie: the process was not running!)
  */
 bool Program::SendMessage(const char * print, ...)
 {
@@ -97,12 +101,15 @@ bool Program::SendMessage(const char * print, ...)
 	va_list ap;
 	va_start(ap, print);
 
-	vfprintf(output, print, ap);
-	fprintf(output, "\n");
-
+	if (vfprintf(output, print, ap) < 0 || fprintf(output, "\n") < 0)
+	{
+		va_end(ap);
+		return false;
+	}
+	va_end(ap);
 	
 
-	va_end(ap);
+
 
 	return true;
 }
@@ -159,5 +166,7 @@ bool Program::Running() const
 {
 	return (kill(pid,0) == 0);
 }
+
+
 
 

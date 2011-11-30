@@ -18,8 +18,12 @@ using namespace std;
 
 Controller * red;
 Controller * blue;
+Colour turn;
 
 void cleanup();
+
+void BrokenPipe(int sig);
+
 int main(int argc, char ** argv)
 {
 	assert(argc == 3);
@@ -39,17 +43,18 @@ int main(int argc, char ** argv)
 	red = new Controller(Piece::RED, argv[1]);
 	blue = new Controller(Piece::BLUE, argv[2]);
 	atexit(cleanup);
+	signal(SIGPIPE, BrokenPipe);
 
-	Board::MovementResult redSetup = red->Setup(argv[2]);
-	Board::MovementResult blueSetup = blue->Setup(argv[1]);
-	if (redSetup != Board::OK)
+	MovementResult redSetup = red->Setup(argv[2]);
+	MovementResult blueSetup = blue->Setup(argv[1]);
+	if (redSetup != MovementResult::OK)
 	{
 		fprintf(stderr, "Blue wins by DEFAULT!\n");
 		red->SendMessage("ILLEGAL");
 		blue->SendMessage("DEFAULT");
 		exit(EXIT_SUCCESS);
 	}
-	if (blueSetup != Board::OK)
+	if (blueSetup != MovementResult::OK)
 	{
 		fprintf(stderr, "Red wins by DEFAULT!\n");
 		red->SendMessage("DEFAULT");
@@ -57,7 +62,7 @@ int main(int argc, char ** argv)
 		exit(EXIT_SUCCESS);
 	}
 
-	Board::MovementResult result = Board::OK;
+	MovementResult result(MovementResult::OK);
 	system("clear");
 	int count = 1;
 
@@ -70,17 +75,17 @@ int main(int argc, char ** argv)
 	string buffer;
 
 	red->SendMessage("START");
-	Colour turn = Piece::RED;
+	turn = Piece::RED;
 	while (Board::LegalResult(result))
 	{
 
-		fprintf(stderr, "This is move %d...\n", count);
-		fprintf(stderr,"---RED's turn---\n");
+		
 		turn = Piece::RED;
+		fprintf(stderr, "%d RED: ", count);
 		result = red->MakeMove(buffer);
 		red->SendMessage(buffer);
 		blue->SendMessage(buffer);
-
+		fprintf(stderr, "%s\n", buffer.c_str());
 		if (!Board::LegalResult(result))
 			break;
 		#ifdef GRAPHICS
@@ -92,11 +97,13 @@ int main(int argc, char ** argv)
 				exit(EXIT_SUCCESS);
 			}
 		#endif //GRAPHICS
-		fprintf(stderr,"---BLUE's turn---\n");
+		
 		turn = Piece::BLUE;
+		fprintf(stderr, "%d BLU: ", count);
 		result = blue->MakeMove(buffer);
 		blue->SendMessage(buffer);
 		red->SendMessage(buffer);
+		fprintf(stderr, "%s\n", buffer.c_str());
 
 		if (!Board::LegalResult(result))
 			break;
@@ -148,36 +155,36 @@ int main(int argc, char ** argv)
 		fprintf(stderr,"Game ends on ERROR's turn - REASON: ");
 			
 	}
-	switch (result)
+	switch (result.type)
 	{
-		case Board::NO_BOARD:
+		case MovementResult::NO_BOARD:
 			fprintf(stderr,"Board does not exit?!\n");
 			break;
-		case Board::INVALID_POSITION:
+		case MovementResult::INVALID_POSITION:
 			fprintf(stderr,"Coords outside board\n");
 			break;
-		case Board::NO_SELECTION:
+		case MovementResult::NO_SELECTION:
 			fprintf(stderr,"Move does not select a piece\n");
 			break;
-		case Board::NOT_YOUR_UNIT:
+		case MovementResult::NOT_YOUR_UNIT:
 			fprintf(stderr,"Selected piece belongs to other player\n");
 			break;
-		case Board::IMMOBILE_UNIT:
+		case MovementResult::IMMOBILE_UNIT:
 			fprintf(stderr,"Selected piece is not mobile (FLAG or BOMB)\n");
 			break;
-		case Board::INVALID_DIRECTION:
+		case MovementResult::INVALID_DIRECTION:
 			fprintf(stderr,"Selected unit cannot move that way\n");
 			break;
-		case Board::POSITION_FULL:
+		case MovementResult::POSITION_FULL:
 			fprintf(stderr,"Attempted move into square occupied by allied piece\n");
 			break;
-		case Board::VICTORY:
+		case MovementResult::VICTORY:
 			fprintf(stderr,"Captured the flag\n");
 			break;
-		case Board::BAD_RESPONSE:
+		case MovementResult::BAD_RESPONSE:
 			fprintf(stderr,"Unintelligable response\n");
 			break;
-		case Board::NO_MOVE:
+		case MovementResult::NO_MOVE:
 			fprintf(stderr,"Did not make a move (may have exited)\n");
 			break;
 	}
@@ -221,4 +228,24 @@ void cleanup()
 	delete blue;
 }
 
+void BrokenPipe(int sig)
+{
+	if (turn == Piece::RED)
+	{
+		fprintf(stderr,"Game ends on RED's turn - REASON: Broken pipe\n");
+		blue->SendMessage("DEFAULT");	
+	}
+	else if (turn == Piece::BLUE)
+	{
+		fprintf(stderr,"Game ends on BLUE's turn - REASON: Broken pipe\n");
+		red->SendMessage("DEFAULT");
+	}
+	else
+	{
+		fprintf(stderr,"Game ends on ERROR's turn - REASON: Broken pipe\n");
+			
+	}
+	exit(EXIT_SUCCESS);
+}
+	
 #endif //GRAPHICS

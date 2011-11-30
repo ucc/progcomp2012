@@ -232,32 +232,32 @@ Piece * Board::GetPiece(int x, int y)
  * @param colour - Colour which the piece must match for the move to be valid
  * @returns A MovementResult which indicates the result of the move - OK is good, VICTORY means that a flag was captured, anything else is an error
  */
-Board::MovementResult Board::MovePiece(int x, int y, const Direction & direction, int multiplier,const Piece::Colour & colour)
+MovementResult Board::MovePiece(int x, int y, const Direction & direction, int multiplier,const Piece::Colour & colour)
 {
 	if (board == NULL) 
 	{
-		return NO_BOARD;
+		return MovementResult(MovementResult::NO_BOARD);
 	}
 	if (!(x >= 0 && x < width && y >= 0 && y < height)) 
 	{
-		return INVALID_POSITION;
+		return MovementResult(MovementResult::INVALID_POSITION);
 	}
 	Piece * target = board[x][y];
 	if (target == NULL) 
 	{
-		return NO_SELECTION;
+		return MovementResult(MovementResult::NO_SELECTION);
 	}
 	if (!(colour == Piece::NONE || target->colour == colour)) 
 	{
-		return NOT_YOUR_UNIT;
+		return MovementResult(MovementResult::NOT_YOUR_UNIT);
 	}
 	if (target->type == Piece::FLAG || target->type == Piece::BOMB || target->type == Piece::BOULDER) 
 	{
-		return IMMOBILE_UNIT;
+		return MovementResult(MovementResult::IMMOBILE_UNIT);
 	}
 	if (multiplier > 1 && target->type != Piece::SCOUT)
 	{
-		return INVALID_DIRECTION; //Can only move a scout multiple times.
+		return MovementResult(MovementResult::INVALID_DIRECTION); //Can only move a scout multiple times.
 	}
 	int x2 = x; int y2 = y;
 
@@ -280,11 +280,11 @@ Board::MovementResult Board::MovePiece(int x, int y, const Direction & direction
 		}
 		if (!(x2 >= 0 && x2 < width && y2 >= 0 && y2 < height)) 
 		{
-			return INVALID_DIRECTION;
+			return MovementResult(MovementResult::INVALID_DIRECTION);
 		}
 		if (ii < multiplier-1 && board[x2][y2] != NULL)
 		{
-			return POSITION_FULL;
+			return MovementResult(MovementResult::POSITION_FULL);
 		}
 	}
 	Piece * defender = board[x2][y2];
@@ -295,23 +295,27 @@ Board::MovementResult Board::MovePiece(int x, int y, const Direction & direction
 	}
 	else if (defender->colour != target->colour)
 	{
+		Piece::Type defenderType = defender->type;
+		Piece::Type attackerType = target->type;
+
 		if (defender->colour == Piece::NONE) 
 		{
-			return POSITION_FULL;
+			return MovementResult(MovementResult::POSITION_FULL);
 		}
 		if (defender->type == Piece::FLAG)
 		{
 			winner = target->colour;
-			return VICTORY;
+			return MovementResult(MovementResult::VICTORY);
 		}
 		else if (defender->type == Piece::BOMB)
 		{
 			if (target->type == Piece::MINER)
 			{
+
 				delete defender;
 				board[x][y] = NULL;
 				board[x2][y2] = target;
-				return KILLS;
+				return MovementResult(MovementResult::KILLS, attackerType, defenderType);
 			}
 			else
 			{
@@ -319,7 +323,7 @@ Board::MovementResult Board::MovePiece(int x, int y, const Direction & direction
 				delete target;
 				board[x][y] = NULL;
 				board[x2][y2] = NULL;
-				return BOTH_DIE;
+				return MovementResult(MovementResult::BOTH_DIE, attackerType, defenderType);
 			}
 		}
 		else if (defender->type == Piece::MARSHAL && target->type == Piece::SPY)
@@ -327,34 +331,34 @@ Board::MovementResult Board::MovePiece(int x, int y, const Direction & direction
 			delete defender;
 			board[x][y] = NULL;
 			board[x2][y2] = target;
-			return KILLS;
+			return MovementResult(MovementResult::KILLS, attackerType, defenderType);
 		}
 		else if (target->operator > (*defender))
 		{
 			delete defender;
 			board[x][y] = NULL;
 			board[x2][y2] = target;
-			return KILLS;
+			return MovementResult(MovementResult::KILLS, attackerType, defenderType);
 		}
 		else if (target->operator==(*defender) && rand() % 2 == 0)
 		{
 			delete defender;
 			board[x][y] = NULL;
 			board[x2][y2] = target;	
-			return KILLS;
+			return MovementResult(MovementResult::KILLS, attackerType, defenderType);
 		}
 		else
 		{
 			delete target;
 			board[x][y] = NULL;
-			return DIES;
+			return MovementResult(MovementResult::DIES, attackerType, defenderType);
 		}
 	}
 	else
 	{
-		return POSITION_FULL;
+		return MovementResult(MovementResult::POSITION_FULL);
 	}
-	return OK;
+	return MovementResult(MovementResult::OK);
 }	
 
 

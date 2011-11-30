@@ -525,7 +525,7 @@ bool Forfax::MakeMove()
 
 bool Forfax::InterpretMove()
 {
-	int x; int y; string direction; string result; int multiplier = 1; 
+	int x; int y; string direction; string result; int multiplier = 1; int attackerVal = (int)(Piece::BOMB); int defenderVal = (int)(Piece::BOMB);
 
 	cerr << "Forfax " << strColour << " waiting for movement information...\n";
 	cin >> x; cin >> y; cin >> direction; cin >> result;
@@ -536,6 +536,20 @@ bool Forfax::InterpretMove()
 		s >> multiplier;
 		result.clear();
 		cin >> result;
+
+		if (cin.peek() != '\n')
+		{
+			cerr << "Forfax " << strColour << " reading ranks of pieces\n";
+			s.clear(); s.str(result);
+			s >> attackerVal;
+			result.clear();
+			cin >> result;	
+			s.clear(); s.str(result);
+			s >> defenderVal;
+			result.clear();
+
+			cin >> result;
+		}
 	}
 	if (cin.get() != '\n')
 	{
@@ -543,6 +557,9 @@ bool Forfax::InterpretMove()
 		cerr << "Read result so far: " << x << " " << y <<  " " << direction << " " << result << " ...\n";
 		return false;
 	}
+
+	Piece::Type attackerRank = Piece::Type(Piece::BOMB - attackerVal);
+	Piece::Type defenderRank = Piece::Type(Piece::BOMB - defenderVal);
 
 	cerr << "Forfax " << strColour << " interpreting movement result of " << x << " " << y <<  " " << direction << " " << result << " ...\n";
 
