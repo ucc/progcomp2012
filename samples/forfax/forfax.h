@@ -1,13 +1,24 @@
+/**
+ * "forfax", a sample Stratego AI for the UCC Programming Competition 2012
+ * Declarations for classes Piece, Board and Forfax, Declaration/Implementation of helper class MovementChoice
+ * @author Sam Moore (matches) [SZM]
+ * @website http://matches.ucc.asn.au/stratego
+ * @email progcomp@ucc.asn.au or matches@ucc.asn.au
+ * @git git.ucc.asn.au/progcomp2012.git
+ */
+
 #ifndef FORFAX_H
 #define FORFAX_H
 
 #include <vector> //Uses C++ std::vectors to store pieces
 #include <string> //Uses C++ std::string
-/**
- * Header for the sample Stratego AI "forfax"
- * @author Sam Moore 2011
- */
-class Board;		
+#include <iostream> //For debug
+#include <cassert> //For debug
+
+
+
+class Board;	//Forward declaration used by class Piece
+	
 /**
  * Class to represent a piece on the board
  */
@@ -18,7 +29,7 @@ class Piece
 		typedef enum {RED=0, BLUE=1, NONE, BOTH} Colour; //Used for the allegiance of the pieces - terrain counts as NONE.
 
 		Piece(int newX, int newY,const Colour & newColour);
-		Piece(int newX, int newY,const Colour & newColour, const Colour & rankKnownBy, const Type & fixedRank);
+		Piece(int newX, int newY,const Colour & newColour, const Type & fixedRank);
 		virtual ~Piece() {}
 		
 		void SetCoords(int newX, int newY) {x = newX; y = newY;}
@@ -30,12 +41,18 @@ class Piece
 
 		static Type GetType(char fromToken); //Retrieves the type of a piece given its character token
 		static Colour Opposite(const Colour & colour) {return colour == RED ? BLUE : RED;}
-
+		bool Mobile() const
+		{
+			if (minRank == maxRank)
+				return (minRank != Piece::FLAG && minRank != Piece::BOMB);
+			else
+				return true;
+		}
 
 		int x; int y;
 		const Colour colour; //The colour of the piece
-		Type minRank[2]; //The minimum possible rank of the piece, according to each colour
-		Type maxRank[2]; //The maximum possible rank of the piece, according to each colour
+		Type minRank; //The minimum possible rank of the piece
+		Type maxRank; //The maximum possible rank of the piece
 		int lastMove;
 		
 		
@@ -56,6 +73,8 @@ class Board
 		
 		Piece * Get(int x, int y) const; //Retrieve single piece
 		Piece *  Set(int x, int y, Piece * newPiece); //Add piece to board
+
+		bool ValidPosition(int x, int y) const {return (x > 0 && x < width && y > 0 && y < height);}
 
 		int Width() const {return width;}
 		int Height() const {return height;}
@@ -89,39 +108,52 @@ class Board
 };
 
 /** 
- * Small class to manage the Forfax AI
+ * Class to manage the Forfax AI
  */
 class Forfax
 {
 	public:
 		Forfax();
 		virtual ~Forfax();
-		bool Setup(); //Waits for input to determine colour and board size, and then responds with setup
-		bool MakeMove(); //Should be called each turn - determines Forfax's move
 
-		double CombatSuccessChance(Piece * attacker, Piece * defender, const Piece::Colour & accordingTo) const;
-		double MovementBaseScore(Piece * move, const Board::Direction & dir, const Piece::Colour & accordingTo) const;
-		double MovementTotalScore(Piece * move, const Board::Direction & dir, const Piece::Colour & accordingTo) const;
+		typedef enum {OK, NO_NEWLINE, EXPECTED_ATTACKER, UNEXPECTED_DEFENDER, NO_ATTACKER, NO_DEFENDER, COLOUR_MISMATCH, INVALID_QUERY, BOARD_ERROR, VICTORY} Status;
+
+		Status Setup(); //Waits for input to determine colour and board size, and then responds with setup
+		Status MakeMove(); //Should be called each turn - determines Forfax's move
+
+
+		//Move score functions
+		double MovementScore(Piece * move, const Board::Direction & dir) const; //Calculate total score
+		double CombatSuccessChance(Piece * attacker, Piece * defender) const; //Calculate chance of success in combat
+		double IntrinsicWorth(int x, int y) const; //How much a given point on the board is worth
+		double VictoryScore(Piece * attacker, Piece * defender) const; //How much killing the defender is worth
+		double DefeatScore(Piece * attacker, Piece * defender) const; //How much losing is worth
+
+
+		void PrintBoard(std::ostream & out);
 
 	protected:
-		bool MakeFirstMove(); //Should only be called on the first turn
-		bool InterpretMove();
+		Status MakeFirstMove(); //Should only be called on the first turn
+		Status InterpretMove();
 	private:
 		Board * board; //Forfax stores the state on a board
 		Piece::Colour colour; //Forfax needs to know his colour
 		std::string strColour; //String of colour
 		int turnNumber; //Forfax needs to know what turn number it is
 		
-		int remainingUnits[14][2][2]; //Known remaining units, accessed by (type, colour, accordingTo)
+		static int remainingUnits[2][15]; //Known remaining units, accessed by [colour][type]
 
 };
 
+/**
+ * Helper class used to store various moves in the board, and their associated scores
+ */
 class MovementChoice
 {
 	public:
-		MovementChoice(Piece * newPiece, const Board::Direction & newDir, const Forfax & forfax, const Piece::Colour & accordingTo) : piece(newPiece), dir(newDir) 
+		MovementChoice(Piece * newPiece, const Board::Direction & newDir, const Forfax & forfax) : piece(newPiece), dir(newDir) 
 		{
-			score = forfax.MovementBaseScore(piece, dir, accordingTo);
+			score = forfax.MovementScore(piece, dir);
 		}
 
 		MovementChoice(const MovementChoice & cpy) : piece(cpy.piece), dir(cpy.dir), score(cpy.score)
@@ -143,14 +175,6 @@ class MovementChoice
 	
 };
 
-class MovementTotalChoice : public MovementChoice
-{
-	public:
-		MovementTotalChoice(Piece * newPiece, const Board::Direction & newDir, const Forfax & forfax, const Piece::Colour & accordingTo) : MovementChoice(newPiece, newDir, forfax, accordingTo)
-		{
-			score = score/(forfax.MovementTotalScore(piece, dir, Piece::Opposite(accordingTo)));
-		}
-};
 
 #endif //FORFAX_H
 

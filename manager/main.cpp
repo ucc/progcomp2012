@@ -28,17 +28,19 @@ int main(int argc, char ** argv)
 {
 	assert(argc == 3);
 	
-	for (int y = 5; y < 9; ++y)
+	
+	for (int y = 4; y < 6; ++y)
 	{
-		for (int x = 3; x < 5; ++x)
+		for (int x = 2; x < 4; ++x)
 		{
 			theBoard.AddPiece(x,y,Piece::BOULDER, Piece::NONE);
 		}
-		for (int x = 9; x < 11; ++x)
+		for (int x = 6; x < 8; ++x)
 		{
 			theBoard.AddPiece(x,y,Piece::BOULDER, Piece::NONE);
 		}
 	}
+	
 
 	red = new Controller(Piece::RED, argv[1]);
 	blue = new Controller(Piece::BLUE, argv[2]);
@@ -90,7 +92,7 @@ int main(int argc, char ** argv)
 			break;
 		#ifdef GRAPHICS
 			Board::theBoard.Draw();
-			if (CheckForQuitWhilstWaiting(0.2))
+			if (CheckForQuitWhilstWaiting(0.5))
 			{
 				red->SendMessage("QUIT");
 				blue->SendMessage("QUIT");
@@ -112,7 +114,7 @@ int main(int argc, char ** argv)
 
 		#ifdef GRAPHICS
 			Board::theBoard.Draw();
-			if (CheckForQuitWhilstWaiting(0.2))
+			if (CheckForQuitWhilstWaiting(0.5))
 			{
 				red->SendMessage("QUIT");
 				blue->SendMessage("QUIT");
@@ -130,12 +132,14 @@ int main(int argc, char ** argv)
 	printf("Final board state\n");
 	#ifdef GRAPHICS
 			Board::theBoard.Draw();
+
 			if (CheckForQuitWhilstWaiting(4))
 			{
 				red->SendMessage("QUIT");
 				blue->SendMessage("QUIT");
 				exit(EXIT_SUCCESS);
 			}
+
 	#else
 		Board::theBoard.Print(stderr);
 	#endif //GRAPHICS
@@ -245,6 +249,16 @@ void BrokenPipe(int sig)
 		fprintf(stderr,"Game ends on ERROR's turn - REASON: Broken pipe\n");
 			
 	}
+			Board::theBoard.Draw();
+			while (true)
+			{
+				if (CheckForQuitWhilstWaiting(4000))
+				{
+				red->SendMessage("QUIT");
+				blue->SendMessage("QUIT");
+				exit(EXIT_SUCCESS);
+				}
+			}
 	exit(EXIT_SUCCESS);
 }
 	

@@ -30,20 +30,20 @@ int main(int argc, char ** argv)
 
 	//fprintf(stderr, "Colour is \"%s\", width and height are (%d, %d), opponent is \"%s\"\n", colour.c_str(), width, height, opponent.c_str());
 
-	assert(width == 14 && height == 14); //Can't deal with other sized boards
+	assert(width == 10 && height == 10); //Can't deal with other sized boards
 	if (colour == "RED")
 	{
-		fprintf(stdout, "FB..........B.\n");
-		fprintf(stdout, "BBCM....cccc.C\n");
-		fprintf(stdout, "LSGmnsBmSsnsSm\n");
-		fprintf(stdout, "sLSBLnLssssnyn\n");
+		fprintf(stdout, "FBnyBmSsBn\n");
+		fprintf(stdout, "BBCMccccnC\n");
+		fprintf(stdout, "LSGmnsnsSm\n");
+		fprintf(stdout, "sLSBLLssss\n");
 	}
 	else if (colour == "BLUE")
 	{
-		fprintf(stdout, "sLSBLnLssssnyn\n");
-		fprintf(stdout, "LSGmnsBmSsnsSm\n");
-		fprintf(stdout, "BBCM....cccc.C\n");
-		fprintf(stdout, "FB..........B.\n");
+		fprintf(stdout, "sLSBLLssss\n");
+		fprintf(stdout, "LSGmnsnsSm\n");		
+		fprintf(stdout, "BBCMccccnC\n");
+		fprintf(stdout, "FBnyBmSsBn\n");
 	}
 	else
 	{
@@ -63,10 +63,12 @@ int main(int argc, char ** argv)
 		//fprintf(stderr, "%s [%d] looping\n", argv[0], myPid);
 		choices.clear();
 
-	//	fprintf(stderr, "%s Waiting for status line...\n", colour.c_str());
-		while (fgetc(stdin) != '\n')
+		//fprintf(stderr, "%s Waiting for status line...\n", colour.c_str());
+		char c = fgetc(stdin);
+		while (c != '\n')
 		{
-			//fprintf(stderr,".");
+			//fprintf(stderr,"%c",c);
+			c = fgetc(stdin);
 		}
 			//fprintf(stderr, "%s Got status, waiting for board line...\n", colour.c_str());
 

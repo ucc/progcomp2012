@@ -5,6 +5,8 @@ CPP = g++ -Wall -pedantic -lSDL -lGL  -g
 dummy : dummy.o
 	$(CPP) -o dummy dummy.o
 
+
+
 clean :
 	$(RM) $(BIN) $(OBJ) $(LINKOBJ)
 

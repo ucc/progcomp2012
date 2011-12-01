@@ -7,7 +7,7 @@ using namespace std;
 /**
  * Static variables
  */
-Board Board::theBoard(14,14);
+Board Board::theBoard(10,10);
 //nothing, boulder, flag, spy, scout, miner, sergeant, lietenant, captain, major, colonel, general, marshal, bomb, error
 char  Piece::tokens[] = {'.','+','F','y','s','n','S','L','c','m','C','G','M','B','?'};
 int Piece::maxUnits[] = {0,0,1,1,8,5,4,4,4,3,2,1,1,6,0};

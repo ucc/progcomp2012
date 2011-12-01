@@ -146,7 +146,7 @@ MovementResult Controller::MakeMove(string & buffer)
 
 	//I stored the ranks in the wrong order; rank 1 is the marshal, 2 is the general etc...
 	//So I am reversing them in the output... great work
-	s << (Piece::BOMB - moveResult.attackerRank) << " " << (Piece::BOMB - moveResult.defenderRank) << "\n";	
+	s << (Piece::BOMB - moveResult.attackerRank) << " " << (Piece::BOMB - moveResult.defenderRank);	
 	switch (moveResult.type)
 	{
 		case MovementResult::OK:
@@ -174,9 +174,9 @@ MovementResult Controller::MakeMove(string & buffer)
 		
 	}
 
-	if (!Board::LegalResult(moveResult))
-		return MovementResult::OK; //HACK - Legal results returned!
-	else
+	//if (!Board::LegalResult(moveResult))
+	//	return MovementResult::OK; //HACK - Legal results returned!
+	//else
 		return moveResult; 	
 
 }
