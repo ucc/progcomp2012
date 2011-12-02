@@ -18,7 +18,8 @@ int main(int argc, char ** argv)
 {
 	setbuf(stdout, NULL);
 	setbuf(stdin, NULL);
-	
+
+	srand(time(NULL));	
 
 	//Read in the colour, and choose a layout
 	

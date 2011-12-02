@@ -17,6 +17,8 @@
 #include <list>
 #include <cmath>
 
+//#define DEBUG
+
 using namespace std;
 
 
@@ -48,7 +50,7 @@ int Forfax::remainingUnits[][15] = {{0,0,1,1,8,5,4,4,4,3,2,1,1,6,0},{0,0,1,1,8,5
  * @param newColour - colour
  */
 Piece::Piece(int newX, int newY,const Colour & newColour)
-	: x(newX), y(newY), colour(newColour), minRank(Piece::FLAG), maxRank(Piece::BOMB), lastMove(0)
+	: x(newX), y(newY), colour(newColour), minRank(Piece::FLAG), maxRank(Piece::BOMB), lastMove(0), lastx(newX), lasty(newY)
 {
 
 }
@@ -61,7 +63,7 @@ Piece::Piece(int newX, int newY,const Colour & newColour)
  * @param fixedRank - rank of the new piece
  */
 Piece::Piece(int newX, int newY,const Colour & newColour, const Type & fixedRank)
-	: x(newX), y(newY), colour(newColour), minRank(fixedRank), maxRank(fixedRank), lastMove(0)
+	: x(newX), y(newY), colour(newColour), minRank(fixedRank), maxRank(fixedRank), lastMove(0),  lastx(newX), lasty(newY)
 {
 	
 	
@@ -268,6 +270,19 @@ Board::Direction Board::DirectionBetween(int x1, int y1, int x2, int y2)
 }
 
 /**
+ * HELPER - Returns the number of moves between two points
+ * @param x1 x coordinate of the first point
+ * @param y1 y coordinate of the first point
+ * @param x2 x coordinate of the second point
+ * @param y2 y coordinate of the second point
+ * @returns The number of moves taken to progress from (x1, y1) to (x2, y2), assuming no obstacles
+ */
+int Board::NumberOfMoves(int x1, int y1, int x2, int y2)
+{
+	return (abs(x2 - x1) + abs(y2 - y1)); //Pieces can't move diagonally, so this is pretty straight forward
+}
+
+/**
  * Searches the board's red and blue arrays for the piece, and removes it
  * DOES NOT delete the piece. Calling function should delete piece after calling this function.
  * @param forget - The Piece to forget about
@@ -279,7 +294,8 @@ bool Board::ForgetPiece(Piece * forget)
 		return false;
 	
 	vector<Piece*> & in = GetPieces(forget->colour); bool result = false;
-	for (vector<Piece*>::iterator i=in.begin(); i != in.end(); ++i)
+	vector<Piece*>::iterator i=in.begin(); 
+	while (i != in.end())
 	{
 		
 		if ((*i) == forget)
@@ -289,7 +305,7 @@ bool Board::ForgetPiece(Piece * forget)
 			
 			continue;
 		}
-		
+		++i;
 		
 	}
 
@@ -298,11 +314,61 @@ bool Board::ForgetPiece(Piece * forget)
 }
 
 /**
+ * Gets the closest Piece of a specified colour to a point
+ * @param x The x coordinate of the point
+ * @param y The y coordinate of the point
+ * @param colour The colour that the piece must match (may be Piece::BOTH to match either colour)
+ * @returns Piece* pointing to the closest piece of a matching colour, NULL if no piece found
+ */
+Piece * Board::GetClosest(int x, int y, const Piece::Colour & colour) const
+{
+	if (x < 0 || y < 0 || x >= width || y >= height)
+		return NULL;
+
+	for (int dist = 0; dist < max<int>(width, height); ++dist)
+	{
+		
+		for (int yy = y-dist; yy <= y+dist; ++yy)
+		{
+			Piece * get = Get(x+dist, y);
+			if ((get != NULL) && (get->colour == colour || colour == Piece::BOTH))
+				return get;
+		}
+		for (int yy = y-dist; yy <= y+dist; ++yy)
+		{
+			Piece * get = Get(x-dist, y);
+			if ((get != NULL) && (get->colour == colour || colour == Piece::BOTH))
+				return get;
+		}
+		for (int xx = x-dist; xx <= x+dist; ++xx)
+		{
+			Piece * get = Get(xx, y+dist);
+			if ((get != NULL) && (get->colour == colour || colour == Piece::BOTH))
+				return get;
+		}
+		for (int xx = x-dist; xx <= y+dist; ++xx)
+		{
+			Piece * get = Get(xx, y-dist);
+			if ((get != NULL) && (get->colour == colour || colour == Piece::BOTH))
+				return get;
+		}
+
+	}
+	
+	return NULL;
+	
+	
+	
+	
+}
+
+/**
  * Construct the Forfax AI
  */
 Forfax::Forfax() : board(NULL), colour(Piece::NONE), strColour("NONE"), turnNumber(0)
 {
 	//By default, Forfax knows nothing; the main function in main.cpp calls Forfax's initialisation functions
+	srand(time(NULL));
 }
 
 /**
@@ -366,32 +432,51 @@ double Forfax::MovementScore(Piece * piece, const Board::Direction & dir) const
 	if (!board->ValidPosition(x2, y2) || !piece->Mobile())
 	{
 		
-		basevalue = 0;
+		basevalue = 0; //No point attempting to move immobile units, or moving off the edges of the board
 	}
 	else if (board->Get(x2, y2) == NULL)
 	{
-		basevalue = 0.5*IntrinsicWorth(x2, y2);
+		//If the position is empty...
+		Piece * closestEnemy = board->GetClosest(x2, y2, Piece::Opposite(piece->colour));
+		if (closestEnemy == NULL)
+		{
+			basevalue = 0.05*IntrinsicWorth(x2, y2); //Should never get this unless there are no enemies left
+		}
+		else
+		{
+			//Allocate score based on score of Combat with nearest enemy to the target square, decrease with distance between target square and the enemy
+			basevalue = 0.95*CombatScore(closestEnemy->x, closestEnemy->y, piece) - 0.2*(double)((double)(Board::NumberOfMoves(closestEnemy->x, closestEnemy->y, x2, y2))/(double)((max<int>(board->Width(), board->Height()))));
+		}
+		
 		
 	}
 	else if (board->Get(x2, y2)->colour != Piece::Opposite(piece->colour))
 	{
-		basevalue = 0;
+		basevalue = 0; //The position is occupied by an ally, and so its pointless to try and move there
 	}
 	else 
 	{
-		Piece * defender = board->Get(x2, y2);
-		double combatSuccess = CombatSuccessChance(piece, defender);
-		basevalue = IntrinsicWorth(x2, y2)*combatSuccess*VictoryScore(piece, defender) + (1.0 - combatSuccess)*DefeatScore(piece, defender);
+		basevalue = CombatScore(x2, y2, piece); //The position is occupied by an enemy; compute combat score
 	}
 
 	if (basevalue > 0)
 	{
+		//Hack which decreases score for units that moved recently
+		//Does not decrease below a threshold (so that at the start of the game units will actually move!)
 		double oldValue = basevalue;
 		basevalue -= (double)(1.0/((double)(1.0 + (turnNumber - piece->lastMove))));
-		if (basevalue < oldValue/8.0)
-			basevalue = oldValue/8.0;
+		if (basevalue < oldValue/1000.0)
+			basevalue = oldValue/1000.0;
 	}
 	
+
+	if (x2 == piece->lastx && y2 == piece->lasty) //Hack which decreases score for backtracking moves
+		basevalue = basevalue/1.5;
+
+	if (rand() % 10 == 0) //Hack which introduces some randomness by boosting one in every 10 scores
+		basevalue *= 4;
+	if (basevalue > 1)
+		basevalue = 1;
 	return basevalue;
 }
 
@@ -475,7 +560,7 @@ Forfax::Status Forfax::MakeMove()
 		if (interpret != OK) {return interpret;}
 
 		//Forfax ignores the board state; he only uses the move result lines
-		
+		#ifndef DEBUG
 		for (int y=0; y < board->Height(); ++y)
 		{
 			for (int x = 0; x < board->Width(); ++x)
@@ -483,6 +568,7 @@ Forfax::Status Forfax::MakeMove()
 			if (cin.get() != '\n')
 				return NO_NEWLINE;
 		}
+		#endif //DEBUG
 		
 	}
 	
@@ -589,13 +675,13 @@ Forfax::Status Forfax::InterpretMove()
 	//If ranks were supplied, update the known ranks of the involved pieces
 	if (attackerRank != Piece::NOTHING && attacker != NULL)
 	{
-		assert(attacker->minRank <= attackerRank && attacker->maxRank >= attackerRank);
+		//assert(attacker->minRank <= attackerRank && attacker->maxRank >= attackerRank);
 		attacker->minRank = attackerRank;
 		attacker->maxRank = attackerRank;
 	}
 	if (defenderRank != Piece::NOTHING && defender != NULL)
 	{
-		assert(defender->minRank <= defenderRank && defender->maxRank >= defenderRank);
+		//assert(defender->minRank <= defenderRank && defender->maxRank >= defenderRank);
 		defender->minRank = defenderRank;
 		defender->maxRank = defenderRank;
 
@@ -635,6 +721,8 @@ Forfax::Status Forfax::InterpretMove()
 		//Update board and piece
 		board->Set(x2, y2, attacker);
 		board->Set(x, y, NULL);
+		attacker->lastx = attacker->x;
+		attacker->lasty = attacker->y;
 		attacker->x = x2;
 		attacker->y = y2;
 	}
@@ -648,6 +736,8 @@ Forfax::Status Forfax::InterpretMove()
 
 		board->Set(x2, y2, attacker);
 		board->Set(x, y, NULL);
+		attacker->lastx = attacker->x;
+		attacker->lasty = attacker->y;
 		attacker->x = x2;
 		attacker->y = y2;
 
@@ -810,6 +900,8 @@ double Forfax::IntrinsicWorth(int x, int y) const
  */
 double Forfax::VictoryScore(Piece * attacker, Piece * defender) const
 {
+
+	//If defender's rank is known, flags or bombs are worth more than usual
 	if (defender->minRank == defender->maxRank)
 	{
 		if (defender->minRank == Piece::FLAG)
@@ -817,6 +909,7 @@ double Forfax::VictoryScore(Piece * attacker, Piece * defender) const
 		else if (defender->minRank == Piece::BOMB)
 			return 0.9;
 	}
+	//Return average of normalised defender ranks
 	return max<double>(((defender->maxRank / Piece::BOMB) + (defender->minRank / Piece::BOMB))/2, 0.6);
 }
 
@@ -828,30 +921,78 @@ double Forfax::VictoryScore(Piece * attacker, Piece * defender) const
  */
 double Forfax::DefeatScore(Piece * attacker, Piece * defender) const
 {
-	if (attacker->minRank == Piece::SPY)
-		return 0.05;
-
-	if (defender->minRank == defender->maxRank)
+	
+	double result = 0;
+	if (defender->minRank == defender->maxRank) //If the defender's rank is known for certain...
 	{
-		if (defender->minRank == Piece::BOMB)
-			return 1 - (double)((double)(attacker->minRank) / (double)(Piece::BOMB));
+		if (defender->minRank == Piece::BOMB) //Committing suicide to destroy bombs has a value that decreases with the attacker's rank
+			result = 1 - 0.5*(double)((double)(attacker->minRank) / (double)(Piece::BOMB));
+		else if (defender->minRank == Piece::FLAG)
+			result = 1; //Its impossible to lose to the flag anyway...
 		else
-			return 0.5;
-	}
+		{
+			//This is committing suicide on a higher ranked non-bomb enemy piece.
+			//Basically pointless, but the greater the attacker's rank the more pointless!
+			double temp = (double)((double)(attacker->minRank) / (double)(Piece::BOMB));
+			result = 0.01*(1 - temp)*(1 - temp);
 
-	double possibleRanks = 0; double totalRanks = 0;
-	for (Piece::Type rank = Piece::NOTHING; rank <= Piece::BOMB; rank = Piece::Type((int)(rank) + 1))
+			
+		}
+	}	
+	else //The defender's rank is not known
 	{
-		totalRanks += remainingUnits[(int)(defender->colour)][(int)(rank)];
-		if (rank >= defender->minRank && rank <= defender->maxRank)
-			possibleRanks += remainingUnits[(int)(defender->colour)][(int)(rank)];
+
+		//Score is allocated based on how much knowledge is gained by attacking defender
+		//The more possible ranks for the defender, the greater the score
+		//The score decreases as the rank of the attacker is increased.
+
+		double possibleRanks = 0; double totalRanks = 0; double bonus = 0; 
+		for (Piece::Type rank = Piece::NOTHING; rank <= Piece::BOMB; rank = Piece::Type((int)(rank) + 1))
+		{
+			totalRanks += remainingUnits[(int)(defender->colour)][(int)(rank)];
+
+			if (rank >= defender->minRank && rank <= defender->maxRank)
+			{
+				possibleRanks += remainingUnits[(int)(defender->colour)][(int)(rank)];
+				if (rank == Piece::BOMB)
+					bonus += remainingUnits[(int)(defender->colour)][(int)(rank)];
+				if (rank == Piece::FLAG)
+					bonus += 2*remainingUnits[(int)(defender->colour)][(int)(rank)];
+			}
+			
+		}
+
+
+		if (totalRanks > 0)
+			result = (possibleRanks/totalRanks) - 0.8*(double)((double)(attacker->minRank) / (double)(Piece::BOMB));
+
+		result += bonus / totalRanks;
 		
+		if (result > 1)
+			result = 1;
 	}
 
-	if (totalRanks > 0)
-		return (possibleRanks/totalRanks) - (double)((double)(attacker->minRank) / (double)(Piece::BOMB));
-	return 0;
-}		
+	if (attacker->minRank == Piece::SPY) //Spies are slightly more valuable than usual since they kill the Marshal
+		result = result / 1.5;
+	return result;
+
+}
+
+/**
+ * Calculates a score indicating the worth of invoking combat in a square
+ * @param x The x coordinate
+ * @param y The y coordinate
+ * @param attacker The piece invoking the combat
+ * @returns A value between 0 in 1, with 0 indicating worthless (or no combat) and 1 indicating highest value
+ */
+double Forfax::CombatScore(int x, int y, Piece * attacker) const
+{
+	Piece * defender = board->Get(x, y);
+	if (defender == NULL)
+		return 0;
+	double combatSuccess = CombatSuccessChance(attacker, defender);
+	return IntrinsicWorth(x, y)*combatSuccess*VictoryScore(attacker, defender) + (1.0 - combatSuccess)*DefeatScore(attacker, defender);		
+}
 
 /**
  * DEBUG - Print the board seen by Forfax to a stream

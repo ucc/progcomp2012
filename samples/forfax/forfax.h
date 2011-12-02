@@ -54,6 +54,7 @@ class Piece
 		Type minRank; //The minimum possible rank of the piece
 		Type maxRank; //The maximum possible rank of the piece
 		int lastMove;
+		int lastx; int lasty;
 		
 		
 
@@ -72,6 +73,7 @@ class Board
 		std::vector<Piece*> & GetPieces(const Piece::Colour & colour) {return colour == Piece::RED ? red : blue;} //retrieve array of pieces
 		
 		Piece * Get(int x, int y) const; //Retrieve single piece
+		Piece * GetClosest(int x, int y, const Piece::Colour & search = Piece::BOTH) const; //Retrieve closest piece of specified colour to the point
 		Piece *  Set(int x, int y, Piece * newPiece); //Add piece to board
 
 		bool ValidPosition(int x, int y) const {return (x > 0 && x < width && y > 0 && y < height);}
@@ -85,7 +87,7 @@ class Board
 
 		static void MoveInDirection(int & x, int & y, const Direction & dir, int multiplier = 1);
 		static Direction DirectionBetween(int x1, int y1, int x2, int y2);
-
+		static int NumberOfMoves(int x1, int y1, int x2, int y2);
 		
 
 		static int redUnits[];
@@ -125,6 +127,7 @@ class Forfax
 		//Move score functions
 		double MovementScore(Piece * move, const Board::Direction & dir) const; //Calculate total score
 		double CombatSuccessChance(Piece * attacker, Piece * defender) const; //Calculate chance of success in combat
+		double CombatScore(int x, int y, Piece * attacker) const; //Calculate total worth of combat at a point
 		double IntrinsicWorth(int x, int y) const; //How much a given point on the board is worth
 		double VictoryScore(Piece * attacker, Piece * defender) const; //How much killing the defender is worth
 		double DefeatScore(Piece * attacker, Piece * defender) const; //How much losing is worth
@@ -174,6 +177,7 @@ class MovementChoice
 				
 	
 };
+
 
 
 #endif //FORFAX_H

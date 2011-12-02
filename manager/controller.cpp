@@ -174,9 +174,9 @@ MovementResult Controller::MakeMove(string & buffer)
 		
 	}
 
-	//if (!Board::LegalResult(moveResult))
-	//	return MovementResult::OK; //HACK - Legal results returned!
-	//else
+	if (!Board::LegalResult(moveResult))
+		return MovementResult::OK; //HACK - Legal results returned!
+	else
 		return moveResult; 	
 
 }

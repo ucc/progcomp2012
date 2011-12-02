@@ -8,12 +8,8 @@ dummy : dummy.o
 
 
 clean :
-	$(RM) $(BIN) $(OBJ) $(LINKOBJ)
-
-clean_full: #cleans up all backup files
-	$(RM) $(BIN) $(OBJ) $(LINKOBJ)
-	$(RM) *.*~
-	$(RM) *~
+	rm -f dummy.o
+	rm -f dummy
 
 
 
