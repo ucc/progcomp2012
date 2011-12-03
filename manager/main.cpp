@@ -10,11 +10,41 @@
 
 using namespace std;
 
+void CreateGame(int argc, char ** argv);
+void DestroyGame();
+void PrintResults(const MovementResult & result);
+
 int main(int argc, char ** argv)
 {
+	
 
+
+	if (argc == 1)
+	{
+		fprintf(stderr, "Usage: stratego [options] red blue\n");
+		fprintf(stderr, "       stratego --help\n");
+		exit(EXIT_SUCCESS);
+		
+	}
+	CreateGame(argc, argv);
+	if (Game::theGame == NULL)
+	{
+		fprintf(stderr, "ERROR: Couldn't create a game!\n");
+		exit(EXIT_FAILURE);
+	}
+
+	MovementResult result = Game::theGame->Play();
+	Game::theGame->PrintEndMessage(result);
+	PrintResults(result);
+
+	exit(EXIT_SUCCESS);
+	return 0;
+}
+
+void CreateGame(int argc, char ** argv)
+{
 	char * red = NULL; char * blue = NULL; double timeout = 0.00001; bool graphics = false; bool allowIllegal = false; FILE * log = NULL;
-	Piece::Colour reveal = Piece::BOTH;
+	Piece::Colour reveal = Piece::BOTH; char * inputFile = NULL; int maxTurns = 5000; bool printBoard = false;
 	for (int ii=1; ii < argc; ++ii)
 	{
 		if (argv[ii][0] == '-')
@@ -31,10 +61,13 @@ int main(int argc, char ** argv)
 					++ii;
 					break;
 				case 'g':
-					graphics = true;
+					graphics = !graphics;
+					break;
+				case 'p':
+					printBoard = !printBoard;
 					break;
 				case 'i':
-					allowIllegal = true;
+					allowIllegal = !allowIllegal;
 					break;
 
 				case 'o':
@@ -69,6 +102,34 @@ int main(int argc, char ** argv)
 					else
 						reveal = Piece::NONE;
 					break;
+				case 'm':
+					if (argc - ii <= 1)
+					{
+						fprintf(stderr, "Expected max_turns value after -m switch!\n");
+						exit(EXIT_FAILURE);
+					}
+					if (strcmp(argv[ii+1], "inf"))
+						maxTurns = -1;
+					else
+						maxTurns = atoi(argv[ii+1]);
+					++ii;
+					break;
+				case 'f':
+					if (argc - ii <= 1)
+					{
+						fprintf(stderr, "Expected filename after -f switch!\n");
+						exit(EXIT_FAILURE);
+					}
+					if (log != NULL)
+					{
+						fprintf(stderr, "Expected at most ONE -f switch!\n");
+						exit(EXIT_FAILURE);
+					}
+					red = (char*)("file");
+					blue = (char*)("file");
+					inputFile = argv[ii+1];
+					++ii;
+					break;
 				case 'h':
 					system("clear");	
 					system("less manual.txt");
@@ -102,27 +163,28 @@ int main(int argc, char ** argv)
 			}
 		}
 	}
-	if (argc == 1)
+
+	if (inputFile == NULL)
 	{
-		fprintf(stderr, "Usage: stratego [options] red blue\n");
-		fprintf(stderr, "       stratego --help\n");
-		exit(EXIT_SUCCESS);
-		
+		Game::theGame = new Game(red,blue, graphics, timeout, allowIllegal,log, reveal,maxTurns, printBoard);
 	}
-	
-	Game game(red, blue, graphics, timeout, allowIllegal, log, reveal);
-	
-	
-	if (!game.Setup(red, blue))
+	else
 	{
-		fprintf(stdout, "NONE %d\n",game.TurnCount());
+		Game::theGame = new Game(inputFile, graphics, timeout, allowIllegal,log, reveal,maxTurns, printBoard);
+	}
+	if (!Game::theGame->Setup(red, blue))
+	{
+		fprintf(stdout, "NONE %d\n",Game::theGame->TurnCount());
 		exit(EXIT_SUCCESS);
 	}
+	
+	atexit(DestroyGame);
 
-	MovementResult result = game.Play();
-	game.PrintEndMessage(result);
+}
 
-	Piece::Colour winner = game.Turn();
+void PrintResults(const MovementResult & result)
+{
+	Piece::Colour winner = Game::theGame->Turn();
 	if (Board::LegalResult(result))
 	{
 		if (winner == Piece::BOTH)
@@ -140,28 +202,27 @@ int main(int argc, char ** argv)
 	switch (winner)
 	{
 		case Piece::RED:
-			fprintf(stdout, "%s RED %d\n", red,game.TurnCount());	
+			fprintf(stdout, "%s RED %d\n", Game::theGame->red->name.c_str(),Game::theGame->TurnCount());	
+			Game::theGame->logMessage("%s RED %d\n", Game::theGame->red->name.c_str(),Game::theGame->TurnCount());
 			break;
 		case Piece::BLUE:
-			fprintf(stdout, "%s BLUE %d\n", blue,game.TurnCount());	
+			fprintf(stdout, "%s BLUE %d\n", Game::theGame->blue->name.c_str(),Game::theGame->TurnCount());	
+			Game::theGame->logMessage("%s BLUE %d\n", Game::theGame->blue->name.c_str(),Game::theGame->TurnCount());
 			break;
 		case Piece::BOTH:
-			fprintf(stdout, "DRAW %d\n",game.TurnCount());	
+			fprintf(stdout, "DRAW %d\n",Game::theGame->TurnCount());
+			Game::theGame->logMessage("DRAW %d\n",Game::theGame->TurnCount());	
 			break;
 		case Piece::NONE:
-			fprintf(stdout, "NONE %d\n",game.TurnCount());	
+			fprintf(stdout, "NONE %d\n",Game::theGame->TurnCount());	
+			Game::theGame->logMessage("NONE %d\n",Game::theGame->TurnCount());
 			break;
 
 	}
-
-	
-	
-
-
-
-	exit(EXIT_SUCCESS);
-	
-	return 0;
 }
 
-
+void DestroyGame()
+{
+	delete Game::theGame;
+	Game::theGame = NULL;
+}

@@ -13,7 +13,7 @@ class Piece;
 class MovementResult
 {
 	public:
-		typedef enum {OK, DIES, KILLS, BOTH_DIE, NO_BOARD, INVALID_POSITION, NO_SELECTION, NOT_YOUR_UNIT, IMMOBILE_UNIT, INVALID_DIRECTION, POSITION_FULL, VICTORY, BAD_RESPONSE, NO_MOVE, COLOUR_ERROR, ERROR} Type;
+		typedef enum {OK, DIES, KILLS, BOTH_DIE, NO_BOARD, INVALID_POSITION, NO_SELECTION, NOT_YOUR_UNIT, IMMOBILE_UNIT, INVALID_DIRECTION, POSITION_FULL, VICTORY, BAD_RESPONSE, NO_MOVE, COLOUR_ERROR, ERROR, DRAW} Type;
 
 		MovementResult(const Type & result = OK, const Piece::Type & newAttackerRank = Piece::NOTHING, const Piece::Type & newDefenderRank = Piece::NOTHING)
 			: type(result), attackerRank(newAttackerRank), defenderRank(newDefenderRank) {}

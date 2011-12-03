@@ -11,7 +11,7 @@
 class AI_Controller : public Controller, private Program
 {
 	public:
-		AI_Controller(const Piece::Colour & newColour, const char * executablePath, const double newTimeout = 2.0) : Controller(newColour), Program(executablePath), timeout(newTimeout) {}
+		AI_Controller(const Piece::Colour & newColour, const char * executablePath, const double newTimeout = 2.0) : Controller(newColour, executablePath), Program(executablePath), timeout(newTimeout) {}
 		virtual ~AI_Controller() {}
 
 		
@@ -20,6 +20,8 @@ class AI_Controller : public Controller, private Program
 		virtual MovementResult QueryMove(std::string & buffer);
 
 		virtual void Message(const char * message) {Program::SendMessage(message);}
+
+		virtual bool Valid() const {return Program::Running();}
 
 
 	private:

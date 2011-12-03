@@ -5,14 +5,14 @@ WARNING
 	This program is still a work in progress. Consider it a Beta version.
 
 SYNOPSIS
-	stratego {[-girb] [-o= output_file ] [-t= stall_time] red_player blue_player | {-h | --help}}
+	stratego {[-gpirb] [-o output_file ] [-t stall_time] [-m max_turns] {red_player blue_player | -f input_file} | {-h | --help} }
 
 DESCRIPTION
 	stratego manages a game of Stratego. It stores the state of the board, and uses a simple protocol to interface with AI programs.
 	By itself, stratego does not "play" the game. An external AI program must be used. stratego is intended to be used for the testing of 
 	various AI strategies, written in any programming language. It will be used for the UCC Programming Competition 2012.
 
-	Unless -h, or --help is given, both red_player and blue_player must be supplied.
+	Unless the -h (--help) or -f switch is given, both red_player and blue_player must be supplied.
 
 	red_player
 		Should be either a path to an executable file which will control the Red player, or "human".
@@ -27,6 +27,10 @@ DESCRIPTION
 OPTIONS
 	-g
 		By default, graphics are disabled. If the -g switch is present, stratego will draw the game as it is played using OpenGL
+	-p
+		By default, even if graphics are disabled, the board state is not printed. If -p is present, the board will be printed to stdout.
+		If the system supports colour, the characters will be in colour.
+		If -p and -g are both present you will see both behaviours (overkill)!
 	-i
 		By default, stratego will exit if a move which is deemed "illegal" is made. If the -i switch is present, illegal moves will be ignored.
 		That is, the move will not be made (effectively the player making the illegal move loses a turn).
@@ -42,8 +46,22 @@ OPTIONS
 	-t
 		By default, stratego executes moves as fast as they are recieved. If the -t switch is present, a delay of stall_time will be introduced
 		between each move.
+
+	-m
+		By default, the game is declared a Draw after 5000 turns have ellapsed.
+		Use this option to change the maximum number of turns.
+		To play for an infinite number of turns, supply "inf" as max_number.
+
+	-f
+		By default, stratego requires red_player and blue_player to enact a game.
+		If this option is supplied, a file previously produced by using the -o switch is read, and the game reenacted.
+		All switches function as normal with -f.
+		NOTE: It is recommended that -g is used with -f.
+
 	-h, --help
-		If the -h switch is present, this page will be printed and stratego will exit.
+		If the -h switch is used, this page will be printed and stratego will exit.
+		
+		
 
 GAME RULES
 		Each player sets up 40 pieces on the Board. The pieces consist of the following:

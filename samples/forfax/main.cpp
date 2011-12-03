@@ -42,6 +42,7 @@ int main(int argc, char ** argv)
 		move = forfax.MakeMove();
 	}
 
+	/*
 	switch (move)
 	{
 		case Forfax::OK:
@@ -76,11 +77,11 @@ int main(int argc, char ** argv)
 			cerr << argv[0] << " Error - An error occurred with the board!\n";
 			break;
 	}
+	*/
+	//cerr << "Final board state:\n";
+	//forfax.PrintBoard(cerr);
 
-	cerr << "Final board state:\n";
-	forfax.PrintBoard(cerr);
-
-	cerr << "Forfax is now exiting!\n";
+	//cerr << "Forfax is now exiting!\n";
 	
 	
 	exit(EXIT_SUCCESS);

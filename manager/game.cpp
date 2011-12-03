@@ -5,14 +5,14 @@ using namespace std;
 
 
 Game* Game::theGame = NULL;
+bool Game::gameCreated = false;
 
-Game::Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0)
+Game::Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard)
 {
-	static bool gameCreated = false;
+	gameCreated = false;
 	if (gameCreated)
 	{
-		if (log != NULL)
-			fprintf(log, "ERROR - Game has already been created!\n");
+		fprintf(stderr, "Game::Game - Error - Tried to create more than one Game!\n");
 		exit(EXIT_FAILURE);
 	}
 	gameCreated = true;
@@ -32,23 +32,61 @@ Game::Game(const char * redPath, const char * bluePath, const bool enableGraphic
 	if (strcmp(bluePath, "human") == 0)
 		blue = new Human_Controller(Piece::BLUE, graphicsEnabled);
 	else
-		blue = new AI_Controller(Piece::BLUE, redPath);
+		blue = new AI_Controller(Piece::BLUE, bluePath);
+
+
+}
+
+Game::Game(const char * fromFile, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard)
+{
+	gameCreated = false;
+	if (gameCreated)
+	{
+		fprintf(stderr, "Game::Game - Error - Tried to create more than one Game!\n");
+		exit(EXIT_FAILURE);
+	}
+	gameCreated = true;
+	Game::theGame = this;
+	signal(SIGPIPE, Game::HandleBrokenPipe);
+
+
+	if (graphicsEnabled && (!Graphics::Initialised()))
+			Graphics::Initialise("Stratego", theBoard.Width()*32, theBoard.Height()*32);
+
+	input = fopen(fromFile, "r");
+
+	red = new FileController(Piece::RED, input);
+	blue = new FileController(Piece::BLUE, input);
 
 
 }
 
 Game::~Game()
 {
-	fprintf(stderr, "Killing AI\n");
+	
 	delete red;
 	delete blue;
 
 	if (log != NULL && log != stdout && log != stderr)
 		fclose(log);
+
+	if (input != NULL && input != stdin)
+		fclose(input);
 }
 
 bool Game::Setup(const char * redName, const char * blueName)
 {
+
+	if (!red->Valid())
+	{
+		logMessage("Controller for Player RED is invalid!\n");
+	}
+	if (!blue->Valid())
+	{
+		logMessage("Controller for Player BLUE is invalid!\n");
+	}
+	if (!red->Valid() || !blue->Valid())
+		return false;
 
 	for (int y = 4; y < 6; ++y)
 	{
@@ -70,15 +108,13 @@ bool Game::Setup(const char * redName, const char * blueName)
 	{	
 		if (blueSetup != MovementResult::OK)
 		{
-			if (log != NULL)
-				fprintf(log, "BOTH players give invalid setup!\n");
+			logMessage("BOTH players give invalid setup!\n");
 			red->Message("ILLEGAL");
 			blue->Message("ILLEGAL");
 		}
 		else
 		{
-			if (log != NULL)
-				fprintf(log, "Player RED gave an invalid setup!\n");
+			logMessage("Player RED gave an invalid setup!\n");
 			red->Message("ILLEGAL");
 			blue->Message("DEFAULT");
 		}
@@ -86,12 +122,29 @@ bool Game::Setup(const char * redName, const char * blueName)
 	}
 	else if (blueSetup != MovementResult::OK)
 	{
-		if (log != NULL)
-			fprintf(log, "Player BLUE gave an invalid setup!\n");
+		logMessage("Player BLUE gave an invalid setup!\n");
 		red->Message("DEFAULT");
 		blue->Message("ILLEGAL");	
 		return false;
 	}
+
+	logMessage("%s RED SETUP\n", red->name.c_str());
+	for (int y=0; y < 4; ++y)
+	{
+		for (int x=0; x < theBoard.Width(); ++x)
+			logMessage("%c", Piece::tokens[(int)(theBoard.GetPiece(x, y)->type)]);
+		logMessage("\n");
+	}	
+
+	logMessage("%s BLUE SETUP\n", blue->name.c_str());
+	for (int y=0; y < 4; ++y)
+	{
+		for (int x=0; x < theBoard.Width(); ++x)
+			logMessage("%c", Piece::tokens[(int)(theBoard.GetPiece(x, theBoard.Height()-4 + y)->type)]);
+		logMessage("\n");
+	}	
+
+	
 	return true;
 
 }
@@ -151,7 +204,8 @@ void Game::HandleBrokenPipe(int sig)
 	
 	theGame->logMessage("SIGPIPE - Broken pipe (AI program may have segfaulted)\n");
 
-
+	if (Game::theGame->printBoard)
+		Game::theGame->theBoard.PrintPretty(stdout, Piece::BOTH);
 
 	if (Game::theGame->graphicsEnabled && theGame->log == stdout)
 	{
@@ -250,9 +304,19 @@ void Game::PrintEndMessage(const MovementResult & result)
 		case MovementResult::ERROR:
 			logMessage("Internal controller error - Unspecified ERROR\n");
 			break;
+		case MovementResult::DRAW:
+			logMessage("Game declared a draw after %d turns\n", turnCount);
+			break;
 
 	}
 
+	if (printBoard)
+	{
+		system("clear");
+		fprintf(stdout, "%d Final State\n", turnCount);
+		theBoard.PrintPretty(stdout, Piece::BOTH);
+		fprintf(stdout, "\n");
+	}
 	if (graphicsEnabled && log == stdout)
 	{
 		logMessage("CLOSE WINDOW TO EXIT\n");
@@ -294,8 +358,8 @@ MovementResult Game::Play()
 
 
 	red->Message("START");
-	logMessage("START");
-	while (Board::LegalResult(result))
+	//logMessage("START\n");
+	while (Board::LegalResult(result) && (turnCount < maxTurns || maxTurns < 0))
 	{
 
 		
@@ -309,6 +373,13 @@ MovementResult Game::Play()
 			break;
 		if (graphicsEnabled)
 			theBoard.Draw(reveal);
+		if (printBoard)
+		{
+			system("clear");
+			fprintf(stdout, "%d RED:\n", turnCount);
+			theBoard.PrintPretty(stdout, reveal);
+			fprintf(stdout, "\n\n");
+		}
 		Wait(stallTime);
 		
 		turn = Piece::BLUE;
@@ -325,9 +396,23 @@ MovementResult Game::Play()
 
 		if (graphicsEnabled)
 			theBoard.Draw(reveal);
+		if (printBoard)
+		{
+			system("clear");
+			fprintf(stdout, "%d BLUE:\n", turnCount);
+			theBoard.PrintPretty(stdout, reveal);
+			fprintf(stdout, "\n\n");
+		}
+
 		Wait(stallTime);
 		
 		++turnCount;
+	}
+
+	if ((maxTurns >= 0 && turnCount >= maxTurns) && result == MovementResult::OK)
+	{
+		result = MovementResult::DRAW;
+		turn = Piece::BOTH;
 	}
 
 	
@@ -354,4 +439,50 @@ int Game::logMessage(const char * format, ...)
 	va_end(ap);
 
 	return result;
+}
+
+MovementResult FileController::QuerySetup(const char * opponentName, std::string setup[])
+{
+
+	char c = fgetc(file);
+	name = "";
+	while (c != ' ')
+	{
+		name += c;
+		c = fgetc(file);
+	}
+
+	while (fgetc(file) != '\n');
+
+	for (int y = 0; y < 4; ++y)
+	{
+		setup[y] = "";
+		for (int x = 0; x < Game::theGame->theBoard.Width(); ++x)
+		{
+			setup[y] += fgetc(file);
+		}
+
+		if (fgetc(file) != '\n')
+		{
+			return MovementResult::BAD_RESPONSE;
+		}
+	}
+	return MovementResult::OK;
+
+	
+}
+
+MovementResult FileController::QueryMove(std::string & buffer)
+{
+	char buf[BUFSIZ];
+
+	fgets(buf, sizeof(buf), file);
+	char * s = (char*)(buf);
+	while (*s != ':' && *s != '\0')
+		++s;
+
+	s += 2;
+	
+	buffer = string(s);
+	return MovementResult::OK;
 }

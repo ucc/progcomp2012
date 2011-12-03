@@ -13,7 +13,8 @@
 class Game
 {
 	public:
-		Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime = 1.0, const bool allowIllegal=false, FILE * newLog = NULL, const Piece::Colour & newRevealed = Piece::BOTH);
+		Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime = 1.0, const bool allowIllegal=false, FILE * newLog = NULL, const Piece::Colour & newRevealed = Piece::BOTH, int maxTurns = 5000, const bool printBoard = false);
+		Game(const char * fromFile, const bool enableGraphics, double newStallTime = 1.0, const bool allowIllegal=false, FILE * newLog = NULL, const Piece::Colour & newRevealed = Piece::BOTH, int maxTurns = 5000, const bool printBoard = false);
 		virtual ~Game();
 
 		
@@ -32,10 +33,12 @@ class Game
 		int TurnCount() const {return turnCount;}
 
 		static Game * theGame;
-	private:
+	public:
 		int logMessage(const char * format, ...);
+		FILE * GetLogFile() const {return log;}
 		Controller * red;
 		Controller * blue;
+	private:
 		Piece::Colour turn;
 		
 	public:
@@ -48,10 +51,36 @@ class Game
 
 	private:
 		FILE * log;
+		
 		Piece::Colour reveal;
 		int turnCount;
+
+		static bool gameCreated;
+
+		FILE * input;
+
+		int maxTurns;
+		const bool printBoard;
 		
 };
+
+class FileController : public Controller
+{
+	public:
+		FileController(const Piece::Colour & newColour, FILE * newFile) : Controller(newColour, "file"), file(newFile) {}
+		virtual ~FileController() {}
+
+		virtual void Message(const char * string) {} //Don't send messages
+		virtual MovementResult QuerySetup(const char * opponentName, std::string setup[]);
+		virtual MovementResult QueryMove(std::string & buffer);
+		virtual bool Valid() const {return file != NULL;}
+
+	private:
+		FILE * file;
+
+
+};
+
 
 
 #endif //MAIN_H

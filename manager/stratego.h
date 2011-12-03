@@ -101,6 +101,7 @@ class Board
 		virtual ~Board(); //Destructor
 
 		void Print(FILE * stream, const Piece::Colour & reveal=Piece::BOTH); //Print board
+		void PrintPretty(FILE * stream, const Piece::Colour & reveal=Piece::BOTH); //Print board using colour
 		
 		void Draw(const Piece::Colour & reveal=Piece::BOTH); //Draw board
 		
@@ -117,7 +118,7 @@ class Board
 		
 		static bool LegalResult(const MovementResult & result)
 		{
-			return (result == MovementResult::OK || result == MovementResult::DIES || result == MovementResult::KILLS || result == MovementResult::BOTH_DIE);
+			return (result == MovementResult::OK || result == MovementResult::DIES || result == MovementResult::KILLS || result == MovementResult::BOTH_DIE || result == MovementResult::VICTORY || result == MovementResult::DRAW);
 		}	
 
 		MovementResult MovePiece(int x, int y, const Direction & direction, int multiplier=1,const Piece::Colour & colour=Piece::NONE); //Move piece from position in direction

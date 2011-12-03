@@ -12,7 +12,7 @@
 class Controller
 {
 	public:
-		Controller(const Piece::Colour & newColour) : colour(newColour) {}
+		Controller(const Piece::Colour & newColour, const char * newName = "no-name") : colour(newColour), name(newName) {}
 		virtual ~Controller() {}
 
 		MovementResult Setup(const char * opponentName);
@@ -26,8 +26,11 @@ class Controller
 
 		virtual MovementResult QuerySetup(const char * opponentName, std::string setup[]) = 0;
 		virtual MovementResult QueryMove(std::string & buffer) = 0;
+		virtual bool Valid() const {return true;}
 
 		const Piece::Colour colour; 
+
+		std::string name;
 
 
 };

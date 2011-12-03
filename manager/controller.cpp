@@ -51,7 +51,7 @@ MovementResult Controller::Setup(const char * opponentName)
 				usedUnits[(int)(type)]++;
 				if (usedUnits[type] > Piece::maxUnits[(int)type])
 				{
-					fprintf(stderr, "Too many units of type %c\n", Piece::tokens[(int)(type)]);
+					//fprintf(stderr, "Too many units of type %c\n", Piece::tokens[(int)(type)]);
 					return MovementResult::BAD_RESPONSE;
 				}
 				Game::theGame->theBoard.AddPiece(x, yStart+y, type, colour);
@@ -107,7 +107,7 @@ MovementResult Controller::MakeMove(string & buffer)
 	}	
 	else
 	{
-		fprintf(stderr, "BAD_RESPONSE \"%s\"\n", buffer.c_str());
+		//fprintf(stderr, "BAD_RESPONSE \"%s\"\n", buffer.c_str());
 		return MovementResult::BAD_RESPONSE; //Player gave bogus direction - it will lose by default.	
 	}
 

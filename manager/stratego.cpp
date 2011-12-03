@@ -92,7 +92,7 @@ Board::~Board()
 /**
  * Print textual representation of the board to a stream
  * @param stream - the stream to print information to
- * @param reveal - Pieces matching this colour will have their identify revealed, other pieces will be shown as '#' or '*' for RED or BLUE respectively.
+ * @param reveal - Pieces matching this colour will have their identify revealed, other pieces will be shown as '#'
  */
 void Board::Print(FILE * stream, const Piece::Colour & reveal)
 {
@@ -107,26 +107,89 @@ void Board::Print(FILE * stream, const Piece::Colour & reveal)
 			}
 			else if (piece->colour != Piece::NONE && (piece->colour == reveal || reveal == Piece::BOTH))
 			{
+
 				fprintf(stream, "%c", Piece::tokens[piece->type]);
+
+
 			}
 			else
 			{
 				switch (piece->colour)
 				{
 					case Piece::RED:
+					case Piece::BLUE:
 						fprintf(stream, "#");
 						break;
-					case Piece::BLUE:
-						fprintf(stream, "*");
-						break;
 					case Piece::NONE:
-						fprintf(stream, "+"); 
+						fprintf(stream, "+");
 						break;
 					case Piece::BOTH:
-						fprintf(stream, "$"); //Should never see these!
+						fprintf(stream, "$");
 						break;
 				}
 			}
+		}
+		fprintf(stream, "\n");
+	}
+	
+}
+
+/**
+ * Print textual representation of the board to a stream
+ * @param stream - the stream to print information to
+ * @param reveal - Pieces matching this colour will have their identify revealed, other pieces will be shown as '#'
+ */
+void Board::PrintPretty(FILE * stream, const Piece::Colour & reveal)
+{
+	for (int y=0; y < height; ++y)
+	{
+		for (int x=0; x < width; ++x)
+		{
+			Piece * piece = board[x][y];
+			if (piece == NULL)
+			{
+				fprintf(stream, ".");
+			}
+			else if (piece->colour != Piece::NONE && (piece->colour == reveal || reveal == Piece::BOTH))
+			{
+				switch (piece->colour)	
+				{
+					case Piece::RED:
+						fprintf(stream, "%c[%d;%d;%dm",0x1B,1,31,40);
+						break;
+					case Piece::BLUE:
+						fprintf(stream, "%c[%d;%d;%dm",0x1B,1,34,40);
+						break;
+					default:
+						break;
+				}
+				fprintf(stream, "%c", Piece::tokens[piece->type]);
+
+			}
+			else
+			{
+				switch (piece->colour)
+				{
+					case Piece::RED:
+						fprintf(stream, "%c[%d;%d;%dm",0x1B,1,31,41);
+
+						break;
+					case Piece::BLUE:
+						fprintf(stream, "%c[%d;%d;%dm",0x1B,1,34,44);
+						break;
+					case Piece::NONE:
+						fprintf(stream, "%c[%d;%d;%dm",0x1B,1,37,47);
+						break;
+					case Piece::BOTH:
+						//Should never see this
+						fprintf(stream, "%c[%d;%d;%dm",0x1B,1,33,43);
+						break;
+
+				}	
+				fprintf(stream, "#");
+				
+			}
+			fprintf(stream, "%c[%d;%d;%dm",0x1B,0,7,0);
 		}
 		fprintf(stream, "\n");
 	}

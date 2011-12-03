@@ -605,7 +605,7 @@ Forfax::Status Forfax::MakeMove()
 	//Print chosen move to stdout
 	cout << choice.piece->x << " " << choice.piece->y << " " << direction << "\n";
 
-	cerr << "\nForfax move " << choice.piece->x << " " << choice.piece->y << " " << direction << " [score = " << choice.score << "]\n";
+	//cerr << "\nForfax move " << choice.piece->x << " " << choice.piece->y << " " << direction << " [score = " << choice.score << "]\n";
 
 
 

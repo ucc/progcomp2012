@@ -9,7 +9,7 @@
 class Human_Controller : public Controller
 {
 	public:
-		Human_Controller(const Piece::Colour & newColour, const bool enableGraphics) : Controller(newColour), graphicsEnabled(enableGraphics) {}
+		Human_Controller(const Piece::Colour & newColour, const bool enableGraphics) : Controller(newColour, "human"), graphicsEnabled(enableGraphics) {}
 		virtual ~Human_Controller() {}
 
 		virtual MovementResult QuerySetup(const char * opponentName, std::string setup[]);
