@@ -2,27 +2,39 @@
 #define CONTROLLER_H
 
 #include "stratego.h"
-#include "program.h"
+#include <string>
 
 /**
- * Class to control an AI program for a game of Stratego
- * Inherits most features from the Program class
+ * Class to control a player for Stratego
+ * Abstract base class
  */
 
-class Controller : public Program
+class Controller
 {
 	public:
-		Controller(const Piece::Colour & newColour, const char * executablePath) : Program(executablePath), colour(newColour) {}
+		Controller(const Piece::Colour & newColour) : colour(newColour) {}
 		virtual ~Controller() {}
 
-		MovementResult Setup(const char * opponentName); //Requests the AI program for the initial positioning of its pieces.
+		MovementResult Setup(const char * opponentName);
 
-		MovementResult MakeMove(std::string & buffer); //Queries the AI program for a response to the state of Board::theBoard
+		MovementResult MakeMove(std::string & buffer);
 
-		const Piece::Colour colour; //Colour identifying the side of the AI program.
+
+
+		void Message(std::string & buffer) {Message(buffer.c_str());}
+		virtual void Message(const char * string) = 0;
+
+		virtual MovementResult QuerySetup(const char * opponentName, std::string setup[]) = 0;
+		virtual MovementResult QueryMove(std::string & buffer) = 0;
+
+		const Piece::Colour colour; 
 
 
 };
+
+
+
+
 
 #endif //CONTROLLER_H
 

@@ -1,4 +1,4 @@
-#include "common.h"
+
 
 #include "stratego.h"
 
@@ -7,19 +7,18 @@ using namespace std;
 /**
  * Static variables
  */
-Board Board::theBoard(10,10);
+
 //nothing, boulder, flag, spy, scout, miner, sergeant, lietenant, captain, major, colonel, general, marshal, bomb, error
-char  Piece::tokens[] = {'.','+','F','y','s','n','S','L','c','m','C','G','M','B','?'};
+char  Piece::tokens[] = {'.','*','F','s','9','8','7','6','5','4','3','2','1','B','?'};
 int Piece::maxUnits[] = {0,0,1,1,8,5,4,4,4,3,2,1,1,6,0};
 
 
 
-#ifdef GRAPHICS
-	Piece::TextureManager Piece::textures;
-#endif //GRAPHICS
+
+Piece::TextureManager Piece::textures;
 
 
-#ifdef GRAPHICS
+
 
 Piece::TextureManager::~TextureManager()
 {
@@ -42,7 +41,7 @@ Texture & Piece::TextureManager::operator[](const LUint & at)
 	}
 	return *(Array<Texture*>::operator[](at));
 }
-#endif //GRAPHICS
+
 
 /**
  * Gets the type of a piece, based off a character token
@@ -135,7 +134,7 @@ void Board::Print(FILE * stream, const Piece::Colour & reveal)
 }
 
 
-#ifdef GRAPHICS
+
 /**
  * Draw the board state to graphics
  * @param reveal - Pieces matching this colour will be revealed. All others will be shown as blank coloured squares.
@@ -144,7 +143,9 @@ void Board::Draw(const Piece::Colour & reveal)
 {
 	if (!Graphics::Initialised())
 	{
-		Graphics::Initialise("Stratego", width*32, height*32);
+		fprintf(stderr, "ERROR - Board::Draw called whilst graphics disabled!!!\n");
+		exit(EXIT_FAILURE);
+		
 	}
 
 	Graphics::ClearScreen();
@@ -170,10 +171,10 @@ void Board::Draw(const Piece::Colour & reveal)
 				switch (piece->colour)
 				{
 					case Piece::RED:
-						Piece::textures[(int)(Piece::BOULDER)].DrawColour(x*32,y*32,0,1, Piece::GetGraphicsColour(piece->colour));
+						Piece::textures[(int)(Piece::NOTHING)].DrawColour(x*32,y*32,0,1, Piece::GetGraphicsColour(piece->colour));
 						break;
 					case Piece::BLUE:
-						Piece::textures[(int)(Piece::BOULDER)].DrawColour(x*32,y*32,0,1, Piece::GetGraphicsColour(piece->colour));
+						Piece::textures[(int)(Piece::NOTHING)].DrawColour(x*32,y*32,0,1, Piece::GetGraphicsColour(piece->colour));
 						break;
 					case Piece::NONE:
 						Piece::textures[(int)(Piece::BOULDER)].DrawColour(x*32,y*32,0,1, Piece::GetGraphicsColour(piece->colour));
@@ -189,7 +190,6 @@ void Board::Draw(const Piece::Colour & reveal)
 	Graphics::UpdateScreen();
 	
 }
-#endif //GRAPHICS
 
 /**
  * Adds a piece to the board

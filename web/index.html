@@ -26,11 +26,12 @@
 <p> The manager program takes two executable paths, one to each of the AI programs to pit against each other. <p>
 <p> It first requests each program to print the setup of its pieces to stdout. Then the programs take turns (Red, then blue, etc) to move one piece. </p>
 <p> The first program is Red (top of the board), the second is Blue (bottom of the board). </p>
-<p> I have now added graphics, but you can disable them by commenting out the "#define GRAPHICS" in the file "common.h" </p>
-<p> EDIT: You also have to remove graphics.o from the Makefile dependencies, and there are probably other annoying things. Its probably easiest just to install the SDL and OpenGL libraries to be honest </p>
-
+<p> The manager program now has switches to enable/disable graphics and set the move speed of the match. </p>
+<p> Use "-g" to enable graphics (by default disabled) and "-t TIMEOUT" to set the move speed (default 0 (as fast as possible)). </p>
+<p> <b> This program now has a <a href="../manager/manual.txt"/>manual page</a> </b> </p>
 
 <h2> Messaging Protocol and Rules </h2>
+<p> <b> The rules are now also available in the <a href="../manager/manual.txt"/>manual page</a> of the manager program </b> </p>
 <h3> Setup </h3>
 <h4> Query </h4>
 <p> The manager program prints one line in the following format to each program: </p>
@@ -40,26 +41,32 @@
 <h4> Response </h4>
 <p> The AI program queried must print <i>four</i> (4) lines containing its initial setup. Each character represents a unit or empty space. The characters are as follows: </p>
 <p> </p>
+
+<p><b>Warning:</b> I have changed the characters from mostly letters to mostly digits, indicating the actual worth of a piece</p>
 <table border="1">
-<tr> <th>Rank</th> <th>Character</th> <th>Number</th> </tr>
-<tr> <td>Marshal</td> <td>M</td> <td>1</td> </tr>
-<tr> <td>General</td> <td>G</td> <td>1</td> </tr>
-<tr> <td>Colonel</td> <td>C</td> <td>2</td> </tr>
-<tr> <td>Major</td> <td>m</td> <td>3</td> </tr>
-<tr> <td>Captain</td> <td>C</td> <td>4</td> </tr>
-<tr> <td>Lietenant</td> <td>L</td> <td>4</td> </tr>
-<tr> <td>Sergeant</td> <td>S</td> <td>4</td> </tr>
-<tr> <td>Miner</td> <td>n</td> <td>5</td> </tr>
-<tr> <td>Scout</td> <td>s</td> <td>8</td> </tr>
-<tr> <td>Spy</td> <td>y</td> <td>1</td> </tr>
-<tr> <td>Bomb</td> <td>B</td> <td>6</td> </tr>
-<tr> <td>Flag</td> <td>F</td> <td>1</td> </tr>
+<tr> <th>Name</th> <th>Character</th>  <th> Number </th> <th> Notes </th> </tr>
+<tr> <td>Marshal</td> <td>1</td>  <td>1</td> <td> Dies if attacked by the Spy </td> </tr>
+<tr> <td>General</td> <td>2</td>  <td>1</td> <td> </td> </tr>
+<tr> <td>Colonel</td> <td>3</td>  <td>2</td> <td> </td> </tr>
+<tr> <td>Major</td> <td>4</td> <td>3</td> <td> </td> </tr>
+<tr> <td>Captain</td> <td>5</td> <td>4</td> <td> </td> </tr>
+<tr> <td>Lietenant</td> <td>6</td> <td>4</td> <td> </td> </tr>
+<tr> <td>Sergeant</td> <td>7</td> <td>4</td> <td> </td> </tr>
+<tr> <td>Miner</td> <td>8</td> <td>5</td> <td> Defuses Bombs and survives. </td> </tr>
+<tr> <td>Scout</td> <td>9</td> <td>8</td> <td> May move any number of times in a single direction. </td> </tr>
+<tr> <td>Spy </td> <td>s</td> <td>1</td> <td> If the Spy attacks the Marshal, the Marshal is destroyed. </td> </tr>
+<tr> <td>Bomb</td> <td>B</td> <td>6</td> <td> Immobile. Destroys both self and any unit that attacks the Bomb. </td> </tr>
+<tr> <td>Flag</td> <td>F</td> <td>1</td> <td> Immobile. Capture the opponent's flag to win. </td> </tr>
 <tr> <td>Unoccupied</td> <td>.</td> <td> </td> </tr> 
-<tr> <td>Obstacle</td> <td>+</td> <td> </td> </tr>
+<tr> <td>Obstacle</td> <td>*</td> <td> </td> </tr>
 </table> 
 <p> The AI program can't place any obstacles, and must at least place the Flag for its setup to be valid. </p>
 <p> RED will always occupy the top four rows of the board, and BLUE occupies the bottom four rows. </p>
 
+<p> All pieces except the Scout, Bomb and Flag can move 1 square horizontally or vertically (not diagonally). </p>
+<p> When two pieces of different ranks encounter each other, the piece with the highest rank (lowest numbered rank!) is the victor, unless a special rule applies. </p>
+<p> When two pieces of <i>equal</i> rank encounter each other, the victor is randomly chosen </p>
+<p> Pieces of the same colour may <i>not</i> pass through the same squares </p>
 
 <h3> Turns </h3>
 <h4> Query </h4>
@@ -90,6 +97,7 @@
 	<tr> <td> ILLEGAL </td> <td> The moving player attempted to make an illegal move, and has hence lost the game. The game will end shortly. </td> </tr>
 </table>
 <p> If printed, RANK1 and RANK2 indicate the ranks of the moved piece and the defending piece (the piece who occupied the destination square) respectively. </p>
+<p> Originally RANK1 and RANK2 were never printed, but when I actually tried to write an AI myself I got very annoyed at this restriction... indicating it was probably a bad idea :P </p>
 		
 
 <h4> Additional Turns </h4>
@@ -102,9 +110,10 @@
 <p> This is a description of the signals the AI programs recieve, in order:
 <ol>
 	<li> Previous turn's outcome (other player's move) OR "START" if it is the first turn </li>
-	<li> A WIDTH*HEIGHT grid indicating the board state, with the AI program's own pieces revealed </li>
+	<li> A BOARD_WIDTH*BOARD_HEIGHT grid indicating the board state, with the AI program's own pieces revealed </li>
 	<li> After the AI program makes a move, the outcome is printed to it, and the other program, which continues from step 1 </li>
 </ol>
+<p> I am considering removing Step 2, since <i>all</i> information needed for an AI to keep the board state is contained in the initial board state and then the movement result messages </p>
 
 <h3> End Game </h3>
 <h4> Query </h4>
@@ -129,11 +138,15 @@
 <p> It is up to the AI program to keep track of pieces. The manager program will only reveal the identity of the AI program's own pieces; the other player's pieces will be marked with * or # characters. </p>
 <p> In a traditional game, two pieces of equal value will both be destroyed in combat. Currently, only one piece is destroyed and the outcome is randomly chosen. </p>
 
-<h2> Example Program </h2>
-<p> I have written a spectacularly boring AI which randomly selects a unit, and then randomly selects a direction in which to move it. </p>
-<p> I should probably make a more interesting example if I want people to actually care about this. </p>
-
-<p> I am working on another AI, but things seem to die and explode every time I try to use it... </p>
+<h2> Example Programs </h2>
+<h3>"Dummy" AI</h3>
+<p> Dummy randomly moves pieces. It attempts to not make illegal moves (although sometimes it still does). </p>
+<h3>"Forfax" AI</h3>
+<p> Forfax iterates through all possible moves and allocates a score between 0 and 1 to each move based on how desirable the move is. It then selects the highest scoring move. </p>
+<p> Forfax is pretty terrible, but can beat the Dummy AI <i>most</i> of the time. </p>
+<p> It is possible Forfax can be greatly improved by altering the scoring algorithms. </p>
+<p> Since we don't want the Sample AIs to beat every entrance, I'm not really going to try and improve Forfax unless I get bored. </p>
+<p> If you are writing an AI in C++, Forfax already contains a lot of useful functions. </p>
 
 <h2> Longterm Scoring </h2>
 <p> I haven't started a system for pairing AI's and keeping track of scores and winners etc yet </p>

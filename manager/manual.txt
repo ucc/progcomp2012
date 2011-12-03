@@ -1,0 +1,155 @@
+NAME
+	stratego - Interface to manage games of stratego between AI programs and/or human players
+	
+WARNING
+	This program is still a work in progress. Consider it a Beta version.
+
+SYNOPSIS
+	stratego {[-girb] [-o= output_file ] [-t= stall_time] red_player blue_player | {-h | --help}}
+
+DESCRIPTION
+	stratego manages a game of Stratego. It stores the state of the board, and uses a simple protocol to interface with AI programs.
+	By itself, stratego does not "play" the game. An external AI program must be used. stratego is intended to be used for the testing of 
+	various AI strategies, written in any programming language. It will be used for the UCC Programming Competition 2012.
+
+	Unless -h, or --help is given, both red_player and blue_player must be supplied.
+
+	red_player
+		Should be either a path to an executable file which will control the Red player, or "human".
+		If set to "human", stratego will request the user to make moves for the Red player using stdin.
+		NOTES
+			1. There is no plan to support AI programs named "human". Deal with it.
+			2. As of writing, human players must use stdin. A graphical interface may be added later.
+
+	blue_player
+		As red_player, except for controlling the Blue player.
+	
+OPTIONS
+	-g
+		By default, graphics are disabled. If the -g switch is present, stratego will draw the game as it is played using OpenGL
+	-i
+		By default, stratego will exit if a move which is deemed "illegal" is made. If the -i switch is present, illegal moves will be ignored.
+		That is, the move will not be made (effectively the player making the illegal move loses a turn).
+	-r
+		By default, the identities of all pieces are shown. If the -r switch is present, and graphics are enabled, red pieces will be disguised.
+		If graphics are disabled, the -r switch has no effect.
+	-b
+		As -r, except blue pieces will be disguised.
+		NOTE: Both -r and -b may be used.
+	-o
+		By default, stratego is silent. If the -o switch is present, the result of each move is printed to a file. If output_file is "stdout"
+		then stdout will be used instead of a text file.
+	-t
+		By default, stratego executes moves as fast as they are recieved. If the -t switch is present, a delay of stall_time will be introduced
+		between each move.
+	-h, --help
+		If the -h switch is present, this page will be printed and stratego will exit.
+
+GAME RULES
+		Each player sets up 40 pieces on the Board. The pieces consist of the following:
+
+		Piece	Name		Rank	Number	Abilities
+		1	Marshal		1	1	Dies if attacked by Spy
+		2	General		2	1	
+		3	Colonel 	3	2	
+		4	Major		4	3	
+		5	Captain		5	4	
+		6	Lieutenant 	6	4
+		7	Sergeant   	7	4
+		8	Miner		8	5	Destroys Bombs without being killed
+		9	Scout		9	8	May move more through multiple empty squares
+		s	Spy		10	1	If the Spy attacks the Marshal, the Marshal dies
+		B	Bomb		NA	6	Immobile. If an enemy piece (except a Miner) encounters a Bomb, both pieces are destroyed
+		F	Flag		NA	1	Immobile. If any enemy piece encounters the Flag, the controlling player wins.
+
+		Pieces may move one square horizontally or vertically unless otherwise stated.
+		Pieces may not move through squares occupied by allied pieces.
+		Pieces may move into squares occupied by enemy pieces, in which case the piece with the lower rank (higher number) is destroyed.
+
+		Each player's pieces are hidden from the other player. When two pieces encounter each other, the ranks will be revealed.
+
+		The objective is to destroy all enemy pieces or capture the Flag.
+		
+
+PROTOCOL
+	In order to interface with stratego, an AI program must satisfy the following protocol. 
+	Each query is followed by a newline, and responses are expected to be followed with a newline.
+	The queries are recieved through stdin, and responses should be written to stdout.
+	
+	1. SETUP
+		QUERY: YOUR_COLOUR OPPONENT_ID BOARD_WIDTH BOARD_HEIGHT
+
+		RESPONSE: 4 lines, each of length BOARD_WIDTH, of characters. Each character represents a piece. The characters are shown above.
+
+	2. TURN
+		QUERY: START | CONFIRMATION
+			On the first turn, "START" is printed to the Red player.
+			On subsequent turns, the CONFIRMATION of the opponent's last turn is printed (see below).
+
+		RESPONSE: X Y DIRECTION [MULTIPLIER=1]
+			X and Y are the coords (starting from 0) of the piece to move
+			DIRECTION is either UP, DOWN, LEFT or RIGHT
+			MULTIPLIER is optional and only valid for units of type Scout. Scouts may move through any number of unblocked squares
+			in one direction.
+
+		CONFIRMATION: X Y DIRECTION [MULTIPLIER=1] OUTCOME
+			OUTCOME may be either OK, ILLEGAL, KILLS or DIES
+				OK - Move was successful
+				ILLEGAL - Move was not allowed. If stratego was not started with the -i switch, the game will end.
+				KILLS ATTACKER_RANK DEFENDER_RANK - The piece moved into an occupied square and killed the defender.
+				DIES ATTACKER_RANK DEFENDER_RANK - The piece moved into an occupied square and was killed by the defender.
+
+	3. END GAME
+		QUERY: VICTORY | DEFEAT | ILLEGAL | DEFAULT
+			VICTORY - This player won the game
+			DEFEAT - The other player won the game
+			ILLEGAL - Game ended because this player made a bad response or timed out
+				(NOTE: Even if the -i option is provided, the game may end with an ILLEGAL signal if a bad response is made)
+			DEFAULT - Game ended because the other player made a bad response.
+
+			No response is necessary; the program should exit or it will be sent a SIGKILL signal.
+	
+	4. TIMEOUTS
+		If a program fails to respond to a query within 2 (two) seconds, the game will end and that AI will be sent the ILLEGAL result.
+		Human players are not subject to the timeout restriction.
+		
+			
+
+EXIT/OUTPUT
+	If the game ends due to a player either winning, or making an illegal move, stratego will print one of the following result messages to stdout.
+
+	1.
+		WINNING_NAME WINNING_COLOUR TURNS
+	2.
+		DRAW TURNS
+		When the result was a draw
+
+	3.
+		NONE TURNS
+		When for some reason both the AI programs failed to respond or crashed.
+
+	stratego will then return exit code 0.
+
+	If an error occurs within stratego itself, an error message will be printed to stderr and return exit code 1.
+	If possible, stratego will print the message "QUIT" to both AI programs, and they should exit as soon as possible.
+	
+
+BUGS
+	There are no known bugs at this time. However, stratego is still a work in progress. Report a bug to the AUTHOR (see below).
+
+AUTHORS
+	Sam Moore (for the UCC Programming Competition 2012) <matches@ucc.asn.au>
+
+NOTES
+	0. This program is still a work in progress and subject to changes.
+	
+	1. UCC Programming Competition 2012 Description
+	   http://matches.ucc.asn.au/stratego/
+
+	2. UCC Programming Competition 2012 Git repository
+	   git://git.ucc.asn.au/progcomp2012.git
+
+ 
+	3. IRC Channel
+	   irc://irc.ucc.asn.au #progcomp
+	

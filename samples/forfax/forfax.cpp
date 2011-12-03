@@ -29,7 +29,7 @@ using namespace std;
  * NOTHING, BOULDER, FLAG, SPY, SCOUT, MINER, SERGEANT, LIETENANT, CAPTAIN, MAJOR, COLONEL, GENERAL, MARSHAL, BOMB, ERROR
  */
 
-char  Piece::tokens[] = {'.','+','F','y','s','n','S','L','c','m','C','G','M','B','?'};
+char  Piece::tokens[] = {'.','*','F','s','9','8','7','6','5','4','3','2','1','B','?'};
 
 
 /**
@@ -416,7 +416,7 @@ double Forfax::CombatSuccessChance(Piece * attacker, Piece * defender) const
  * TODO: Alter this to make it better
  * @param piece - The Piece to move
  * @param dir - The direction in which to move
- * @returns a number between 0 and 1, indicating how worthwhile the move is
+ * @returns a number between 0 and 1, indicating how worthwhile the move is, or a negative number (-1) if the move is illegal
  */
 double Forfax::MovementScore(Piece * piece, const Board::Direction & dir) const
 {
@@ -432,7 +432,7 @@ double Forfax::MovementScore(Piece * piece, const Board::Direction & dir) const
 	if (!board->ValidPosition(x2, y2) || !piece->Mobile())
 	{
 		
-		basevalue = 0; //No point attempting to move immobile units, or moving off the edges of the board
+		return -1; //No point attempting to move immobile units, or moving off the edges of the board
 	}
 	else if (board->Get(x2, y2) == NULL)
 	{
@@ -445,18 +445,22 @@ double Forfax::MovementScore(Piece * piece, const Board::Direction & dir) const
 		else
 		{
 			//Allocate score based on score of Combat with nearest enemy to the target square, decrease with distance between target square and the enemy
-			basevalue = 0.95*CombatScore(closestEnemy->x, closestEnemy->y, piece) - 0.2*(double)((double)(Board::NumberOfMoves(closestEnemy->x, closestEnemy->y, x2, y2))/(double)((max<int>(board->Width(), board->Height()))));
+			double multiplier = (double)(max<int>(board->Width(), board->Height()) - Board::NumberOfMoves(closestEnemy->x, closestEnemy->y, x2, y2)) / (double)(max<int>(board->Width(), board->Height()));
+
+			basevalue = CombatScore(closestEnemy->x, closestEnemy->y, piece)*multiplier*multiplier;
+
 		}
 		
 		
 	}
 	else if (board->Get(x2, y2)->colour != Piece::Opposite(piece->colour))
 	{
-		basevalue = 0; //The position is occupied by an ally, and so its pointless to try and move there
+		return -1; //The position is occupied by an ally, and so its pointless to try and move there
 	}
 	else 
 	{
 		basevalue = CombatScore(x2, y2, piece); //The position is occupied by an enemy; compute combat score
+		
 	}
 
 	if (basevalue > 0)
@@ -471,7 +475,7 @@ double Forfax::MovementScore(Piece * piece, const Board::Direction & dir) const
 	
 
 	if (x2 == piece->lastx && y2 == piece->lasty) //Hack which decreases score for backtracking moves
-		basevalue = basevalue/1.5;
+		basevalue = basevalue/100;
 
 	if (rand() % 10 == 0) //Hack which introduces some randomness by boosting one in every 10 scores
 		basevalue *= 4;
@@ -507,18 +511,18 @@ Forfax::Status Forfax::Setup()
 	if (strColour == "RED")
 	{
 		colour = Piece::RED;
-		cout <<  "FBmSsnsnBn\n";
-		cout << "BBCMccccyC\n";
-		cout << "LSGmnsBsSm\n";
-		cout << "sLSBLnLsss\n";
+		cout << "FB8sB479B8\n";
+		cout << "BB31555583\n";
+		cout << "6724898974\n";
+		cout << "967B669999\n";
 	}
 	else if (strColour == "BLUE")
 	{
 		colour = Piece::BLUE;
-		cout << "sLSBLnLsss\n";	
-		cout << "LSGmnsBsSm\n";
-		cout << "BBCMccccyC\n";
-		cout <<  "FBmSsnsnBn\n";		
+		cout << "967B669999\n";	
+		cout << "6724898974\n";
+		cout << "BB31555583\n";
+		cout << "FB8sB479B8\n";
 	}
 	else
 		return INVALID_QUERY;
@@ -601,7 +605,7 @@ Forfax::Status Forfax::MakeMove()
 	//Print chosen move to stdout
 	cout << choice.piece->x << " " << choice.piece->y << " " << direction << "\n";
 
-	
+	cerr << "\nForfax move " << choice.piece->x << " " << choice.piece->y << " " << direction << " [score = " << choice.score << "]\n";
 
 
 
@@ -621,8 +625,9 @@ Forfax::Status Forfax::MakeMove()
 Forfax::Status Forfax::InterpretMove()
 {
 	//Variables to store move information
-	int x; int y; string direction; string result = ""; int multiplier = 1; int attackerVal = (int)(Piece::BOMB); int defenderVal = (int)(Piece::BOMB);
-
+	int x; int y; string direction; string result = ""; int multiplier = 1; 
+	Piece::Type attackerRank = Piece::NOTHING;
+	Piece::Type defenderRank = Piece::NOTHING;
 
 	//Read in information from stdin
 	cin >> x; cin >> y; cin >> direction; cin >> result;
@@ -634,13 +639,15 @@ Forfax::Status Forfax::InterpretMove()
 		stringstream s(buf);
 		cin >> buf;
 		s.clear(); s.str(buf);
-		s >> attackerVal;
-
+		char temp;
+		s >> temp;
+		attackerRank = Piece::GetType(temp);
 
 		buf.clear();
 		cin >> buf;	
 		s.clear(); s.str(buf);
-		s >> defenderVal;
+		s >> temp;
+		defenderRank = Piece::GetType(temp);
 
 		
 	}
@@ -654,9 +661,8 @@ Forfax::Status Forfax::InterpretMove()
 	}
 
 
-	//Convert printed ranks into internal Piece::Type ranks
-	Piece::Type attackerRank = Piece::Type(Piece::BOMB - attackerVal);
-	Piece::Type defenderRank = Piece::Type(Piece::BOMB - defenderVal);
+
+	
 
 
 
@@ -910,7 +916,7 @@ double Forfax::VictoryScore(Piece * attacker, Piece * defender) const
 			return 0.9;
 	}
 	//Return average of normalised defender ranks
-	return max<double>(((defender->maxRank / Piece::BOMB) + (defender->minRank / Piece::BOMB))/2, 0.6);
+	return max<double>(((defender->maxRank / Piece::BOMB) + (defender->minRank / Piece::BOMB))/2, 1);
 }
 
 /**
@@ -964,7 +970,10 @@ double Forfax::DefeatScore(Piece * attacker, Piece * defender) const
 
 
 		if (totalRanks > 0)
-			result = (possibleRanks/totalRanks) - 0.8*(double)((double)(attacker->minRank) / (double)(Piece::BOMB));
+		{
+			double multiplier = ((double)(Piece::BOMB) - (double)(attacker->minRank)) / (double)(Piece::BOMB);
+			result = (possibleRanks/totalRanks) * multiplier * multiplier;
+		}
 
 		result += bonus / totalRanks;
 		

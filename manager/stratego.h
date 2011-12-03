@@ -6,10 +6,10 @@
 
 #include <assert.h>
 
-#ifdef GRAPHICS
+
 	#include "graphics.h"
 	#include "array.h"
-#endif //GRAPHICS
+
 
 /**
  * Contains classes for a game of Stratego
@@ -51,7 +51,6 @@ class Piece
 		const Type type; 
 		const Colour colour;
 
-	#ifdef GRAPHICS
 		public:
 
 			class TextureManager : public Graphics::TextureManager<LUint>, private Array<Texture*>
@@ -85,7 +84,7 @@ class Piece
 
 			
 			
-	#endif //GRAPHICS
+
 		
 };
 
@@ -102,9 +101,9 @@ class Board
 		virtual ~Board(); //Destructor
 
 		void Print(FILE * stream, const Piece::Colour & reveal=Piece::BOTH); //Print board
-		#ifdef GRAPHICS
-			void Draw(const Piece::Colour & reveal=Piece::BOTH); //Draw board
-		#endif //GRAPHICS
+		
+		void Draw(const Piece::Colour & reveal=Piece::BOTH); //Draw board
+		
 
 		bool AddPiece(int x, int y, const Piece::Type & newType, const Piece::Colour & newColour); //Add piece to board
 
@@ -122,7 +121,7 @@ class Board
 		}	
 
 		MovementResult MovePiece(int x, int y, const Direction & direction, int multiplier=1,const Piece::Colour & colour=Piece::NONE); //Move piece from position in direction
-		static Board theBoard;
+	
 
 		Piece::Colour winner;
 

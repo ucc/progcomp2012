@@ -34,17 +34,17 @@ int main(int argc, char ** argv)
 	assert(width == 10 && height == 10); //Can't deal with other sized boards
 	if (colour == "RED")
 	{
-		fprintf(stdout, "FBnyBmSsBn\n");
-		fprintf(stdout, "BBCMccccnC\n");
-		fprintf(stdout, "LSGmnsnsSm\n");
-		fprintf(stdout, "sLSBLLssss\n");
+		fprintf(stdout, "FB8sB479B8\n");
+		fprintf(stdout, "BB31555583\n");
+		fprintf(stdout, "6724898974\n");
+		fprintf(stdout, "967B669999\n");
 	}
 	else if (colour == "BLUE")
 	{
-		fprintf(stdout, "sLSBLLssss\n");
-		fprintf(stdout, "LSGmnsnsSm\n");		
-		fprintf(stdout, "BBCMccccnC\n");
-		fprintf(stdout, "FBnyBmSsBn\n");
+		fprintf(stdout, "967B669999\n");
+		fprintf(stdout, "6724898974\n");		
+		fprintf(stdout, "BB31555583\n");
+		fprintf(stdout, "FB8sB479B8\n");
 	}
 	else
 	{

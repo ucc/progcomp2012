@@ -1,112 +1,86 @@
-#include <sstream>
-
-#include "stratego.h"
-
 #include "controller.h"
+
+#include <sstream>
+#include "game.h"
 
 using namespace std;
 
 /**
- * Queries the AI program to setup its pieces
- * @param opponentName - string containing the name/id of the opponent AI program
- * @returns the result of the response
+ * Queries the player to setup their pieces
+ *
  */
+
 MovementResult Controller::Setup(const char * opponentName)
 {
-	int y;
-	switch (colour)
-	{
-		case Piece::RED:
-			assert(SendMessage("RED %s %d %d", opponentName, Board::theBoard.Width(), Board::theBoard.Height()));
-			y = 0;
-			
-			break;
-		case Piece::BLUE:
-			assert(SendMessage("BLUE %s %d %d", opponentName, Board::theBoard.Width(), Board::theBoard.Height()));
-			y = Board::theBoard.Height()-4;
-			
-			break;
-		case Piece::NONE:
-		case Piece::BOTH:
-			//Should never see this;
-			assert(false);
-			break;
-	}
+	string setup[4] = {"","","",""};
+	MovementResult query = this->QuerySetup(opponentName, setup);
+	if (query != MovementResult::OK)
+		return query;
 
+	
 
 	int usedUnits[(int)(Piece::BOMB)];
 	for (int ii = 0; ii <= (int)(Piece::BOMB); ++ii)
 		usedUnits[ii] = 0;
 
-	//The setup is spread across 4 lines of the board - blue at the top, red at the bottom. AI has 2.5s for each line.
-	
-
-
-
-	for (int ii=0; ii < 4; ++ii)
+	int yStart = 0;
+	switch (colour)
 	{
-		string line="";
-		if (!GetMessage(line, 2.5))
-		{
-			fprintf(stderr, "Timeout on setup\n");
+		case Piece::RED:
+			yStart = 0;
+			break;
+		case Piece::BLUE:
+			yStart = Game::theGame->theBoard.Height()-4;
+			break;
+		default:
+			return MovementResult::COLOUR_ERROR; 
+			break;
+	}
+
+
+	for (int y = 0; y < 4; ++y)
+	{
+		if ((int)setup[y].length() != Game::theGame->theBoard.Width())
 			return MovementResult::BAD_RESPONSE;
-		}
-		if ((int)(line.size()) != Board::theBoard.Width())
+
+		for (int x = 0; x < Game::theGame->theBoard.Width(); ++x)
 		{
-			fprintf(stderr, "Bad length of \"%s\" on setup\n", line.c_str());
-			return MovementResult::BAD_RESPONSE;
-		}
-	
-		for (int x = 0; x < (int)(line.size()); ++x)
-		{
-			Piece::Type type = Piece::GetType(line[x]);
+			Piece::Type type = Piece::GetType(setup[y][x]);
 			if (type != Piece::NOTHING)
 			{
-//fprintf(stderr, "x y %d %d\n", x, y+ii);
-//					fprintf(stderr, "Found unit of type '%c' (%d '%c') %d vs %d\n", line[x], (int)(type), Piece::tokens[(int)(type)], usedUnits[(int)(type)], Piece::maxUnits[(int)type]);
-		///			fprintf(stderr, "Marshal is %d '%c', flag is %d '%c'\n", (int)Piece::MARSHAL, Piece::tokens[(int)(Piece::MARSHAL)], (int)Piece::FLAG, Piece::tokens[(int)(Piece::FLAG)]);
-
-				usedUnits[(int)(type)] += 1;
+				usedUnits[(int)(type)]++;
 				if (usedUnits[type] > Piece::maxUnits[(int)type])
 				{
 					fprintf(stderr, "Too many units of type %c\n", Piece::tokens[(int)(type)]);
 					return MovementResult::BAD_RESPONSE;
 				}
-	
-				Board::theBoard.AddPiece(x, y+ii, type, colour);
+				Game::theGame->theBoard.AddPiece(x, yStart+y, type, colour);
 			}
-		}	
+		}
 	}
-
 	if (usedUnits[(int)Piece::FLAG] <= 0)
 	{
 		return MovementResult::BAD_RESPONSE; //You need to include a flag!
 	}
 
 	return MovementResult::OK;
+
 }
 
 
 /**
- * Queries the AI program to respond to a state of Board::theBoard
+ * Queries the player to respond to a state of Game::theGame->theBoard
+ * @param buffer String which is used to store the player's responses
  * @returns The result of the response and/or move if made
  */
 MovementResult Controller::MakeMove(string & buffer)
 {
-	
-	if (!Running())
-		return MovementResult::NO_MOVE; //AI has quit
-	Board::theBoard.Print(output, colour);
-
-	
-
-	
 	buffer.clear();
-	if (!GetMessage(buffer,2))
-	{
-		return MovementResult::NO_MOVE; //AI did not respond. It will lose by default.
-	}
+	MovementResult query = this->QueryMove(buffer);
+	if (query != MovementResult::OK)
+		return query;
 
+	
 	int x; int y; string direction="";
 	stringstream s(buffer);
 	s >> x;
@@ -134,19 +108,19 @@ MovementResult Controller::MakeMove(string & buffer)
 	else
 	{
 		fprintf(stderr, "BAD_RESPONSE \"%s\"\n", buffer.c_str());
-		return MovementResult::BAD_RESPONSE; //AI gave bogus direction - it will lose by default.	
+		return MovementResult::BAD_RESPONSE; //Player gave bogus direction - it will lose by default.	
 	}
 
 	int multiplier = 1;
 	if (s.peek() != EOF)
 		s >> multiplier;
-	MovementResult moveResult = Board::theBoard.MovePiece(x, y, dir, multiplier, colour);
+	MovementResult moveResult = Game::theGame->theBoard.MovePiece(x, y, dir, multiplier, colour);
 
 	s.clear(); 	s.str("");
 
 	//I stored the ranks in the wrong order; rank 1 is the marshal, 2 is the general etc...
 	//So I am reversing them in the output... great work
-	s << (Piece::BOMB - moveResult.attackerRank) << " " << (Piece::BOMB - moveResult.defenderRank);	
+	s << Piece::tokens[(int)(moveResult.attackerRank)] << " " << Piece::tokens[(int)(moveResult.defenderRank)];	
 	switch (moveResult.type)
 	{
 		case MovementResult::OK:
@@ -174,10 +148,9 @@ MovementResult Controller::MakeMove(string & buffer)
 		
 	}
 
-	if (!Board::LegalResult(moveResult))
+	if (Game::theGame->allowIllegalMoves && !Board::LegalResult(moveResult))
 		return MovementResult::OK; //HACK - Legal results returned!
 	else
 		return moveResult; 	
 
 }
-
