@@ -56,7 +56,7 @@ class Asmodeus:
 		self.board = []
 		self.units = []
 		if self.Setup():
-			while self.MakeMove():
+			while self.MoveCycle(): #derp derp derp
 				pass
 		
 
@@ -87,7 +87,7 @@ class Asmodeus:
 	def MakeMove(self):
 		#TODO: Over-ride this function in base classes with more complex move behaviour
 
-		#sys.stderr.write("Asmodeus MakeRandomMove here...\n")
+		#sys.stderr.write("Asmodeus MakeMove here...\n")
 		#self.debugPrintBoard()
 		while True:
 			if len(self.units) <= 0:
