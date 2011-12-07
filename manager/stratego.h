@@ -10,6 +10,7 @@
 	#include "graphics.h"
 	#include "array.h"
 
+#include <vector>
 
 /**
  * Contains classes for a game of Stratego
@@ -25,9 +26,10 @@ class Piece
 		typedef enum {ERROR=14,BOMB=13,MARSHAL=12, GENERAL=11, COLONEL=10, MAJOR=9, CAPTAIN=8, LIEUTENANT=7, SERGEANT=6, MINER=5, SCOUT=4, SPY=3, FLAG=2,BOULDER=1, NOTHING=0} Type; //Type basically defines how strong the piece is
 		
 
+	
 		typedef enum {RED=0, BLUE=1, NONE=2, BOTH=3} Colour; //Used for the allegiance of the pieces - terrain counts as NONE.
 
-		Piece(const Type & newType, const Colour & newColour) : type(newType), colour(newColour) {}
+		Piece(const Type & newType, const Colour & newColour) : type(newType), colour(newColour), beenRevealed(false) {}
 		virtual ~Piece() {}
 
 
@@ -46,10 +48,13 @@ class Piece
 
 		static Type GetType(char fromToken);
 
+		int PieceValue() const {if (type == BOMB || type == FLAG) {return 0;} return (int)(type) - (int)(SPY) + 1;}
 
 		//Attributes of the piece
 		const Type type; 
 		const Colour colour;
+
+		bool beenRevealed;
 
 		public:
 
@@ -118,8 +123,13 @@ class Board
 		
 		static bool LegalResult(const MovementResult & result)
 		{
-			return (result == MovementResult::OK || result == MovementResult::DIES || result == MovementResult::KILLS || result == MovementResult::BOTH_DIE || result == MovementResult::VICTORY || result == MovementResult::DRAW);
-		}	
+			return (result == MovementResult::OK || result == MovementResult::DIES || result == MovementResult::KILLS || result == MovementResult::BOTH_DIE || result == MovementResult::VICTORY || result == MovementResult::DRAW || result == MovementResult::DRAW_DEFAULT || result == MovementResult::SURRENDER);
+		}
+
+		static bool HaltResult(const MovementResult & result)
+		{
+			return (result == MovementResult::VICTORY || result == MovementResult::DRAW || result == MovementResult::DRAW_DEFAULT || result == MovementResult::SURRENDER || !LegalResult(result));
+		}		
 
 		MovementResult MovePiece(int x, int y, const Direction & direction, int multiplier=1,const Piece::Colour & colour=Piece::NONE); //Move piece from position in direction
 	
@@ -128,10 +138,15 @@ class Board
 
 		int Width() const {return width;}
 		int Height() const {return height;}
+
+		int MobilePieces(const Piece::Colour & colour) const;
+		int TotalPieceValue(const Piece::Colour & colour) const;
+		bool RemovePiece(Piece * piece);
 	private:
 		int width;
 		int height;
 		Piece ** * board;
+		std::vector<Piece*> pieces;
 };
 
 #endif //STRATEGO_H

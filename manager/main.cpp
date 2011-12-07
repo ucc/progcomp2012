@@ -10,9 +10,9 @@
 
 using namespace std;
 
-void CreateGame(int argc, char ** argv);
+Piece::Colour SetupGame(int argc, char ** argv);
 void DestroyGame();
-void PrintResults(const MovementResult & result);
+void PrintResults(const MovementResult & result, string & buffer);
 
 int main(int argc, char ** argv)
 {
@@ -26,22 +26,40 @@ int main(int argc, char ** argv)
 		exit(EXIT_SUCCESS);
 		
 	}
-	CreateGame(argc, argv);
-	if (Game::theGame == NULL)
-	{
-		fprintf(stderr, "ERROR: Couldn't create a game!\n");
-		exit(EXIT_FAILURE);
-	}
+	
 
-	MovementResult result = Game::theGame->Play();
+	Piece::Colour setupError = SetupGame(argc, argv);
+	MovementResult result = MovementResult::OK;
+	if (setupError == Piece::NONE)
+	{
+		result = Game::theGame->Play();
+	}
+	else
+	{
+		result = MovementResult::BAD_SETUP;
+		Game::theGame->ForceTurn(setupError);
+	}
+	
 	Game::theGame->PrintEndMessage(result);
-	PrintResults(result);
+
+	string buffer = "";
+	PrintResults(result, buffer);
+
+	//Message the AI's the quit message
+	Game::theGame->red->Message("QUIT " + buffer);
+	Game::theGame->blue->Message("QUIT " + buffer);
+
+	//Log the message
+	if (Game::theGame->GetLogFile() != stdout)
+		Game::theGame->logMessage("%s\n", buffer.c_str());
+
+	fprintf(stdout, "%s\n", buffer.c_str());
 
 	exit(EXIT_SUCCESS);
 	return 0;
 }
 
-void CreateGame(int argc, char ** argv)
+Piece::Colour SetupGame(int argc, char ** argv)
 {
 	char * red = NULL; char * blue = NULL; double timeout = 0.00001; bool graphics = false; bool allowIllegal = false; FILE * log = NULL;
 	Piece::Colour reveal = Piece::BOTH; char * inputFile = NULL; int maxTurns = 5000; bool printBoard = false;
@@ -54,7 +72,7 @@ void CreateGame(int argc, char ** argv)
 				case 't':
 					if (argc - ii <= 1)
 					{
-						fprintf(stderr, "Expected timeout value after -t switch!\n");
+						fprintf(stderr, "ARGUMENT_ERROR - Expected timeout value after -t switch!\n");
 						exit(EXIT_FAILURE);
 					}
 					timeout = atof(argv[ii+1]);
@@ -73,12 +91,12 @@ void CreateGame(int argc, char ** argv)
 				case 'o':
 					if (argc - ii <= 1)
 					{
-						fprintf(stderr, "Expected filename or \"stdout\" after -o switch!\n");
+						fprintf(stderr, "ARGUMENT_ERROR - Expected filename or \"stdout\" after -o switch!\n");
 						exit(EXIT_FAILURE);
 					}
 					if (log != NULL)
 					{
-						fprintf(stderr, "Expected at most ONE -o switch!\n");
+						fprintf(stderr, "ARGUMENT_ERROR - Expected at most ONE -o switch!\n");
 						exit(EXIT_FAILURE);
 					}
 					if (strcmp(argv[ii+1], "stdout") == 0)
@@ -105,10 +123,10 @@ void CreateGame(int argc, char ** argv)
 				case 'm':
 					if (argc - ii <= 1)
 					{
-						fprintf(stderr, "Expected max_turns value after -m switch!\n");
+						fprintf(stderr, "ARGUMENT_ERROR - Expected max_turns value after -m switch!\n");
 						exit(EXIT_FAILURE);
 					}
-					if (strcmp(argv[ii+1], "inf"))
+					if (strcmp(argv[ii+1], "inf") == 0)
 						maxTurns = -1;
 					else
 						maxTurns = atoi(argv[ii+1]);
@@ -117,12 +135,12 @@ void CreateGame(int argc, char ** argv)
 				case 'f':
 					if (argc - ii <= 1)
 					{
-						fprintf(stderr, "Expected filename after -f switch!\n");
+						fprintf(stderr, "ARGUMENT_ERROR - Expected filename after -f switch!\n");
 						exit(EXIT_FAILURE);
 					}
 					if (log != NULL)
 					{
-						fprintf(stderr, "Expected at most ONE -f switch!\n");
+						fprintf(stderr, "ARGUMENT_ERROR - Expected at most ONE -f switch!\n");
 						exit(EXIT_FAILURE);
 					}
 					red = (char*)("file");
@@ -144,7 +162,7 @@ void CreateGame(int argc, char ** argv)
 					}
 					else
 					{
-						fprintf(stderr, "Unrecognised switch \"%s\"...\n", argv[ii]);
+						fprintf(stderr, "ARGUMENT_ERROR - Unrecognised switch \"%s\"...\n", argv[ii]);
 						exit(EXIT_FAILURE);
 					}
 			}
@@ -158,67 +176,93 @@ void CreateGame(int argc, char ** argv)
 				blue = argv[ii];
 			else
 			{
-				fprintf(stderr, "Unexpected argument \"%s\"...\n", argv[ii]);
+				fprintf(stderr, "ARGUMENT_ERROR - Unexpected argument \"%s\"...\n", argv[ii]);
 				exit(EXIT_FAILURE);
 			}
 		}
 	}
 
+
+
 	if (inputFile == NULL)
 	{
+		if (red == NULL || blue == NULL) //Not enough arguments
+		{
+			fprintf(stderr, "ARGUMENT_ERROR - Did not recieve enough players (did you mean to use the -f switch?)\n");	
+			exit(EXIT_FAILURE);	
+		}
 		Game::theGame = new Game(red,blue, graphics, timeout, allowIllegal,log, reveal,maxTurns, printBoard);
 	}
 	else
 	{
 		Game::theGame = new Game(inputFile, graphics, timeout, allowIllegal,log, reveal,maxTurns, printBoard);
 	}
-	if (!Game::theGame->Setup(red, blue))
+
+	if (Game::theGame == NULL)
 	{
-		fprintf(stdout, "NONE %d\n",Game::theGame->TurnCount());
-		exit(EXIT_SUCCESS);
+		fprintf(stderr,"INTERNAL_ERROR - Error creating Game!\n");
+		exit(EXIT_FAILURE);
 	}
-	
 	atexit(DestroyGame);
+	
+	return Game::theGame->Setup(red, blue);
+	
 
 }
 
-void PrintResults(const MovementResult & result)
+void PrintResults(const MovementResult & result, string & buffer)
 {
-	Piece::Colour winner = Game::theGame->Turn();
-	if (Board::LegalResult(result))
+	stringstream s("");
+	switch (Game::theGame->Turn())
 	{
-		if (winner == Piece::BOTH)
-			winner = Piece::NONE;
-		else
+		case Piece::RED:
+			s << Game::theGame->red->name << " RED ";
+			break;
+		case Piece::BLUE:
+			s << Game::theGame->blue->name << " BLUE ";
+			break;
+		case Piece::BOTH:
+			s << "neither BOTH ";
+			break;
+		case Piece::NONE:
+			s << "neither NONE ";
+			break;
+	}
+
+	if (!Board::LegalResult(result) && result != MovementResult::BAD_SETUP)
+		s << "ILLEGAL ";
+	else if (!Board::HaltResult(result))
+		s << "INTERNAL_ERROR ";
+	else
+	{
+		switch (result.type)
 		{
-			if (winner == Piece::RED)
-				winner = Piece::BLUE;
-			else
-				winner = Piece::RED;
+			case MovementResult::VICTORY:
+				s <<  "VICTORY ";
+				break;
+			case MovementResult::SURRENDER:
+				s << "SURRENDER ";
+				break;
+			case MovementResult::DRAW:
+				s << "DRAW ";
+				break;
+			case MovementResult::DRAW_DEFAULT:
+				s << "DRAW_DEFAULT ";
+				break;
+			case MovementResult::BAD_SETUP:
+				s << "BOTH_ILLEGAL ";
+				break;	
+			default:
+				s << "INTERNAL_ERROR ";
+				break;	
 		}
 	}
 	
+	s << Game::theGame->TurnCount() << " " << Game::theGame->theBoard.TotalPieceValue(Piece::RED) << " " << Game::theGame->theBoard.TotalPieceValue(Piece::BLUE);
 
-	switch (winner)
-	{
-		case Piece::RED:
-			fprintf(stdout, "%s RED %d\n", Game::theGame->red->name.c_str(),Game::theGame->TurnCount());	
-			Game::theGame->logMessage("%s RED %d\n", Game::theGame->red->name.c_str(),Game::theGame->TurnCount());
-			break;
-		case Piece::BLUE:
-			fprintf(stdout, "%s BLUE %d\n", Game::theGame->blue->name.c_str(),Game::theGame->TurnCount());	
-			Game::theGame->logMessage("%s BLUE %d\n", Game::theGame->blue->name.c_str(),Game::theGame->TurnCount());
-			break;
-		case Piece::BOTH:
-			fprintf(stdout, "DRAW %d\n",Game::theGame->TurnCount());
-			Game::theGame->logMessage("DRAW %d\n",Game::theGame->TurnCount());	
-			break;
-		case Piece::NONE:
-			fprintf(stdout, "NONE %d\n",Game::theGame->TurnCount());	
-			Game::theGame->logMessage("NONE %d\n",Game::theGame->TurnCount());
-			break;
+	buffer = s.str();
+	
 
-	}
 }
 
 void DestroyGame()

@@ -22,8 +22,18 @@ using namespace std;
  */
 Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0)
 {
+	//See if file exists...
+	FILE * file = fopen(executablePath, "r");
+	if (file != NULL)
+	{
+		fclose(file);
+	}
+	else
+	{
+		pid = -1;
+		return;
+	}
 	
-
 	int readPipe[2]; int writePipe[2];
 	assert(pipe(readPipe) == 0);
 	assert(pipe(writePipe) == 0);
@@ -47,8 +57,8 @@ Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0
 
 
 		execl(executablePath, executablePath, (char*)(NULL)); ///Replace process with desired executable
-		fprintf(stderr, "Program::Program - Could not run program \"%s\"!\n", executablePath);
-		exit(EXIT_FAILURE); //We will probably have to terminate the whole program if this happens
+		//fprintf(stderr, "Program::Program - Could not run program \"%s\"!\n", executablePath);
+		//exit(EXIT_FAILURE); //We will probably have to terminate the whole program if this happens
 	}
 	else
 	{
@@ -69,17 +79,28 @@ Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0
  */
 Program::~Program()
 {
-	if (kill(pid, 0) == 0) //Check if the process created is still running...
+	if (Running()) //Check if the process created is still running...
 	{
 		fputc(EOF, output); //If it was, tell it to stop with EOF
-		usleep(500000); //Give it 1/2 a second to respond...
-		if (kill(pid, 0) == 0) //Check if its still running
+
+		TimerThread timer(2); //Wait for 2 seconds
+		timer.Start();		
+		while (!timer.Finished())
 		{
-			kill(pid, 9); //Slay the infidel mercilessly!
+			if (!Running())
+			{
+				timer.Stop();
+				break;
+			}
 		}
+		timer.Stop();
+		kill(pid, SIGKILL);
 	}
-	fclose(input);
-	fclose(output);
+	if (pid > 0)
+	{
+		fclose(input);
+		fclose(output);
+	}
 	
 }
 
@@ -95,7 +116,7 @@ Program::~Program()
  */
 bool Program::SendMessage(const char * print, ...)
 {
-	if (kill(pid, 0) != 0) //Is the process running...
+	if (!Running()) //Is the process running...
 		return false; 
 
 	va_list ap;
@@ -123,7 +144,7 @@ bool Program::SendMessage(const char * print, ...)
  */
 bool Program::GetMessage(string & buffer, double timeout)
 {
-	if (kill(pid, 0) != 0)
+	if (!Running())
 		return false;
 
 	assert(&buffer != NULL);
@@ -164,7 +185,7 @@ bool Program::GetMessage(string & buffer, double timeout)
  */
 bool Program::Running() const
 {
-	return (kill(pid,0) == 0);
+	return (pid > 0 && kill(pid,0) == 0);
 }
 
 

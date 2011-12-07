@@ -21,7 +21,7 @@ class Game
 
 		void Wait(double wait); 
 
-		bool Setup(const char * redName, const char * blueName);
+		Piece::Colour Setup(const char * redName, const char * blueName);
 		MovementResult Play();
 		void PrintEndMessage(const MovementResult & result);
 		
@@ -30,6 +30,7 @@ class Game
 		
 		
 		const Piece::Colour Turn() const {return turn;}
+		void ForceTurn(const Piece::Colour & newTurn) {turn = newTurn;}
 		int TurnCount() const {return turnCount;}
 
 		static Game * theGame;

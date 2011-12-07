@@ -80,6 +80,16 @@ MovementResult Controller::MakeMove(string & buffer)
 	if (query != MovementResult::OK)
 		return query;
 
+	if (buffer == "NO_MOVE")
+	{
+		buffer += " OK";
+		return MovementResult::OK;
+	}
+	if (buffer == "SURRENDER")
+	{
+		buffer += " OK";
+		return MovementResult::SURRENDER;
+	}
 	
 	int x; int y; string direction="";
 	stringstream s(buffer);
@@ -149,7 +159,7 @@ MovementResult Controller::MakeMove(string & buffer)
 	}
 
 	if (Game::theGame->allowIllegalMoves && !Board::LegalResult(moveResult))
-		return MovementResult::OK; //HACK - Legal results returned!
+		return MovementResult::OK; //HACK - Illegal results returned as legal!
 	else
 		return moveResult; 	
 

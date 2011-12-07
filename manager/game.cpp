@@ -74,7 +74,16 @@ Game::~Game()
 		fclose(input);
 }
 
-bool Game::Setup(const char * redName, const char * blueName)
+/**
+ * Attempts to setup the board and controllers
+ * @param redName the name of the red AI
+ * @param blueName the name of the blue AI
+ * @returns A colour, indicating if there were any errors
+	Piece::NONE indicates no errors
+	Piece::BOTH indicates errors with both AI
+	Piece::RED / Piece::BLUE indicates an error with only one of the two AI
+ */
+Piece::Colour Game::Setup(const char * redName, const char * blueName)
 {
 
 	if (!red->Valid())
@@ -85,8 +94,16 @@ bool Game::Setup(const char * redName, const char * blueName)
 	{
 		logMessage("Controller for Player BLUE is invalid!\n");
 	}
-	if (!red->Valid() || !blue->Valid())
-		return false;
+	if (!red->Valid())
+	{
+		if (!blue->Valid())
+			return Piece::BOTH;
+		return Piece::RED;
+	}
+	else if (!blue->Valid())
+	{
+		return Piece::BLUE;
+	}
 
 	for (int y = 4; y < 6; ++y)
 	{
@@ -104,35 +121,38 @@ bool Game::Setup(const char * redName, const char * blueName)
 	MovementResult redSetup = red->Setup(blueName);
 	MovementResult blueSetup = blue->Setup(redName);
 
+
+	Piece::Colour result = Piece::NONE;
 	if (redSetup != MovementResult::OK)
 	{	
 		if (blueSetup != MovementResult::OK)
 		{
 			logMessage("BOTH players give invalid setup!\n");
-			red->Message("ILLEGAL");
-			blue->Message("ILLEGAL");
+			result = Piece::BOTH;
 		}
 		else
 		{
 			logMessage("Player RED gave an invalid setup!\n");
-			red->Message("ILLEGAL");
-			blue->Message("DEFAULT");
+			result = Piece::RED;
 		}
-		return false;
+		
 	}
 	else if (blueSetup != MovementResult::OK)
 	{
 		logMessage("Player BLUE gave an invalid setup!\n");
-		red->Message("DEFAULT");
-		blue->Message("ILLEGAL");	
-		return false;
+		result = Piece::BLUE;
 	}
 
 	logMessage("%s RED SETUP\n", red->name.c_str());
 	for (int y=0; y < 4; ++y)
 	{
 		for (int x=0; x < theBoard.Width(); ++x)
-			logMessage("%c", Piece::tokens[(int)(theBoard.GetPiece(x, y)->type)]);
+		{
+			if (theBoard.GetPiece(x, y) != NULL)
+				logMessage("%c", Piece::tokens[(int)(theBoard.GetPiece(x, y)->type)]);
+			else
+				logMessage(".");
+		}
 		logMessage("\n");
 	}	
 
@@ -145,7 +165,7 @@ bool Game::Setup(const char * redName, const char * blueName)
 	}	
 
 	
-	return true;
+	return result;
 
 }
 
@@ -241,18 +261,25 @@ void Game::HandleBrokenPipe(int sig)
 
 void Game::PrintEndMessage(const MovementResult & result)
 {
-	if (turn == Piece::RED)
+	if (turnCount == 0)
 	{
-		logMessage("Game ends on RED's turn - REASON: ");	
-	}
-	else if (turn == Piece::BLUE)
-	{
-		logMessage("Game ends on BLUE's turn - REASON: ");
+		logMessage("Game ends in the SETUP phase - REASON: ");
 	}
 	else
 	{
-		logMessage("Game ends on ERROR's turn - REASON: ");
+		if (turn == Piece::RED)
+		{
+			logMessage("Game ends on RED's turn - REASON: ");	
+		}
+		else if (turn == Piece::BLUE)
+		{
+			logMessage("Game ends on BLUE's turn - REASON: ");
+		}
+		else
+		{
+			logMessage("Game ends on ERROR's turn - REASON: ");
 			
+		}
 	}
 	switch (result.type)
 	{
@@ -287,7 +314,7 @@ void Game::PrintEndMessage(const MovementResult & result)
 			logMessage("Selected unit cannot move that way\n");
 			break;
 		case MovementResult::POSITION_FULL:
-			logMessage("Attempted move into square occupied by allied piece\n");
+			logMessage("Attempted move into square occupied by neutral or allied piece\n");
 			break;
 		case MovementResult::VICTORY:
 			logMessage("Captured the flag\n");
@@ -304,8 +331,31 @@ void Game::PrintEndMessage(const MovementResult & result)
 		case MovementResult::ERROR:
 			logMessage("Internal controller error - Unspecified ERROR\n");
 			break;
-		case MovementResult::DRAW:
+		case MovementResult::DRAW_DEFAULT:
 			logMessage("Game declared a draw after %d turns\n", turnCount);
+			break;
+		case MovementResult::DRAW:
+			logMessage("Game declared a draw because neither player has mobile pieces\n");
+			break;
+		case MovementResult::SURRENDER:
+			logMessage("This player has surrendered!\n");
+			break;
+		case MovementResult::BAD_SETUP:
+			switch (turn)
+			{
+				case Piece::RED:
+					logMessage("An illegal setup was made by RED\n");
+					break;
+				case Piece::BLUE:
+					logMessage("An illegal setup was made by BLUE\n");
+					break;
+				case Piece::BOTH:
+					logMessage("An illegal setup was made by BOTH players\n");
+					break;
+				case Piece::NONE:
+					logMessage("Unknown internal error.\n");
+					break;
+			}
 			break;
 
 	}
@@ -350,7 +400,7 @@ void Game::PrintEndMessage(const MovementResult & result)
 
 MovementResult Game::Play()
 {
-	
+
 	MovementResult result = MovementResult::OK;
 	turnCount = 1;
 	string buffer;
@@ -359,7 +409,7 @@ MovementResult Game::Play()
 
 	red->Message("START");
 	//logMessage("START\n");
-	while (Board::LegalResult(result) && (turnCount < maxTurns || maxTurns < 0))
+	while (!Board::HaltResult(result) && (turnCount < maxTurns || maxTurns < 0))
 	{
 
 		
@@ -369,7 +419,7 @@ MovementResult Game::Play()
 		red->Message(buffer);
 		blue->Message(buffer);
 		logMessage( "%s\n", buffer.c_str());
-		if (!Board::LegalResult(result))
+		if (Board::HaltResult(result))
 			break;
 		if (graphicsEnabled)
 			theBoard.Draw(reveal);
@@ -389,7 +439,7 @@ MovementResult Game::Play()
 		red->Message(buffer);
 		logMessage( "%s\n", buffer.c_str());
 
-		if (!Board::LegalResult(result))
+		if (Board::HaltResult(result))
 			break;
 
 		
@@ -406,13 +456,15 @@ MovementResult Game::Play()
 
 		Wait(stallTime);
 		
+		if (theBoard.MobilePieces(Piece::BOTH) == 0)
+			result = MovementResult::DRAW;
+
 		++turnCount;
 	}
 
 	if ((maxTurns >= 0 && turnCount >= maxTurns) && result == MovementResult::OK)
 	{
-		result = MovementResult::DRAW;
-		turn = Piece::BOTH;
+		result = MovementResult::DRAW_DEFAULT;
 	}
 
 	

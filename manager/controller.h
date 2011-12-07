@@ -21,7 +21,7 @@ class Controller
 
 
 
-		void Message(std::string & buffer) {Message(buffer.c_str());}
+		void Message(const std::string & buffer) {Message(buffer.c_str());}
 		virtual void Message(const char * string) = 0;
 
 		virtual MovementResult QuerySetup(const char * opponentName, std::string setup[]) = 0;

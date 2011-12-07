@@ -65,7 +65,7 @@ Piece::Type Piece::GetType(char fromToken)
  * @param newWidth - the width of the board
  * @param newHeight - the height of the board
  */
-Board::Board(int newWidth, int newHeight) : winner(Piece::NONE), width(newWidth), height(newHeight), board(NULL)
+Board::Board(int newWidth, int newHeight) : winner(Piece::NONE), width(newWidth), height(newHeight), board(NULL), pieces()
 {
 	board = new Piece**[width];
 	for (int x=0; x < width; ++x)
@@ -269,6 +269,8 @@ bool Board::AddPiece(int x, int y, const Piece::Type & newType, const Piece::Col
 
 	Piece * piece = new Piece(newType, newColour);
 	board[x][y] = piece;
+
+	pieces.push_back(piece);
 	return true;
 }
 
@@ -374,7 +376,7 @@ MovementResult Board::MovePiece(int x, int y, const Direction & direction, int m
 		{
 			if (target->type == Piece::MINER)
 			{
-
+				RemovePiece(defender);
 				delete defender;
 				board[x][y] = NULL;
 				board[x2][y2] = target;
@@ -382,6 +384,8 @@ MovementResult Board::MovePiece(int x, int y, const Direction & direction, int m
 			}
 			else
 			{
+				RemovePiece(defender);
+				RemovePiece(target);
 				delete defender;
 				delete target;
 				board[x][y] = NULL;
@@ -391,6 +395,7 @@ MovementResult Board::MovePiece(int x, int y, const Direction & direction, int m
 		}
 		else if (defender->type == Piece::MARSHAL && target->type == Piece::SPY)
 		{
+			RemovePiece(defender);
 			delete defender;
 			board[x][y] = NULL;
 			board[x2][y2] = target;
@@ -398,6 +403,7 @@ MovementResult Board::MovePiece(int x, int y, const Direction & direction, int m
 		}
 		else if (target->operator > (*defender))
 		{
+			RemovePiece(defender);
 			delete defender;
 			board[x][y] = NULL;
 			board[x2][y2] = target;
@@ -405,6 +411,7 @@ MovementResult Board::MovePiece(int x, int y, const Direction & direction, int m
 		}
 		else if (target->operator==(*defender) && rand() % 2 == 0)
 		{
+			RemovePiece(defender);
 			delete defender;
 			board[x][y] = NULL;
 			board[x2][y2] = target;	
@@ -412,6 +419,7 @@ MovementResult Board::MovePiece(int x, int y, const Direction & direction, int m
 		}
 		else
 		{
+			RemovePiece(target);
 			delete target;
 			board[x][y] = NULL;
 			return MovementResult(MovementResult::DIES, attackerType, defenderType);
@@ -424,5 +432,77 @@ MovementResult Board::MovePiece(int x, int y, const Direction & direction, int m
 	return MovementResult(MovementResult::OK);
 }	
 
+/**
+ * Removes a piece from the board
+ * @param piece The piece to remove
+ * @returns true iff the piece actually existed
+ */
+bool Board::RemovePiece(Piece * piece)
+{
+	bool result = false;
+	for (int x = 0; x < width; ++x)
+	{
+		for (int y = 0; y < height; ++y)	
+		{
+			if (board[x][y] == piece)
+			{
+				result = true;
+				board[x][y] = NULL;
+			}
+		}
+	}
+
+	vector<Piece*>::iterator i = pieces.begin();
+	while (i != pieces.end())
+	{
+		if ((*i) == piece)
+		{
+			i = pieces.erase(i);
+			result = true;
+			continue;
+		}
+		++i;
+	}
+	return result;
+}
+
+/**
+ * Returns the total value of pieces belonging to colour
+ * @param colour the colour
+ * @returns the total value of pieces belonging to colour.
+ *	(Redundant repetition <3)
+ */
+int Board::TotalPieceValue(const Piece::Colour & colour) const
+{
+	int result = 0;
+	for (vector<Piece*>::const_iterator i = pieces.begin(); i != pieces.end(); ++i)
+	{
+		if ((*i)->colour == colour || colour == Piece::BOTH)
+		{
+			result += (*i)->PieceValue();
+		}
+	}
+	return result;
+}
+
+/**
+ * Returns the total number of mobile pieces belonging to colour
+ * @param colour the colour
+ * @returns the total value of mobile pieces belonging to colour.
+ *	(Redundant repetition <3)
+ */
+int Board::MobilePieces(const Piece::Colour & colour) const
+{
+	int result = 0;
+	for (vector<Piece*>::const_iterator i = pieces.begin(); i != pieces.end(); ++i)
+	{
+		if ((*i)->colour == colour || colour == Piece::BOTH)
+		{
+			if ((*i)->type <= Piece::MARSHAL && (*i)->type >= Piece::SPY)
+				result++;
+		}
+	}
+	return result;
+}
 
 

@@ -32,6 +32,7 @@ class Program
 
 	private:
 		pid_t pid; //Process ID of the program wrapped
+		
 };
 
 #endif //PROGRAM_H
