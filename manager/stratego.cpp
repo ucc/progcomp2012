@@ -202,7 +202,7 @@ void Board::PrintPretty(FILE * stream, const Piece::Colour & reveal)
  * Draw the board state to graphics
  * @param reveal - Pieces matching this colour will be revealed. All others will be shown as blank coloured squares.
  */
-void Board::Draw(const Piece::Colour & reveal)
+void Board::Draw(const Piece::Colour & reveal, bool showRevealed)
 {
 	if (!Graphics::Initialised())
 	{
@@ -223,7 +223,8 @@ void Board::Draw(const Piece::Colour & reveal)
 				//Don't display anything
 
 			}
-			else if (piece->colour != Piece::NONE && (piece->colour == reveal || reveal == Piece::BOTH))
+			else if ((piece->colour != Piece::NONE && (piece->colour == reveal || reveal == Piece::BOTH))
+					|| (piece->beenRevealed && showRevealed))
 			{
 				//Display the piece
 				Piece::textures[(int)(piece->type)].DrawColour(x*32,y*32,0,1, Piece::GetGraphicsColour(piece->colour));
@@ -360,6 +361,9 @@ MovementResult Board::MovePiece(int x, int y, const Direction & direction, int m
 	}
 	else if (defender->colour != target->colour)
 	{
+		defender->beenRevealed = true;
+		target->beenRevealed = true;
+
 		Piece::Type defenderType = defender->type;
 		Piece::Type attackerType = target->type;
 

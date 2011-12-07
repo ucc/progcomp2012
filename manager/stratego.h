@@ -108,7 +108,7 @@ class Board
 		void Print(FILE * stream, const Piece::Colour & reveal=Piece::BOTH); //Print board
 		void PrintPretty(FILE * stream, const Piece::Colour & reveal=Piece::BOTH); //Print board using colour
 		
-		void Draw(const Piece::Colour & reveal=Piece::BOTH); //Draw board
+		void Draw(const Piece::Colour & reveal=Piece::BOTH, bool showRevealed = true); //Draw board
 		
 
 		bool AddPiece(int x, int y, const Piece::Type & newType, const Piece::Colour & newColour); //Add piece to board

@@ -87,6 +87,8 @@ class BasicAI:
 		""" Implements Setup part of protocol. Always uses the same setup. Override to create custom setups """
 		#sys.stderr.write("BasicAI Setup here...\n");
 		setup = sys.stdin.readline().split(' ')
+		if len(setup) != 4:
+			sys.stderr.write("BasicAI setup fails, expected 4 tokens, got " + str(len(setup)) + " "+str(setup) + "\n")
 		self.colour = setup[0]
 		self.opponentName = setup[1]
 		self.width = int(setup[2])

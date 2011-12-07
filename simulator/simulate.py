@@ -84,7 +84,7 @@ if len(agents) == 0:
 if verbose:
 	print "Total: " + str(len(agents)) + " valid agents found (From "+str(len(agentNames))+" possibilities)"
 	print ""
-	print "Commencing ROUND " + str(roundNumber) + " combat! ("+str(nGames)+" games per pairing)"
+	print "Commencing ROUND " + str(roundNumber) + " combat! This could take a while... ("+str(nGames)+" games per pairing * " + str(len(agents) * len(agents)-1) + " pairings = " + str((len(agents) * len(agents)-1) * nGames) + " games)"
 
 
 normalGames = 0

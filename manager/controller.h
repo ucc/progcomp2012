@@ -19,7 +19,7 @@ class Controller
 
 		MovementResult MakeMove(std::string & buffer);
 
-
+		virtual bool HumanController() const {return false;} //Hacky... overrides in human_controller... avoids having to use run time type info
 
 		void Message(const std::string & buffer) {Message(buffer.c_str());}
 		virtual void Message(const char * string) = 0;

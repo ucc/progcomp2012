@@ -27,7 +27,7 @@ class Game
 		
 
 		static void HandleBrokenPipe(int signal);
-		
+		void ReadUserCommand();
 		
 		const Piece::Colour Turn() const {return turn;}
 		void ForceTurn(const Piece::Colour & newTurn) {turn = newTurn;}
@@ -53,7 +53,8 @@ class Game
 	private:
 		FILE * log;
 		
-		Piece::Colour reveal;
+	public:
+		const Piece::Colour reveal;
 		int turnCount;
 
 		static bool gameCreated;

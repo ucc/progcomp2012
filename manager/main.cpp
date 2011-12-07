@@ -75,7 +75,10 @@ Piece::Colour SetupGame(int argc, char ** argv)
 						fprintf(stderr, "ARGUMENT_ERROR - Expected timeout value after -t switch!\n");
 						exit(EXIT_FAILURE);
 					}
-					timeout = atof(argv[ii+1]);
+					if (strcmp(argv[ii+1], "inf") == 0)
+						timeout = -1;
+					else
+						timeout = atof(argv[ii+1]);
 					++ii;
 					break;
 				case 'g':

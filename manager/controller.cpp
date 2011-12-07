@@ -158,9 +158,20 @@ MovementResult Controller::MakeMove(string & buffer)
 		
 	}
 
-	if (Game::theGame->allowIllegalMoves && !Board::LegalResult(moveResult))
-		return MovementResult::OK; //HACK - Illegal results returned as legal!
-	else
-		return moveResult; 	
+	if (!Board::LegalResult(moveResult))
+	{
+		if (Game::theGame->allowIllegalMoves)
+			return MovementResult::OK; //HACK - Illegal results returned as legal! (Move not made)
+		else if (this->HumanController()) //Cut human controllers some slack and let them try again...
+		{
+			//Yes, checking type of object is "not the C++ way"
+			//	But sometimes its bloody useful to know!!!
+			Message("Bad move: \'" + buffer + "\' <- Please try again!");
+			buffer = "";
+			return this->MakeMove(buffer);
+		}
+	}
+
+	return moveResult; 	
 
 }

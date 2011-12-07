@@ -404,14 +404,34 @@ MovementResult Game::Play()
 	MovementResult result = MovementResult::OK;
 	turnCount = 1;
 	string buffer;
+
+	Piece::Colour toReveal = reveal;
+	
+	
 	
 
 
 	red->Message("START");
-	//logMessage("START\n");
+	
+
+
 	while (!Board::HaltResult(result) && (turnCount < maxTurns || maxTurns < 0))
 	{
+		if (red->HumanController())
+			toReveal = Piece::RED;
+		if (printBoard)
+		{
+			system("clear");
+			if (turnCount == 0)
+				fprintf(stdout, "START:\n");
+			else
+				fprintf(stdout, "%d BLUE:\n", turnCount);
+			theBoard.PrintPretty(stdout, toReveal);
+			fprintf(stdout, "\n\n");
+		}
 
+		if (graphicsEnabled)
+			theBoard.Draw(toReveal);
 		
 		turn = Piece::RED;
 		logMessage( "%d RED: ", turnCount);
@@ -421,16 +441,25 @@ MovementResult Game::Play()
 		logMessage( "%s\n", buffer.c_str());
 		if (Board::HaltResult(result))
 			break;
-		if (graphicsEnabled)
-			theBoard.Draw(reveal);
+
+		if (stallTime > 0)
+			Wait(stallTime);
+		else
+			ReadUserCommand();
+
+		if (blue->HumanController())
+			toReveal = Piece::BLUE;
 		if (printBoard)
 		{
 			system("clear");
 			fprintf(stdout, "%d RED:\n", turnCount);
-			theBoard.PrintPretty(stdout, reveal);
+			theBoard.PrintPretty(stdout, toReveal);
 			fprintf(stdout, "\n\n");
 		}
-		Wait(stallTime);
+		if (graphicsEnabled)
+			theBoard.Draw(toReveal);
+
+		
 		
 		turn = Piece::BLUE;
 		logMessage( "%d BLU: ", turnCount);
@@ -444,18 +473,13 @@ MovementResult Game::Play()
 
 		
 
-		if (graphicsEnabled)
-			theBoard.Draw(reveal);
-		if (printBoard)
-		{
-			system("clear");
-			fprintf(stdout, "%d BLUE:\n", turnCount);
-			theBoard.PrintPretty(stdout, reveal);
-			fprintf(stdout, "\n\n");
-		}
-
-		Wait(stallTime);
 		
+
+		if (stallTime > 0)
+			Wait(stallTime);
+		else
+			ReadUserCommand();
+	
 		if (theBoard.MobilePieces(Piece::BOTH) == 0)
 			result = MovementResult::DRAW;
 
@@ -491,6 +515,20 @@ int Game::logMessage(const char * format, ...)
 	va_end(ap);
 
 	return result;
+}
+
+/**
+ * Waits for a user command
+ * Currently ignores the command.
+ */
+void Game::ReadUserCommand()
+{
+	fprintf(stdout, "Waiting for user to press enter...\n");
+	string command("");
+	for (char c = fgetc(stdin); c != '\n' && (int)(c) != EOF; c = fgetc(stdin))
+	{
+		command += c;
+	}
 }
 
 MovementResult FileController::QuerySetup(const char * opponentName, std::string setup[])
@@ -538,3 +576,5 @@ MovementResult FileController::QueryMove(std::string & buffer)
 	buffer = string(s);
 	return MovementResult::OK;
 }
+
+

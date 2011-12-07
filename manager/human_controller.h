@@ -12,9 +12,10 @@ class Human_Controller : public Controller
 		Human_Controller(const Piece::Colour & newColour, const bool enableGraphics) : Controller(newColour, "human"), graphicsEnabled(enableGraphics) {}
 		virtual ~Human_Controller() {}
 
+		virtual bool HumanController() const {return true;}
 		virtual MovementResult QuerySetup(const char * opponentName, std::string setup[]);
 		virtual MovementResult QueryMove(std::string & buffer); 
-		virtual void Message(const char * message) {fprintf(stderr, "Recieved message \"%s\" from manager.\n", message);}
+		virtual void Message(const char * message) {fprintf(stderr, "%s\n", message);}
 	
 	private:
 		const bool graphicsEnabled;

@@ -19,38 +19,48 @@ DESCRIPTION
 		If set to "human", stratego will request the user to make moves for the Red player using stdin.
 		NOTES
 			1. There is no plan to support AI programs named "human". Deal with it.
-			2. As of writing, human players must use stdin. A graphical interface may be added later.
+			2. The graphical interface for human players is... basic. Deal with it.
 
 	blue_player
 		As red_player, except for controlling the Blue player.
 	
 OPTIONS
 	-g
-		By default, graphics are disabled. If the -g switch is present, stratego will draw the game as it is played using OpenGL
+		By default, graphics are disabled. If the -g switch is present, stratego will draw the game as it is played using SDL/OpenGL
+		
 	-p
 		By default, even if graphics are disabled, the board state is not printed. If -p is present, the board will be printed to stdout.
 		If the system supports colour, the characters will be in colour.
-		If -p and -g are both present you will see both behaviours (overkill)!
+		Yes, If -p and -g are both present you will see both behaviours (overkill)!
 	-i
 		By default, stratego will exit if a move which is deemed "illegal" is made. If the -i switch is present, illegal moves will be ignored.
 		That is, the move will not be made (effectively the player making the illegal move loses a turn).
+
+		NOTE: If -i is not given and a human player accidentally(?) makes an illegal move, they will be asked to make a different move. The game will continue.
+		This is intended to prevent fits of rage due to the horrible graphical interface causing humans to make illegal moves.
 	-r
 		By default, the identities of all pieces are shown. If the -r switch is present, and graphics are enabled, red pieces will be disguised.
 		If graphics are disabled, the -r switch has no effect.
+
+		Pieces which have previously taken part in combat (and survived) will be revealed.
 	-b
 		As -r, except blue pieces will be disguised.
-		NOTE: Both -r and -b may be used.
+		NOTE: Both -r and -b may be used together.
 	-o
-		By default, stratego is silent. If the -o switch is present, the result of each move is printed to a file. If output_file is "stdout"
-		then stdout will be used instead of a text file.
+		By default, stratego does not log moves. If the -o switch is present, the result of each move is printed to a file. 
+		If output_file is "stdout" then stdout will be used instead of a text file.
 	-t
 		By default, stratego executes moves as fast as they are recieved. If the -t switch is present, a delay of stall_time will be introduced
 		between each move.
-
+		
+		If stall_time is negative or "inf", stratego will wait for the user to press enter before moving to the next move.
+		
+		It is tentatively planned to allow the user to enter various commands to alter the game or proceed to specified turns.
+		However this is slightly complicated. So it might never be done.
 	-m
 		By default, the game is declared a Draw after 5000 turns have ellapsed.
 		Use this option to change the maximum number of turns.
-		To play for an infinite number of turns, supply "inf" as max_number.
+		To play for an infinite number of turns, supply "inf" as max_number. This is not recommended for obvious reasons.
 
 	-f
 		By default, stratego requires red_player and blue_player to enact a game.
@@ -107,6 +117,10 @@ PROTOCOL
 
 		RESPONSE: 4 lines, each of length BOARD_WIDTH, of characters. Each character represents a piece. The characters are shown above.
 
+		RED's pieces are placed at the top of the board, and BLUE's pieces are placed at the bottom.
+
+		An AI program does not have to place all 40 pieces, but must at least place the flag ('F').
+
 	2. TURN
 		QUERY: 	START | CONFIRMATION
 			BOARD_STATE
@@ -127,23 +141,25 @@ PROTOCOL
 			The AI program should print "NO_MOVE" if it is unable to determine a move.
 			This will typically occur when the only pieces belonging to the AI program are Bombs and the Flag.
 
-		CONFIRMATION: X Y DIRECTION [MULTIPLIER=1] OUTCOME | NO_MOVE | QUIT RESULT
+		CONFIRMATION: X Y DIRECTION [MULTIPLIER=1] OUTCOME | NO_MOVE {OK | ILLEGAL} | QUIT [RESULT]
+
 			OUTCOME may be either OK, ILLEGAL, KILLS or DIES
 				OK - Move was successful
 				ILLEGAL - Move was not allowed. If stratego was not started with the -i switch, the game will end.
 				KILLS ATTACKER_RANK DEFENDER_RANK - The piece moved into an occupied square and killed the defender.
 				DIES ATTACKER_RANK DEFENDER_RANK - The piece moved into an occupied square and was killed by the defender.
 
-			A confirmation of "NO_MOVE" occurs when the AI program made no move for a legitimate reason.
+			Most turns will be confirmed with: "X Y DIRECTION [MULTIPLIER=1] OUTCOME"
+
+			A confirmation of "NO_MOVE OK" occurs when the AI program made no move for a legitimate reason.
 			"NO_MOVE ILLEGAL" is printed if the AI program made no move for an illegitimate reason.
 
 			If both AI programs successively make a "NO_MOVE" response, then the game will end.
 			The player with the highest piece value will win, or a draw will be declared if the values are equal.
 
-
 	3. END GAME
 		If the CONFIRMATION line is of the form:
-			QUIT RESULT
+			QUIT [RESULT]
 		Then the game is about to end.
 	
 		If present, RESULT will be a direct copy of the message to stdout described in the EXIT/OUTPUT section below.
@@ -190,7 +206,11 @@ EXIT/OUTPUT
 	
 
 BUGS
-	There are no known bugs at this time. However, stratego is still a work in progress. Report a bug to the AUTHOR (see below).
+	WARNING:
+	stratego has been observed to segfault occassionally after the end of a game. It is not yet known what is causing these errors.
+	They appear to occur most often when the result is a draw, however they have been observed to occur under all exit conditions except the Illegal case. The result is still printed to stdout. However this bug _must_ be fixed before stratego can be used by simulation scripts.	
+
+	stratego is still a work in progress. Report another bug to the AUTHOR (see below).
 
 AUTHORS
 	Sam Moore (for the UCC Programming Competition 2012) <matches@ucc.asn.au>
