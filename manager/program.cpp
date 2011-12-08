@@ -81,7 +81,7 @@ Program::~Program()
 {
 	if (Running()) //Check if the process created is still running...
 	{
-		fputc(EOF, output); //If it was, tell it to stop with EOF
+		//fputc(EOF, output); //If it was, tell it to stop with EOF
 
 		TimerThread timer(2); //Wait for 2 seconds
 		timer.Start();		

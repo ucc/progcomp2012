@@ -117,8 +117,10 @@ MovementResult Controller::MakeMove(string & buffer)
 	}	
 	else
 	{
-		//fprintf(stderr, "BAD_RESPONSE \"%s\"\n", buffer.c_str());
-		return MovementResult::BAD_RESPONSE; //Player gave bogus direction - it will lose by default.	
+		if (Game::theGame->allowIllegalMoves)
+			return MovementResult::OK;
+		else
+			return MovementResult::BAD_RESPONSE; //Player gave bogus direction - it will lose by default.	
 	}
 
 	int multiplier = 1;
@@ -158,10 +160,15 @@ MovementResult Controller::MakeMove(string & buffer)
 		
 	}
 
+	
 	if (!Board::LegalResult(moveResult))
 	{
+		
 		if (Game::theGame->allowIllegalMoves)
+		{
+			
 			return MovementResult::OK; //HACK - Illegal results returned as legal! (Move not made)
+		}
 		else if (this->HumanController()) //Cut human controllers some slack and let them try again...
 		{
 			//Yes, checking type of object is "not the C++ way"

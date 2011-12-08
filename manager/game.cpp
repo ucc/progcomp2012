@@ -205,6 +205,11 @@ void Game::Wait(double wait)
 
 void Game::HandleBrokenPipe(int sig)
 {
+	if (theGame == NULL)
+	{
+		fprintf(stderr, "ERROR - Recieved SIGPIPE during game exit!\n");
+		exit(EXIT_FAILURE);
+	}
 	if (theGame->turn == Piece::RED)
 	{
 		theGame->logMessage("Game ends on RED's turn - REASON: ");

@@ -88,7 +88,7 @@ Piece::Colour SetupGame(int argc, char ** argv)
 					printBoard = !printBoard;
 					break;
 				case 'i':
-					allowIllegal = !allowIllegal;
+					allowIllegal = true;
 					break;
 
 				case 'o':
