@@ -89,10 +89,14 @@ Piece::Colour Game::Setup(const char * redName, const char * blueName)
 	if (!red->Valid())
 	{
 		logMessage("Controller for Player RED is invalid!\n");
+		if (!red->HumanController())
+			logMessage("Check that program \"%s\" exists and has executable permissions set.\n", redName);
 	}
 	if (!blue->Valid())
 	{
 		logMessage("Controller for Player BLUE is invalid!\n");
+		if (!blue->HumanController())
+			logMessage("Check that program \"%s\" exists and has executable permissions set.\n", blueName);
 	}
 	if (!red->Valid())
 	{
@@ -132,37 +136,57 @@ Piece::Colour Game::Setup(const char * redName, const char * blueName)
 		}
 		else
 		{
-			logMessage("Player RED gave an invalid setup!\n");
+			//logMessage("Player RED gave an invalid setup!\n");
 			result = Piece::RED;
 		}
 		
 	}
 	else if (blueSetup != MovementResult::OK)
 	{
-		logMessage("Player BLUE gave an invalid setup!\n");
+		//logMessage("Player BLUE gave an invalid setup!\n");
 		result = Piece::BLUE;
 	}
 
+
 	logMessage("%s RED SETUP\n", red->name.c_str());
-	for (int y=0; y < 4; ++y)
+	if (redSetup == MovementResult::OK)
 	{
-		for (int x=0; x < theBoard.Width(); ++x)
+		for (int y=0; y < 4; ++y)
 		{
-			if (theBoard.GetPiece(x, y) != NULL)
-				logMessage("%c", Piece::tokens[(int)(theBoard.GetPiece(x, y)->type)]);
-			else
-				logMessage(".");
-		}
-		logMessage("\n");
-	}	
+			for (int x=0; x < theBoard.Width(); ++x)
+			{
+				if (theBoard.GetPiece(x, y) != NULL)
+					logMessage("%c", Piece::tokens[(int)(theBoard.GetPiece(x, y)->type)]);
+				else
+					logMessage(".");
+			}
+			logMessage("\n");
+		}	
+	}
+	else
+	{
+		logMessage("INVALID!\n");
+	}
 
 	logMessage("%s BLUE SETUP\n", blue->name.c_str());
-	for (int y=0; y < 4; ++y)
+	if (blueSetup == MovementResult::OK)
 	{
-		for (int x=0; x < theBoard.Width(); ++x)
-			logMessage("%c", Piece::tokens[(int)(theBoard.GetPiece(x, theBoard.Height()-4 + y)->type)]);
-		logMessage("\n");
-	}	
+		for (int y=0; y < 4; ++y)
+		{
+			for (int x=0; x < theBoard.Width(); ++x)
+			{
+				if (theBoard.GetPiece(x, theBoard.Height()-4+y) != NULL)
+					logMessage("%c", Piece::tokens[(int)(theBoard.GetPiece(x, theBoard.Height()-4+y)->type)]);
+				else
+					logMessage(".");
+			}
+			logMessage("\n");
+		}	
+	}
+	else
+	{
+		logMessage("INVALID!\n");
+	}
 
 	
 	return result;

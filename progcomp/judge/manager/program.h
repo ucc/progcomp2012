@@ -4,6 +4,7 @@
 #include "thread_util.h"
 
 #include <string>
+#include <unistd.h> //Needed to check permissions
 
 /**
  * A wrapping class for an external program, which can exchange messages with the current process through stdin/stdout

@@ -77,5 +77,9 @@ class Asmodeus(BasicAI):
 		else:
 			return self.suicideScores[attacker.rank]
 		
-
+if __name__ == "__main__":
+	asmodeus = Asmodeus()
+	if asmodeus.Setup():
+		while asmodeus.MoveCycle():
+			pass
 

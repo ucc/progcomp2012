@@ -287,8 +287,9 @@ class BasicAI:
 					sys.stderr.write(str(self.board[x][y].rank));
 			sys.stderr.write("\n")
 
-#basicAI = BasicAI()
-#if basicAI.Setup():
-#	while basicAI.MoveCycle():
-#		pass
+if __name__ == "__main__":
+	basicAI = BasicAI()
+	if basicAI.Setup():
+		while basicAI.MoveCycle():
+			pass
 

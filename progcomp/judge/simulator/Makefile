@@ -2,11 +2,11 @@
 # Not used for building simulate.py
 # Used for building/removing results
 
-BASEDIR = /home/sam/Documents/progcomp2012/
-RESULTSDIR = /home/sam/Documents/progcomp2012/results
-LOGDIR = /home/sam/Documents/progcomp2012/log
-AGENTSDIR = /home/sam/Documents/progcomp2012/samples
-MANAGER = /home/sam/Documents/progcomp2012/manager/stratego
+BASEDIR = /home/sam/Documents/progcomp2012/progcomp
+RESULTSDIR = /home/sam/Documents/progcomp2012/progcomp/results
+LOGDIR = /home/sam/Documents/progcomp2012/progcomp/log
+AGENTSDIR = /home/sam/Documents/progcomp2012/progcomp/agents
+MANAGER = /home/sam/Documents/progcomp2012/progcomp/judge/manager/stratego
 
 
 

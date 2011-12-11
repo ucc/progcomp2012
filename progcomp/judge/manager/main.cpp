@@ -253,7 +253,7 @@ void PrintResults(const MovementResult & result, string & buffer)
 				s << "DRAW_DEFAULT ";
 				break;
 			case MovementResult::BAD_SETUP:
-				s << "BOTH_ILLEGAL ";
+				s << "BAD_SETUP ";
 				break;	
 			default:
 				s << "INTERNAL_ERROR ";

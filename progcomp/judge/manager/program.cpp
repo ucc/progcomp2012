@@ -22,13 +22,8 @@ using namespace std;
  */
 Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0)
 {
-	//See if file exists...
-	FILE * file = fopen(executablePath, "r");
-	if (file != NULL)
-	{
-		fclose(file);
-	}
-	else
+	//See if file exists and is executable...
+	if (access(executablePath, X_OK) != 0)
 	{
 		pid = -1;
 		return;
@@ -55,10 +50,11 @@ Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0
 					//If your wrapped program is not written in C/C++, you will probably have a problem
 				
 
-
-		execl(executablePath, executablePath, (char*)(NULL)); ///Replace process with desired executable
-		//fprintf(stderr, "Program::Program - Could not run program \"%s\"!\n", executablePath);
-		//exit(EXIT_FAILURE); //We will probably have to terminate the whole program if this happens
+		if (access(executablePath, X_OK) == 0) //Check we STILL have permissions to start the file
+			execl(executablePath, executablePath, (char*)(NULL)); ///Replace process with desired executable
+		
+		fprintf(stderr, "Program::Program - Could not run program \"%s\"!\n", executablePath);
+		exit(EXIT_FAILURE); //We will probably have to terminate the whole program if this happens
 	}
 	else
 	{
