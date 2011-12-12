@@ -144,7 +144,7 @@ for agent in agents:
 	for line in oldFile:
 		if line.strip() == "</body>":
 			break
-		agentFile.write(line + "\n")
+		agentFile.write(line.strip() + "\n")
 	oldFile.close()
 	agentFile.close()
 	os.remove("tmpfile")
