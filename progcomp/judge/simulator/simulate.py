@@ -85,7 +85,6 @@ if verbose:
 	print "Identifying possible agents in \""+agentsDirectory+"\""
 
 #Get all agent names from agentsDirectory
-#TODO: Move this part outside the loop? It only has to happen once
 agentNames = os.listdir(agentsDirectory) 
 agents = []
 for name in agentNames:
@@ -114,7 +113,7 @@ for name in agentNames:
 
 	#Convert array of valid names into array of dictionaries containing information about each agent
 	#I'm starting to like python...
-	agents.append({"name":name, "path":agentExecutable,"score":[0], "totalScore":0, "VICTORY":[], "DEFEAT":[], "DRAW":[], "ILLEGAL":[], "INTERNAL_ERROR":[], "ALL":[]})	
+	agents.append({"name":name, "path":agentExecutable,  "score":[0], "VICTORY":[], "DEFEAT":[], "DRAW":[], "ILLEGAL":[], "DEFAULT":[], "INTERNAL_ERROR":[], "SURRENDER":[], "DRAW_DEFAULT":[], "BOTH_ILLEGAL":[], "BAD_SETUP":[], "ALL":[], "totalScore":0, "Wins":0, "Losses":0, "Draws":0, "Illegal":0, "Errors":0})
 
 if len(agents) == 0:
 	print "Couldn't find any agents! Check paths (Edit this script) or generate \"info\" files for agents."
@@ -124,6 +123,8 @@ if verbose:
 	print ""
 
 #Prepare the pretty .html files if they don't exist
+if verbose:
+	print "Preparing .html results files..."
 htmlDir = resultsDirectory + "pretty/"
 if os.path.exists(htmlDir) == False:
 	os.mkdir(htmlDir)
@@ -139,15 +140,36 @@ for agent in agents:
 
 	os.rename(htmlDir+agent["name"] + ".html", "tmpfile")
 	
-	oldFile = open("tmpfile")
+	oldFile = open("tmpfile", "r")
 	agentFile = open(htmlDir+agent["name"] + ".html", "w")
-	for line in oldFile:
+	line = oldFile.readline()
+	while line != "":
+		#if verbose:
+		#	print "Interpreting line \"" + line.strip() + "\""
 		if line.strip() == "</body>":
 			break
-		agentFile.write(line.strip() + "\n")
+		elif line == "<tr> <th> Score </th> <th> Wins </th> <th> Losses </th> <th> Draws </th> <th> Illegal </th> <th> Errors </th></tr>\n":
+			agentFile.write(line)
+			line = oldFile.readline()
+			
+			values = line.split(' ')
+			agent["totalScore"] += int(values[2].strip())
+			agent["Wins"] += int(values[5].strip())
+			agent["Losses"] += int(values[8].strip())
+			agent["Draws"] += int(values[11].strip())
+			agent["Illegal"] += int(values[14].strip())
+			agent["Errors"] += int(values[17].strip())
+		agentFile.write(line)
+		line = oldFile.readline()
+
+	if verbose:
+		print "Prepared results file \"" + htmlDir+agent["name"] + ".html\"."
 	oldFile.close()
 	agentFile.close()
 	os.remove("tmpfile")
+
+if verbose:
+	print ""
 
 #Do each round...
 totalGames = nGames/2 * len(agents) * (len(agents)-1)
@@ -155,6 +177,9 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 
 	if os.path.exists(logDirectory + "round"+str(roundNumber)) == False:
 		os.mkdir(logDirectory + "round"+str(roundNumber)) #Check there is a directory for this round's logs
+
+	for agent in agents:
+		agent.update({"name":agent["name"], "path":agent["path"],  "score":[0], "VICTORY":[], "DEFEAT":[], "DRAW":[], "ILLEGAL":[], "DEFAULT":[], "INTERNAL_ERROR":[], "SURRENDER":[], "DRAW_DEFAULT":[], "BOTH_ILLEGAL":[], "BAD_SETUP":[], "ALL":[], "totalScore":0, "Wins":0, "Losses":0, "Draws":0, "Illegal":0, "Errors":0})
 
 	
 	print "Commencing ROUND " + str(roundNumber) + " combat!"
@@ -233,6 +258,8 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 		print "" 
 	#We should now have complete score values.
 		
+	'''
+		Obselete, non prettified results
 	if verbose:
 		sys.stdout.write("Creating raw results files for ROUND " + str(roundNumber) + "... ")
 
@@ -269,28 +296,27 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 		sys.stdout.write(" Complete!\n")
 		print "Finished writing results for ROUND " + str(roundNumber)
 		print ""
-	
+	'''
 	if verbose:	
 		print "RESULTS FOR ROUND " + str(roundNumber)
 
-	totalFile = open(resultsDirectory+"total.scores", "w") #Recreate the file
-	for agent in agents:	
-		totalFile.write(agent["name"] + " " + str(agent["totalScore"]) +"\n") #Write the total scores in descending order
-		if verbose:
-			print "Agent: " + str(agent)
+	#totalFile = open(resultsDirectory+"total.scores", "w") #Recreate the file
+		for agent in agents:	
+		#totalFile.write(agent["name"] + " " + str(agent["totalScore"]) +"\n") #Write the total scores in descending order
+		#if verbose:
+				print "Agent: " + str(agent)
+	
 
 	if verbose:
 		print "Updating pretty .html files... "
 
-
-
 	for agent in agents:
 		agentFile = open(htmlDir + agent["name"]+".html", "a")
 		agentFile.write("<h2> Round " + str(roundNumber) + "</h2>\n")
-		agentFile.write("<h3> Summary </h3>\n")
+		agentFile.write("<h3> Round Overview </h3>\n")
 		agentFile.write("<table border=\"0\" cellpadding=\"10\">\n")
 		agentFile.write("<tr> <th> Score </th> <th> Wins </th> <th> Losses </th> <th> Draws </th> <th> Illegal </th> <th> Errors </th></tr>\n")
-		agentFile.write("<tr> <td> "+str(agent["score"][0])+" </td> <td> "+str(len(agent["VICTORY"]))+" </td> <td> "+str(len(agent["DEFEAT"]))+" </td> <td> "+str(len(agent["DRAW"]))+" </td> <td> "+str(len(agent["ILLEGAL"]))+" </td> <td> " +str(len(agent["INTERNAL_ERROR"]))+" </td> </tr>\n")
+		agentFile.write("<tr> <td> "+str(agent["score"][0])+" </td> <td> "+str(len(agent["VICTORY"]) + len(agent["DEFAULT"]))+" </td> <td> "+str(len(agent["DEFEAT"]) + len(agent["SURRENDER"]))+" </td> <td> "+str(len(agent["DRAW"]) + len(agent["DRAW_DEFAULT"]))+" </td> <td> "+str(len(agent["ILLEGAL"]) + len(agent["BOTH_ILLEGAL"]) + len(agent["BAD_SETUP"]))+" </td> <td> " +str(len(agent["INTERNAL_ERROR"]))+" </td> </tr>\n")
 
 		agentFile.write("</table>\n")
 
@@ -301,13 +327,32 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 		for index in range(0, len(agent["ALL"])):
 			agentFile.write("<tr> <td> " + str(agent["ALL"][index][1]) + " </td> <td> <a href="+agent["ALL"][index][0]+".html>"+agent["ALL"][index][0] + " </a> </td> <td> " + agent["ALL"][index][4] + " </td> <td> " + agent["ALL"][index][3] + " </td> <td> " + str(agent["ALL"][index][2]) + "</td> <td> " + str(agent["score"][len(agent["score"])-index -2]) + " </td> </tr> </th>\n")
 		agentFile.write("</table>\n")
+		
+		agent["totalScore"] += agent["score"][0]
+		agent["Wins"] += len(agent["VICTORY"]) + len(agent["DEFAULT"])
+		agent["Losses"] += len(agent["DEFEAT"]) + len(agent["SURRENDER"])
+		agent["Draws"] += len(agent["DRAW"]) + len(agent["DRAW_DEFAULT"])
+		agent["Illegal"] += len(agent["ILLEGAL"]) + len(agent["BOTH_ILLEGAL"]) + len(agent["BAD_SETUP"])
+		agent["Errors"] += len(agent["INTERNAL_ERROR"])
+
+		agentFile.write("<h3> Accumulated Results </h3>\n")
+		agentFile.write("<table border=\"0\" cellpadding=\"10\">\n")
+		agentFile.write("<tr> <th> Score </th> <th> Wins </th> <th> Losses </th> <th> Draws </th> <th> Illegal </th> <th> Errors </th></tr>\n")
+		agentFile.write("<tr> <td> "+str(agent["totalScore"])+" </td> <td> "+str(agent["Wins"])+" </td> <td> "+str(agent["Losses"])+" </td> <td> "+str(agent["Draws"])+" </td> <td> "+str(agent["Illegal"])+" </td> <td> " +str(agent["Errors"])+" </td> </tr>\n")
+
+		agentFile.write("</table>\n")
 		agentFile.close()	
+
+		
 	
 
 if verbose:
 	print "Finalising .html files... "
 for agent in agents:
 	agentFile = open(htmlDir + agent["name"]+".html", "a")
+
+	#Write the "total" statistics
+
 	agentFile.write("</body>\n<!-- Results file for \"" + agent["name"] + "\" autogenerated by \"" + sys.argv[0] + "\" at time " + str(time()) + " -->\n</html>\n\n")
 	agentFile.close()
 
