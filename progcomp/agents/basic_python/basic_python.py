@@ -73,6 +73,12 @@ class Piece:
 			return 0
 	
 
+def valuedRank(rank):
+	if ranks.count(rank) > 0:
+		return len(ranks) - 2 - ranks.index(rank)
+	else:
+		return 0
+
 
 
 class BasicAI:
@@ -89,8 +95,13 @@ class BasicAI:
 		self.board = []
 		self.units = []
 		self.enemyUnits = []
-		self.alliedNumber = {'B':6,'1':1,'2':1,'3':2,'4':3,'5':4,'6':4,'7':4,'8':5,'9':8,'s':1,'F':1}
-		self.enemyNumber = {'B':6,'1':1,'2':1,'3':2,'4':3,'5':4,'6':4,'7':4,'8':5,'9':8,'s':1,'F':1}
+
+		self.totalAllies = {'B':6,'1':1,'2':1,'3':2,'4':3,'5':4,'6':4,'7':4,'8':5,'9':8,'s':1,'F':1}
+		self.totalEnemies = {'B':6,'1':1,'2':1,'3':2,'4':3,'5':4,'6':4,'7':4,'8':5,'9':8,'s':1,'F':1}
+		self.hiddenEnemies = {'B':6,'1':1,'2':1,'3':2,'4':3,'5':4,'6':4,'7':4,'8':5,'9':8,'s':1,'F':1}
+		self.hiddenAllies = {'B':6,'1':1,'2':1,'3':2,'4':3,'5':4,'6':4,'7':4,'8':5,'9':8,'s':1,'F':1}
+		self.lastMoved = None
+
 		
 
 	def Setup(self):
@@ -230,6 +241,9 @@ class BasicAI:
 
 		if attacker == None:
 			return False
+
+		lastMoved = attacker
+
 		defender = self.board[p[0]][p[1]]
 
 		#Update attacker's position (Don't overwrite the board yet though)
@@ -242,8 +256,19 @@ class BasicAI:
 			if defender == None:
 				return False
 			attacker.rank = result[outIndex+1].strip()
+			if attacker.beenRevealed == False:
+				if attacker.colour == self.colour:
+					self.hiddenAllies[attacker.rank] -= 1
+				elif attacker.colour == oppositeColour(self.colour):
+					self.hiddenEnemies[attacker.rank] -= 1
 			attacker.beenRevealed = True
 			defender.rank = result[outIndex+2].strip()
+			if defender.beenRevealed == False:
+				if defender.colour == self.colour:
+					self.hiddenAllies[defender.rank] -= 1
+				elif defender.colour == oppositeColour(self.colour):
+					self.hiddenEnemies[defender.rank] -= 1
+
 			defender.beenRevealed = True
 
 			
@@ -255,35 +280,35 @@ class BasicAI:
 			self.board[p[0]][p[1]] = attacker
 
 			if defender.colour == self.colour:
-				self.alliedNumber[defender.rank] -= 1
+				self.totalAllies[defender.rank] -= 1
 				self.units.remove(defender)
 			elif defender.colour == oppositeColour(self.colour):
-				self.enemyNumber[defender.rank] -= 1
+				self.totalEnemies[defender.rank] -= 1
 				self.enemyUnits.remove(defender)
 	
 		elif outcome == "DIES":
 			if attacker.colour == self.colour:
-				self.alliedNumber[attacker.rank] -= 1
+				self.totalAllies[attacker.rank] -= 1
 				self.units.remove(attacker)
 			elif attacker.colour == oppositeColour(self.colour):
-				self.enemyNumber[attacker.rank] -= 1
+				self.totalEnemies[attacker.rank] -= 1
 				self.enemyUnits.remove(attacker)
 
 		elif outcome == "BOTHDIE":
 			self.board[p[0]][p[1]] = None
 
 			if defender.colour == self.colour:
-				self.alliedNumber[defender.rank] -= 1
+				self.totalAllies[defender.rank] -= 1
 				self.units.remove(defender)
 			elif defender.colour == oppositeColour(self.colour):
-				self.enemyNumber[defender.rank] -= 1
+				self.totalEnemies[defender.rank] -= 1
 				self.enemyUnits.remove(defender)
 
 			if attacker.colour == self.colour:
-				self.alliedNumber[attacker.rank] -= 1
+				self.totalAllies[attacker.rank] -= 1
 				self.units.remove(attacker)
 			elif attacker.colour == oppositeColour(self.colour):
-				self.enemyNumber[attacker.rank] -= 1
+				self.totalEnemies[attacker.rank] -= 1
 				self.enemyUnits.remove(attacker)
 
 		elif outcome == "FLAG":
