@@ -45,6 +45,8 @@
 
 <p> <b> Warning:</b> The accuracy of the above file depends on how recently I pulled it from git. To ensure you get the latest version, find it under "manager/manual.txt" in the <a href="http://git.ucc.asn.au/?p=progcomp2012.git;a=summary"/>git repository</a> </p>
 
+<p> <b> Another Warning:</b> AI programs <b>must</b> unbuffer stdin and stdout themselves. This is explained in the manual page, but I figured no one would read it. It is fairly simple to unbuffer stdin/stdout in C/C++ and python, I have not investigated other languages yet. </p>
+
 <h2> Long Term Scoring </h2>
 <p> <b> WARNING: Work in progress </b> </p>
 <p> It is currently planned to store all the AIs on a virtual machine, and periodically run a script to play a round robin </p>
@@ -69,9 +71,19 @@
 
 <h2> Submissions </h2>
 <p> We (I?) are now accepting test submissions. </p>
-<p> Please email matches@ attaching your submission source code </p>
+<p> You must submit the full source code, and build instructions or makefile(s) for your program. </p>
+<p> Also include the name of the executable or script, the name of the AI, your name, and optionally a description of your AI and its tactics. </p>
+<p> Please email matches@ if you have a submission. </p>
 
-<p> <b>Last webpage update: 12/12/11</b></p>
+<h2> Dates </h2>
+<p> The competition will run in 2012. The exact dates have not been determined. I will consider whether it is worth waiting until freshers have a chance to make submissions March/April, or running the competition earlier in January/February. </p>
+
+<h2> Involvement </h2>
+<p> If you want to help set up the competition, email matches@ </p>
+<p> There isn't much left to do, but all help is appreciated. Maybe you can suggest something, and volunteer to implement it! </p>
+<p> The most useful thing you can do is actually write an AI, and test the manager program. Please report any bugs (in the manager program, not in your AI!) to matches@ (you can feel free to fix them, but won't be able to push unless you email matches). </p>
+
+<p> <b>Last webpage update: 20/12/11</b></p>
 </body>
 
 </html>

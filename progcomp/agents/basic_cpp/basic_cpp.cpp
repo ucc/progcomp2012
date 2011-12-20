@@ -333,9 +333,21 @@ bool BasicAI::InterpretResult()
 	
 
 	Direction dir = Helper::StrToDir(tokens[2]);
-	string & outcome = tokens[3];
 
-	int x2 = x; int y2 = y; Helper::MoveInDirection(x2,y2,dir);
+	//We might want to actually check for the multiplier in the sample agents! 20/12/11
+	unsigned int outIndex = 3;
+	int multiplier = atoi(tokens[outIndex].c_str());
+	if (multiplier == 0)
+		multiplier = 1;
+	else
+		outIndex += 1;
+	
+
+
+	string & outcome = tokens[outIndex];
+
+
+	int x2 = x; int y2 = y; Helper::MoveInDirection(x2,y2,dir, multiplier);
 
 	Piece * attacker = board->Get(x,y);
 	if (attacker == NULL)
@@ -357,12 +369,14 @@ bool BasicAI::InterpretResult()
 			//cerr << "No defender!\n";
 			return false;
 		}
+		if (tokens.size() < outIndex+2)
+			return false;
+
 
 		board->Set(x2,y2, attacker);
 		board->Set(x,y,NULL);
 		attacker->x = x2; attacker->y = y2;
-		
-		attacker->rank = Piece::GetRank(tokens[4][0]);
+		attacker->rank = Piece::GetRank(tokens[outIndex+1][0]);
 		ForgetUnit(defender);
 	}
 	else if (outcome == "DIES")
@@ -372,10 +386,12 @@ bool BasicAI::InterpretResult()
 			//cerr << "No defender!\n";
 			return false;
 		}
-		
+		if (tokens.size() < outIndex+3)
+			return false;
+
 
 		board->Set(x,y,NULL);
-		defender->rank = Piece::GetRank(tokens[5][0]);
+		defender->rank = Piece::GetRank(tokens[outIndex+2][0]);
 		ForgetUnit(attacker);
 
 		

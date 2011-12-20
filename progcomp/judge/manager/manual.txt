@@ -20,9 +20,19 @@ DESCRIPTION
 		NOTES
 			1. There is no plan to support AI programs named "human". Deal with it.
 			2. The graphical interface for human players is... basic. Deal with it.
-
 	blue_player
 		As red_player, except for controlling the Blue player.
+
+A WARNING ABOUT BUFFERING
+	The AI programs must unbuffer their stdin and stdout streams, otherwise it will be seen to be non-responsive.
+	If you C and you know a way to force the process started by exec() to have unbuffered stdin/stdout, please email the author.
+
+	In C or C++, unbuffering is accomplished with the following lines, which should appear near the start of main()
+		setbuf(stdin, NULL);
+		setbuf(stdout, NULL);
+	In python, unbuffering is accomplished by passing the -u switch to the interpreter, ie: The first line of a script reads:
+		#!/usr/bin/python -u
+	
 	
 OPTIONS
 	-g
@@ -74,7 +84,7 @@ OPTIONS
 		
 
 GAME RULES
-		Each player controls up to 40 pieces on the Board. The pieces consist of the following:
+		Each player controls up to 40 pieces on the Board. The pieces are represented by the following characters:
 
 		Piece	Name		Rank	Number	Abilities
 		1	Marshal		1	1	Dies if attacked by Spy
@@ -205,11 +215,7 @@ EXIT/OUTPUT
 	If possible, stratego will print the message "QUIT" to both AI programs, and they should exit as soon as possible.
 	
 
-BUGS
-	WARNING:
-	stratego has been observed to segfault occassionally after the end of a game. It is not yet known what is causing these errors.
-	They appear to occur most often when the result is a draw, however they have been observed to occur under all exit conditions except the Illegal case. The result is still printed to stdout. However this bug _must_ be fixed before stratego can be used by simulation scripts.	
-
+BUGS	
 	stratego is still a work in progress. Report another bug to the AUTHOR (see below).
 
 AUTHORS
@@ -227,4 +233,7 @@ NOTES
  
 	3. IRC Channel
 	   irc://irc.ucc.asn.au #progcomp
+
+THIS PAGE LAST UPDATED
+	20/12/11 by Sam Moore
 	

@@ -200,7 +200,9 @@ void Board::PrintPretty(FILE * stream, const Piece::Colour & reveal)
 
 /**
  * Draw the board state to graphics
- * @param reveal - Pieces matching this colour will be revealed. All others will be shown as blank coloured squares.
+ * @param reveal - Pieces matching this colour will be revealed. If Piece::BOTH, all pieces will be revealed
+ * @param showRevealed - If true, then all pieces that have taken part in combat will be revealed, regardless of colour.
+ *			 If false, only pieces matching the colour reveal will be revealed
  */
 void Board::Draw(const Piece::Colour & reveal, bool showRevealed)
 {
@@ -291,12 +293,12 @@ Piece * Board::GetPiece(int x, int y)
 }
 
 /**
- * Moves a piece at a specified position in the specified direction, handles combat if necessary
+ * Moves a piece at a specified position in the specified direction, handles combat if necessary, updates state of the board
  * @param x - x-coord of the piece
  * @param y - y-coord of the piece
  * @param direction - Direction in which to move (UP, DOWN, LEFT or RIGHT)
  * @param colour - Colour which the piece must match for the move to be valid
- * @returns A MovementResult which indicates the result of the move - OK is good, VICTORY means that a flag was captured, anything else is an error
+ * @returns A MovementResult which indicates the result of the move
  */
 MovementResult Board::MovePiece(int x, int y, const Direction & direction, int multiplier,const Piece::Colour & colour)
 {
@@ -413,13 +415,15 @@ MovementResult Board::MovePiece(int x, int y, const Direction & direction, int m
 			board[x2][y2] = target;
 			return MovementResult(MovementResult::KILLS, attackerType, defenderType);
 		}
-		else if (target->operator==(*defender) && rand() % 2 == 0)
+		else if (target->operator==(*defender))// && rand() % 2 == 0)
 		{
 			RemovePiece(defender);
+			RemovePiece(target);
 			delete defender;
+			delete target;
 			board[x][y] = NULL;
-			board[x2][y2] = target;	
-			return MovementResult(MovementResult::KILLS, attackerType, defenderType);
+			board[x2][y2] = NULL;	
+			return MovementResult(MovementResult::BOTH_DIE, attackerType, defenderType);
 		}
 		else
 		{

@@ -20,7 +20,15 @@ import random
 
 ranks = ['B','1','2','3','4','5','6','7','8','9','s','F', '?', '+']
 
-def move(x, y, direction):
+def is_integer(s):
+	""" Using exceptions for this feels... wrong..."""
+	try:
+		int(s)
+		return True
+	except ValueError:
+		return False
+
+def move(x, y, direction, multiplier):
 	""" Moves point (x,y) in direction, returns a pair """
 	if direction == "UP":
 		return (x,y-1)
@@ -203,9 +211,16 @@ class BasicAI:
 		#sys.stderr.write("	Board position " + str(x) + " " + str(y) + " is OK!\n")		
 
 		direction = result[2].strip()
+
+		multiplier = 1
 		outcome = result[3].strip()
+		outIndex = 3
+		if is_integer(outcome):
+			multiplier = int(outcome)
+			outcome = result[4].strip()
+			outIndex = 4
 		
-		p = move(x,y,direction)
+		p = move(x,y,direction, multiplier)
 
 		
 
@@ -229,7 +244,7 @@ class BasicAI:
 
 
 			self.board[p[0]][p[1]] = self.board[x][y]
-			self.board[x][y].rank = result[4].strip()
+			self.board[x][y].rank = result[outIndex+1].strip()
 
 			self.board[x][y] = None
 			
@@ -242,7 +257,7 @@ class BasicAI:
 			elif self.board[x][y].colour == oppositeColour(self.colour):
 				self.enemyUnits.remove(self.board[x][y])
 
-			self.board[p[0]][p[1]].rank = result[5].strip()
+			self.board[p[0]][p[1]].rank = result[outIndex+2].strip()
 			self.board[x][y] = None
 		elif outcome == "BOTHDIE":
 			if self.board[p[0]][p[1]] == None:
