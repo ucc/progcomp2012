@@ -94,11 +94,11 @@ GAME RULES
 		5	Captain		5	4	
 		6	Lieutenant 	6	4
 		7	Sergeant   	7	4
-		8	Miner		8	5	Destroys Bombs without being killed
+		8	Miner		8	5	Destroys Bombs
 		9	Scout		9	8	May move more through multiple empty squares
 		s	Spy		10	1	If the Spy attacks the Marshal, the Marshal dies
-		B	Bomb		NA	6	Immobile. If any piece (except a Miner) encounters an enemy Bomb, both pieces are destroyed
-		F	Flag		NA	1	Immobile. If any piece encounters the enemy Flag, the controlling player wins.
+		B	Bomb		NA	6	Immobile. If any piece (except a Miner) attacks an enemy Bomb, that piece is destroyed.
+		F	Flag		NA	1	Immobile. If any piece attacks the enemy Flag, the controlling player wins.
 
 		Additional pieces, not controlled by the player:
 		Piece	Name			Number	Notes
@@ -115,6 +115,9 @@ GAME RULES
 		Each player's pieces are hidden from the other player. When two pieces encounter each other, the ranks will be revealed.
 
 		The objective is to destroy all Enemy Pieces (#) or capture the Enemy Flag (also #).
+
+		Since 20/12 Bombs reflect the traditional rules; they are only destroyed by Miners.
+		In previous versions contact of an attacker other than a Miner with a Bomb destroyed the Bomb as well as the attacking piece.
 		
 
 PROTOCOL
@@ -216,7 +219,11 @@ EXIT/OUTPUT
 	
 
 BUGS	
+	Occasionally the result is not printed at the end of the game. 
+	So far this has only been observed to occur when RED wins the game by Flag capture.
+
 	stratego is still a work in progress. Report another bug to the AUTHOR (see below).
+
 
 AUTHORS
 	Sam Moore (for the UCC Programming Competition 2012) <matches@ucc.asn.au>

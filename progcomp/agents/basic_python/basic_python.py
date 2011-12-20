@@ -62,6 +62,7 @@ class Piece:
 		self.y = y
 		self.lastMoved = -1
 		self.beenRevealed = False
+		self.positions = [(x, y)]
 
 	def mobile(self):
 		return self.rank != 'F' and self.rank != 'B' and self.rank != '?' and self.rank != '+'
@@ -247,8 +248,10 @@ class BasicAI:
 		defender = self.board[p[0]][p[1]]
 
 		#Update attacker's position (Don't overwrite the board yet though)
+
 		attacker.x = p[0]
 		attacker.y = p[1]
+		attacker.positions.insert(0, (attacker.x, attacker.y))
 
 		
 		#Determine ranks of pieces if supplied

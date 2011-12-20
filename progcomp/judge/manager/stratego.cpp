@@ -390,6 +390,14 @@ MovementResult Board::MovePiece(int x, int y, const Direction & direction, int m
 			}
 			else
 			{
+				//Use this to destroy only the attacking piece, and not the bomb
+				RemovePiece(target);
+				delete target;
+				board[x][y] = NULL;
+				return MovementResult(MovementResult::DIES, attackerType, defenderType);
+
+				/*
+				//Use this to destroy both the bomb and the attacking piece
 				RemovePiece(defender);
 				RemovePiece(target);
 				delete defender;
@@ -397,6 +405,7 @@ MovementResult Board::MovePiece(int x, int y, const Direction & direction, int m
 				board[x][y] = NULL;
 				board[x2][y2] = NULL;
 				return MovementResult(MovementResult::BOTH_DIE, attackerType, defenderType);
+				*/
 			}
 		}
 		else if (defender->type == Piece::MARSHAL && target->type == Piece::SPY)

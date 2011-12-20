@@ -26,9 +26,10 @@ class Vixen(BasicAI):
 		BasicAI.__init__(self)
 		
 		
-		self.bombScores = {'1' : -0.9 , '2' : -0.8 , '3' : -0.5 , '4' : 0.1, '5' : 0.1, '6' : 0.3, '7' : 0.7, '8' : 1 , '9' : 0.6, 's' : 0}
-		self.suicideScores = {'1' : -0.5 , '2' : -0.4 , '3' : -0.35, '4' : -0.25, '5' : -0.2, '6' : 0.0, '7' : 0.1, '8' : -0.4 , '9' : 0.0, 's' : -0.4}
-		self.killScores = {'1' : 1.0 , '2' : 0.9 , '3' : 0.9 , '4' : 0.8, '5' : 0.8, '6' : 0.8, '7' : 0.8, '8' : 0.9 , '9' : 0.7, 's' : 0.9}	
+		#self.bombScores = {'1' : -0.9 , '2' : -0.8 , '3' : -0.5 , '4' : 0.1, '5' : 0.1, '6' : 0.3, '7' : 0.7, '8' : 1 , '9' : 0.6, 's' : 0}
+		#self.bombScores = {'1' : -0.9 , '2' : -0.8 , '3' : -0.5 , '4' : -0.5, '5' : -0.4, '6' : -0.5, '7' : -0.2, '8' : 1.0 , '9' : -0.1, 's' : -0.2}
+		self.suicideScores = {'1' : -0.5 , '2' : -0.4 , '3' : -0.35, '4' : -0.25, '5' : -0.2, '6' : 0.0, '7' : 0.1, '8' : -1.0 , '9' : 0.0, 's' : -0.4}
+		self.killScores = {'1' : 1.0 , '2' : 0.9 , '3' : 0.9 , '4' : 0.8, '5' : 0.8, '6' : 0.8, '7' : 0.8, '8' : 0.9 , '9' : 0.7, 's' : 1.0}	
 		self.riskScores = {'1' : 0.0, '2' : 0.1, '3' : 0.2, '4': 0.4, '5': 0.6, '6': 0.7, '7':0.8, '8': 0.0, '9' : 1.0, 's' : 0.1}
 
 
@@ -53,11 +54,11 @@ class Vixen(BasicAI):
 				path = PathFinder().pathFind((unit.x, unit.y), (target.x, target.y), self.board)
 				if path == False or len(path) == 0:
 					continue
-				moveList.append({"unit":unit, "direction":path[0], "score":self.CalculateScore(unit, target, path)})
-				#scores[path[0]] += self.CalculateScore(unit, target, path)
+				#moveList.append({"unit":unit, "direction":path[0], "score":self.CalculateScore(unit, target, path)})
+				scores[path[0]] += self.CalculateScore(unit, target, path)
 
-			#bestScore = sorted(scores.items(), key = lambda e : e[1], reverse=True)[0]
-			#moveList.append({"unit":unit, "direction":bestScore[0], "score":bestScore[1]})
+			bestScore = sorted(scores.items(), key = lambda e : e[1], reverse=True)[0]
+			moveList.append({"unit":unit, "direction":bestScore[0], "score":bestScore[1]})
 			
 
 		if len(moveList) == 0:
@@ -65,7 +66,7 @@ class Vixen(BasicAI):
 			return True
 
 		moveList.sort(key = lambda e : e["score"], reverse=True)
-		sys.stderr.write("vixen - best move: " + str(moveList[0]["unit"].x) + " " + str(moveList[0]["unit"].y) + " " + moveList[0]["direction"] + " [ score = " + str(moveList[0]["score"]) + " ]\n")
+		#sys.stderr.write("vixen - best move: " + str(moveList[0]["unit"].x) + " " + str(moveList[0]["unit"].y) + " " + moveList[0]["direction"] + " [ score = " + str(moveList[0]["score"]) + " ]\n")
 		if moveList[0]["score"] == 0:
 			print "NO_MOVE"
 			return True
@@ -84,6 +85,9 @@ class Vixen(BasicAI):
 
 
 	def CalculateScore(self, attacker, defender, path):
+		p = move(attacker.x, attacker.y, path[0], 1)
+		
+
 		total = 0.0
 		count = 0.0
 		for rank in ranks:
@@ -99,6 +103,9 @@ class Vixen(BasicAI):
 
 
 		total = total * self.tailFactor(len(path))
+		#HACK - Prevent "oscillating" by decreasing the value of backtracks
+		if len(path) > 1 and len(attacker.positions) > 1 and attacker.positions[1][0] == p[0] and attacker.positions[1][1] == p[1]:
+			total = total / 100
 		#sys.stderr.write("Total score for " + str(attacker) + " vs. " + str(defender) + " is " + str(total) + "\n")
 		return total
 
@@ -122,7 +129,10 @@ class Vixen(BasicAI):
 		return self.killScores[defenderRank]
 
 	def bombScore(self, attackerRank):
-		return self.bombScores[attackerRank]
+		if attackerRank == '8':
+			return 1.0
+		else:
+			return 0.0
 
 	def suicideScore(self, attackerRank):
 		return self.suicideScores[attackerRank]
@@ -152,12 +162,7 @@ class Vixen(BasicAI):
 			return 0.0
 		return float(float(self.hiddenEnemies[targetRank]) / float(total))
 	
-	def InterpretResult(self):
-		""" Over-ride the basic AI interpret result so we can update probabilities """
-		if BasicAI.InterpretResult(self) == False:
-			return False
-		
-		return True
+
 	
 
 				
