@@ -446,7 +446,7 @@ MovementResult Game::Play()
 
 	while (!Board::HaltResult(result) && (turnCount < maxTurns || maxTurns < 0))
 	{
-		if (red->HumanController())
+		if (red->HumanController() && blue->HumanController())
 			toReveal = Piece::RED;
 		if (printBoard)
 		{
@@ -476,7 +476,7 @@ MovementResult Game::Play()
 		else
 			ReadUserCommand();
 
-		if (blue->HumanController())
+		if (blue->HumanController() && red->HumanController())
 			toReveal = Piece::BLUE;
 		if (printBoard)
 		{
