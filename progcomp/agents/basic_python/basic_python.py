@@ -31,13 +31,13 @@ def is_integer(s):
 def move(x, y, direction, multiplier):
 	""" Moves point (x,y) in direction, returns a pair """
 	if direction == "UP":
-		return (x,y-1)
+		return (x,y-multiplier)
 	elif direction == "DOWN":
-		return (x,y+1)
+		return (x,y+multiplier)
 	elif direction == "LEFT":
-		return (x-1, y)
+		return (x-multiplier, y)
 	elif direction == "RIGHT":
-		return (x+1, y)
+		return (x+multiplier, y)
 	return (x,y)
 
 
