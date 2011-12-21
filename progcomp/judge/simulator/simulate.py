@@ -39,8 +39,8 @@ if len(sys.argv) >= 6:
 	print "Useage: " +sys.argv[0] + " [nRounds=1] [nGames=10] [baseDirectory=\""+baseDirectory+"\"] [managerPath=baseDirectory+\"/judge/manager/stratego\"]"
 	sys.exit(1)
 
-resultsDirectory = baseDirectory+"/results/" #Where results will go (results are in the form of text files of agent names and scores)
-logDirectory = baseDirectory+"/log/" #Where log files go (direct output of manager program)
+resultsDirectory = baseDirectory+"/web/results/" #Where results will go (results are in the form of text files of agent names and scores)
+logDirectory = baseDirectory+"/web/log/" #Where log files go (direct output of manager program)
 agentsDirectory = baseDirectory+"/agents/" #Where agents are found (each agent has its own subdirectory within this directory)
 managerPath = baseDirectory+"/judge/manager/stratego" #Path to the executable that plays the games
 if len(sys.argv) >= 5:
@@ -65,16 +65,22 @@ if os.path.exists(managerPath) == False:
 
 if os.path.exists(resultsDirectory) == False:
 	os.mkdir(resultsDirectory) #Make the results directory if it didn't exist
-''' 
-	Obselete older version doesn't work with new .html files
-#Identify the round number by reading the results directory
-totalRounds = len(os.listdir(resultsDirectory)) + 1
-if totalRounds > 1:
-	totalRounds -= 1
-'''
 
-totalRounds = 1
-#TODO: Fix this bit!
+	
+#Identify the round number by reading from the "info" file in the results directory, if it doesn't exist then start at round 1.
+if os.path.exists(resultsDirectory+"info") == False:
+	totalRounds = 1
+else:
+	info = open(resultsDirectory+"info", "r")
+	totalRounds = int(info.readline().strip())
+	info.close()
+	os.remove(resultsDirectory+"info")
+
+info = open(resultsDirectory+"info", "w")
+info.write(str(totalRounds + nRounds) + "\n")
+info.close()
+	
+
 
 if os.path.exists(logDirectory) == False:
 	os.mkdir(logDirectory) #Make the log directory if it didn't exist
@@ -106,7 +112,18 @@ for name in agentNames:
 			sys.stdout.write(" Invalid! (No \"info\" file found)\n")
 		continue
 
-	agentExecutable = agentsDirectory+name+"/"+(open(agentsDirectory+name+"/info").readline().strip())
+	infoFile = open(agentsDirectory+name+"/info", "r")
+	agentExecutable = agentsDirectory+name+"/"+(infoFile.readline().strip())
+	author = infoFile.readline().strip()
+	language = infoFile.readline().strip()
+	description = ""
+	while True:
+		line = infoFile.readline()
+		if len(line) > 0:
+			description += line
+		else:
+			break
+	infoFile.close()
 	
 	if os.path.exists(agentExecutable) == False:
 		if verbose:
@@ -119,7 +136,7 @@ for name in agentNames:
 
 	#Convert array of valid names into array of dictionaries containing information about each agent
 	#I'm starting to like python...
-	agents.append({"name":name, "path":agentExecutable,  "score":[0], "VICTORY":[], "DEFEAT":[], "DRAW":[], "ILLEGAL":[], "DEFAULT":[], "INTERNAL_ERROR":[], "SURRENDER":[], "DRAW_DEFAULT":[], "BOTH_ILLEGAL":[], "BAD_SETUP":[], "ALL":[], "totalScore":0, "Wins":0, "Losses":0, "Draws":0, "Illegal":0, "Errors":0})
+	agents.append({"name":name, "path":agentExecutable, "author":author, "language":language, "description":description, "score":[0], "VICTORY":[], "DEFEAT":[], "DRAW":[], "ILLEGAL":[], "DEFAULT":[], "INTERNAL_ERROR":[], "SURRENDER":[], "DRAW_DEFAULT":[], "BOTH_ILLEGAL":[], "BAD_SETUP":[], "ALL":[], "totalScore":0, "Wins":0, "Losses":0, "Draws":0, "Illegal":0, "Errors":0})
 
 if len(agents) == 0:
 	print "Couldn't find any agents! Check paths (Edit this script) or generate \"info\" files for agents."
@@ -131,23 +148,25 @@ if verbose:
 #Prepare the pretty .html files if they don't exist
 if verbose:
 	print "Preparing .html results files..."
-htmlDir = resultsDirectory + "pretty/"
-if os.path.exists(htmlDir) == False:
-	os.mkdir(htmlDir)
-if os.path.exists(htmlDir) == False:
-	print "Couldn't create directory \""+htmlDir+"\"."
-	sys.exit(1)
+
 
 for agent in agents:
-	if os.path.exists(htmlDir+agent["name"] + ".html") == False:
-		agentFile = open(htmlDir+agent["name"] + ".html", "w")
-		agentFile.write("<html>\n<head>\n <title> " + agent["name"] + " results</title>\n</head>\n<body>\n<h1> Results for " + agent["name"]+" </h1>\n</body>\n</html>\n")
+	if os.path.exists(resultsDirectory+agent["name"] + ".html") == False:
+		agentFile = open(resultsDirectory+agent["name"] + ".html", "w")
+		agentFile.write("<html>\n<head>\n <title> " + agent["name"] + " overview</title>\n</head>\n<body>\n<h1> Overview for " + agent["name"]+" </h1>\n")
+		agentFile.write("<table border=\"0\" cellpadding=\"10\">\n")
+		agentFile.write("<tr> <th> Name </th> <th> Author </th> <th> Language </th> </tr>\n")
+		agentFile.write("<tr> <td> "+agent["name"]+" </td> <td> "+agent["author"]+" </td> <td> "+agent["language"]+" </td> </tr>\n")
+		agentFile.write("</table>\n");
+
+		agentFile.write("<p> <b>Description</b> </p>\n")
+		agentFile.write("<p> " + agent["description"] + " </p>\n")
 		agentFile.close()
 
-	os.rename(htmlDir+agent["name"] + ".html", "tmpfile")
+	os.rename(resultsDirectory+agent["name"] + ".html", "tmpfile")
 	
 	oldFile = open("tmpfile", "r")
-	agentFile = open(htmlDir+agent["name"] + ".html", "w")
+	agentFile = open(resultsDirectory+agent["name"] + ".html", "w")
 	line = oldFile.readline()
 	while line != "":
 		#if verbose:
@@ -169,7 +188,7 @@ for agent in agents:
 		line = oldFile.readline()
 
 	if verbose:
-		print "Prepared results file \"" + htmlDir+agent["name"] + ".html\"."
+		print "Prepared results file \"" + resultsDirectory+agent["name"] + ".html\"."
 	oldFile.close()
 	agentFile.close()
 	os.remove("tmpfile")
@@ -206,7 +225,7 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 				#Play a game and read the result. Note the game is logged to a file based on the agent's names
 				if verbose:
 					sys.stdout.write("Agents: \""+red["name"]+"\" and \""+blue["name"]+"\" playing game (ID: " + gameID + ") ... ")
-				logFile = logDirectory + "round"+str(roundNumber) + "/"+red["name"]+".vs."+blue["name"]+"."+str(i)
+				logFile = logDirectory + "round"+str(roundNumber) + "/"+red["name"]+".vs."+blue["name"]+"."+str(gameID)
 				outline = os.popen(managerPath + " -o " + logFile + " " + red["path"] + " " + blue["path"], "r").read()
 				results = outline.split(' ')
 			
@@ -317,7 +336,7 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 		print "Updating pretty .html files... "
 
 	for agent in agents:
-		agentFile = open(htmlDir + agent["name"]+".html", "a")
+		agentFile = open(resultsDirectory + agent["name"]+".html", "a")
 		agentFile.write("<h2> Round " + str(roundNumber) + "</h2>\n")
 		agentFile.write("<h3> Round Overview </h3>\n")
 		agentFile.write("<table border=\"0\" cellpadding=\"10\">\n")
@@ -325,13 +344,20 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 		agentFile.write("<tr> <td> "+str(agent["score"][0])+" </td> <td> "+str(len(agent["VICTORY"]) + len(agent["DEFAULT"]))+" </td> <td> "+str(len(agent["DEFEAT"]) + len(agent["SURRENDER"]))+" </td> <td> "+str(len(agent["DRAW"]) + len(agent["DRAW_DEFAULT"]))+" </td> <td> "+str(len(agent["ILLEGAL"]) + len(agent["BOTH_ILLEGAL"]) + len(agent["BAD_SETUP"]))+" </td> <td> " +str(len(agent["INTERNAL_ERROR"]))+" </td> </tr>\n")
 
 		agentFile.write("</table>\n")
+		agentFile.write("<p> <a href=round"+str(roundNumber)+".html>Round "+str(roundNumber) + " Scoreboard</a></p>\n")
 
 		agentFile.write("<h3> Detailed </h3>\n")
 		agentFile.write("<table border=\"0\" cellpadding=\"10\">\n")
 		agentFile.write("<tr> <th> Game ID </th> <th> Opponent </th> <th> Played as </th> <th> Outcome </th> <th> Score </th> <th> Accumulated Score </th> </tr> </th>\n")
 		
+		
+
 		for index in range(0, len(agent["ALL"])):
-			agentFile.write("<tr> <td> " + str(agent["ALL"][index][1]) + " </td> <td> <a href="+agent["ALL"][index][0]+".html>"+agent["ALL"][index][0] + " </a> </td> <td> " + agent["ALL"][index][4] + " </td> <td> " + agent["ALL"][index][3] + " </td> <td> " + str(agent["ALL"][index][2]) + "</td> <td> " + str(agent["score"][len(agent["score"])-index -2]) + " </td> </tr> </th>\n")
+			if agent["ALL"][index][4] == "RED":
+				logFile = logDirectory + "round"+str(roundNumber) + "/"+agent["name"]+".vs."+agent["ALL"][index][0]+"."+str(agent["ALL"][index][1])
+			else:
+				logFile = logDirectory + "round"+str(roundNumber) + "/"+agent["ALL"][index][0]+".vs."+agent["name"]+"."+str(agent["ALL"][index][1])
+			agentFile.write("<tr> <td> <a href="+logFile+">" + str(agent["ALL"][index][1]) + " </a> </td> <td> <a href="+agent["ALL"][index][0]+".html>"+agent["ALL"][index][0] + " </a> </td> <td> " + agent["ALL"][index][4] + " </td> <td> " + agent["ALL"][index][3] + " </td> <td> " + str(agent["ALL"][index][2]) + "</td> <td> " + str(agent["score"][len(agent["score"])-index -2]) + " </td> </tr> </th>\n")
 		agentFile.write("</table>\n")
 		
 		agent["totalScore"] += agent["score"][0]
@@ -347,10 +373,12 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 		agentFile.write("<tr> <td> "+str(agent["totalScore"])+" </td> <td> "+str(agent["Wins"])+" </td> <td> "+str(agent["Losses"])+" </td> <td> "+str(agent["Draws"])+" </td> <td> "+str(agent["Illegal"])+" </td> <td> " +str(agent["Errors"])+" </td> </tr>\n")
 
 		agentFile.write("</table>\n")
+
+
 		agentFile.close()	
 
 	#Update round file
-	roundFile = open(htmlDir + "round"+str(roundNumber)+".html", "w")
+	roundFile = open(resultsDirectory + "round"+str(roundNumber)+".html", "w")
 	roundFile.write("<html>\n<head>\n <title> Round " +str(roundNumber)+ " Overview </title>\n</head>\n<body>\n")
 	roundFile.write("<h1> Round " +str(roundNumber)+ " Overview </h1>\n")
 	roundFile.write("<table border=\"0\" cellpadding=\"10\">\n")
@@ -358,7 +386,9 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 	agents.sort(key = lambda e : e["score"][0], reverse=True)
 	for agent in agents:
 		roundFile.write("<tr> <td> <a href="+agent["name"]+".html>"+agent["name"] + " </a> </td> <td> " + str(agent["score"][0]) + " </td> <td> " + str(agent["totalScore"]) + " </td> </tr>\n")
-	roundFile.write("</table>\n</body>\n<!-- Results file for Round " + str(roundNumber) + " autogenerated by \"" + sys.argv[0] + "\" at time " + str(time()) + " -->\n</html>\n\n")
+	roundFile.write("</table>\n")
+	roundFile.write("<p> <a href=total.html>Current Scoreboard</a></p>\n")
+	roundFile.write("</body>\n<!-- Results file for Round " + str(roundNumber) + " autogenerated by \"" + sys.argv[0] + "\" at time " + str(time()) + " -->\n</html>\n\n")
 	roundFile.close()
 
 
@@ -368,17 +398,17 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 if verbose:
 	print "Finalising .html files... "
 for agent in agents:
-	agentFile = open(htmlDir + agent["name"]+".html", "a")
+	agentFile = open(resultsDirectory + agent["name"]+".html", "a")
 
 	#Write the "total" statistics
 
 	agentFile.write("</body>\n<!-- Results file for \"" + agent["name"] + "\" autogenerated by \"" + sys.argv[0] + "\" at time " + str(time()) + " -->\n</html>\n\n")
 	agentFile.close()
 
-	if os.path.exists(htmlDir + "total.html") == True:
-		os.remove(htmlDir + "total.html") #Delete the file
+	if os.path.exists(resultsDirectory + "total.html") == True:
+		os.remove(resultsDirectory + "total.html") #Delete the file
 
-totalFile = open(htmlDir + "total.html", "w")
+totalFile = open(resultsDirectory + "total.html", "w")
 totalFile.write("<html>\n<head>\n <title> Total Overview </title>\n</head>\n<body>\n")
 totalFile.write("<h1> Total Overview </h1>\n")
 totalFile.write("<table border=\"0\" cellpadding=\"10\">\n")
@@ -386,7 +416,15 @@ totalFile.write("<tr> <th> Name </th> <th> Total Score </th> </tr>\n")
 agents.sort(key = lambda e : e["totalScore"], reverse=True)
 for agent in agents:
 	totalFile.write("<tr> <td> <a href="+agent["name"]+".html>"+agent["name"] + " </a> </td> <td> " + str(agent["totalScore"]) + " </td> </tr>\n")
-totalFile.write("</table>\n</body>\n<!-- Total Results file autogenerated by \"" + sys.argv[0] + "\" at time " + str(time()) + " -->\n</html>\n\n")
+totalFile.write("</table>\n")
+
+totalFile.write("<h2> Round Summaries </h2>\n")
+totalFile.write("<table border=\"0\" cellpadding=\"10\">\n")
+for i in range(1, totalRounds+1):
+	totalFile.write("<tr> <td> <a href=round"+str(i)+".html>Round " + str(i) + "</a> </td> </tr>\n")
+totalFile.write("</table>\n")
+
+totalFile.write("</body>\n<!-- Total Results file autogenerated by \"" + sys.argv[0] + "\" at time " + str(time()) + " -->\n</html>\n\n")
 totalFile.close()
 
 	
