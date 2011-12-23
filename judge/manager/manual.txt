@@ -1,1 +1,1 @@
-web/doc/manager_manual.txt
+../../web/doc/manager_manual.txt

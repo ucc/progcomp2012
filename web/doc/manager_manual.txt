@@ -221,16 +221,19 @@ EXIT/OUTPUT
 
 BUILDING
 	To build from source, simply run make in the source directory.
+	You will need the C pthread library (which should come with gcc)
 
 	stratego can be built with or without graphics enabled. By default, graphics are disabled.
 
-	To enable graphics, ensure that the first line of the source file "graphics.h" reads:
+	To enable graphics:
+	1. Ensure that the first line of the source file "graphics.h" reads:
+		#define BUILD_GRAPHICS
+	2. In "Makefile", uncomment the line "CPP = g++ -Wall -pedantic -lSDL -lGL  -g" and comment out the line "CPP = g++ -Wall -pedantic -g"
 
-	#define BUILD_GRAPHICS
-
-	To disable graphics, comment out the first line of "graphics.h" i.e ensure that it reads:
-
-	//#define BUILD_GRAPHICS
+	To disable graphics:
+	1. Comment out the first line of "graphics.h" i.e ensure that it reads:
+		//#define BUILD_GRAPHICS
+	2. In "Makefile", uncomment the line "CPP = g++ -Wall -pedantic -g" and comment out the line "CPP = g++ -Wall -pedantic -lSDL -lGL  -g"
 
 	If you intend to build with graphics enabled, you will need the SDL and OpenGL developement libraries installed first.
 	If you intend to use graphics, please ensure the "images" directory is located in the executable's run directory.
