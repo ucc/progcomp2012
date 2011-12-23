@@ -8,6 +8,7 @@
 
 #include "game.h"
 
+
 using namespace std;
 
 Piece::Colour SetupGame(int argc, char ** argv);
@@ -82,7 +83,13 @@ Piece::Colour SetupGame(int argc, char ** argv)
 					++ii;
 					break;
 				case 'g':
+					#ifdef BUILD_GRAPHICS
 					graphics = !graphics;
+					#else
+					fprintf(stderr, "ERROR: -g switch supplied, but the program was not built with graphics.\n Please do not use the -g switch.");
+					exit(EXIT_FAILURE);
+					#endif //BUILD_GRAPHICS
+
 					break;
 				case 'p':
 					printBoard = !printBoard;

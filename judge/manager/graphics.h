@@ -1,19 +1,26 @@
+//#define BUILD_GRAPHICS
+#ifdef BUILD_GRAPHICS
+
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
+
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
 
+typedef SDL_Surface Screen;
+typedef SDL_Rect Rectangle;
+typedef short unsigned int SUint;
+typedef unsigned char Uint8;
 
 #include <vector>
 #include <list>
 
 
-typedef SDL_Surface Screen;
-typedef SDL_Rect Rectangle;
 
 
-typedef short unsigned int SUint;
+
+
 
 class Texture;
 class Font;
@@ -72,8 +79,8 @@ class Graphics
 
 		static SDL_Surface * TextureFromColours(std::vector<SUint> * R, std::vector<SUint> * G, std::vector<SUint> * B, std::vector<SUint> * A = NULL);
 		static SDL_Surface * TextureFromColours(std::vector<std::vector<SUint> > * R, std::vector<std::vector<SUint> > * G, std::vector<std::vector<SUint> > * B, std::vector<std::vector<SUint> > * A = NULL);
-
-		static void Wait(int n) {SDL_Delay(n);}
+		
+		static void Wait(int n);
 
 		template <class T>
 		class TextureManager
@@ -120,6 +127,7 @@ class Texture
 		
 		int width() const {return surface->w;}
 		int height() const {return surface->h;}
+
 	protected:
 		SDL_Surface * surface;
 		GLuint texture;
@@ -144,5 +152,7 @@ class Font : private Texture
 
 
 #endif //GRAPHICS_H
+
+#endif //BUILD_GRAPHICS
 
 //EOF

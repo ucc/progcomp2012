@@ -14,11 +14,8 @@ int Piece::maxUnits[] = {0,0,1,1,8,5,4,4,4,3,2,1,1,6,0};
 
 
 
-
+#ifdef BUILD_GRAPHICS
 Piece::TextureManager Piece::textures;
-
-
-
 
 Piece::TextureManager::~TextureManager()
 {
@@ -41,7 +38,7 @@ Texture & Piece::TextureManager::operator[](const LUint & at)
 	}
 	return *(Array<Texture*>::operator[](at));
 }
-
+#endif //BUILD_GRAPHICS
 
 /**
  * Gets the type of a piece, based off a character token
@@ -197,7 +194,7 @@ void Board::PrintPretty(FILE * stream, const Piece::Colour & reveal)
 }
 
 
-
+#ifdef BUILD_GRAPHICS
 /**
  * Draw the board state to graphics
  * @param reveal - Pieces matching this colour will be revealed. If Piece::BOTH, all pieces will be revealed
@@ -206,6 +203,7 @@ void Board::PrintPretty(FILE * stream, const Piece::Colour & reveal)
  */
 void Board::Draw(const Piece::Colour & reveal, bool showRevealed)
 {
+
 	if (!Graphics::Initialised())
 	{
 		fprintf(stderr, "ERROR - Board::Draw called whilst graphics disabled!!!\n");
@@ -256,6 +254,7 @@ void Board::Draw(const Piece::Colour & reveal, bool showRevealed)
 	Graphics::UpdateScreen();
 	
 }
+#endif //BUILD_GRAPHICS
 
 /**
  * Adds a piece to the board

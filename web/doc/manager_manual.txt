@@ -36,6 +36,8 @@ A WARNING ABOUT BUFFERING
 	
 OPTIONS
 	-g
+		NOTE: This switch only functions if stratego is built with graphics enabled. See BUILDING for more information.
+
 		By default, graphics are disabled. If the -g switch is present, stratego will draw the game as it is played using SDL/OpenGL
 		
 	-p
@@ -216,6 +218,24 @@ EXIT/OUTPUT
 
 	If an error occurs within stratego itself, an error message will be printed to stderr and return exit code 1.
 	If possible, stratego will print the message "QUIT" to both AI programs, and they should exit as soon as possible.
+
+BUILDING
+	To build from source, simply run make in the source directory.
+
+	stratego can be built with or without graphics enabled. By default, graphics are disabled.
+
+	To enable graphics, ensure that the first line of the source file "graphics.h" reads:
+
+	#define BUILD_GRAPHICS
+
+	To disable graphics, comment out the first line of "graphics.h" i.e ensure that it reads:
+
+	//#define BUILD_GRAPHICS
+
+	If you intend to build with graphics enabled, you will need the SDL and OpenGL developement libraries installed first.
+	If you intend to use graphics, please ensure the "images" directory is located in the executable's run directory.
+
+	
 	
 
 BUGS	
@@ -242,5 +262,5 @@ NOTES
 	   irc://irc.ucc.asn.au #progcomp
 
 THIS PAGE LAST UPDATED
-	20/12/11 by Sam Moore
+	23/12/11 by Sam Moore
 	

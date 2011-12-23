@@ -1,5 +1,5 @@
 #include "game.h"
-
+#include <stdarg.h>
 using namespace std;
 
 
@@ -20,8 +20,10 @@ Game::Game(const char * redPath, const char * bluePath, const bool enableGraphic
 	signal(SIGPIPE, Game::HandleBrokenPipe);
 
 
+	#ifdef BUILD_GRAPHICS
 	if (graphicsEnabled && (!Graphics::Initialised()))
 			Graphics::Initialise("Stratego", theBoard.Width()*32, theBoard.Height()*32);
+	#endif //BUILD_GRAPHICS
 
 	if (strcmp(redPath, "human") == 0)
 		red = new Human_Controller(Piece::RED, graphicsEnabled);
@@ -49,9 +51,10 @@ Game::Game(const char * fromFile, const bool enableGraphics, double newStallTime
 	Game::theGame = this;
 	signal(SIGPIPE, Game::HandleBrokenPipe);
 
-
+	#ifdef BUILD_GRAPHICS
 	if (graphicsEnabled && (!Graphics::Initialised()))
 			Graphics::Initialise("Stratego", theBoard.Width()*32, theBoard.Height()*32);
+	#endif //BUILD_GRAPHICS
 
 	input = fopen(fromFile, "r");
 
@@ -201,16 +204,18 @@ void Game::Wait(double wait)
 	TimerThread timer(wait*1000000); //Wait in seconds
 	timer.Start();
 
+	#ifdef BUILD_GRAPHICS
 	if (!graphicsEnabled)
 	{
 		while (!timer.Finished());
 		timer.Stop();
 		return;
 	}
-
+	#endif //BUILD_GRAPHICS
 
 	while (!timer.Finished())
 	{
+		#ifdef BUILD_GRAPHICS
 		SDL_Event  event;
 		while (SDL_PollEvent(&event))
 		{
@@ -222,6 +227,7 @@ void Game::Wait(double wait)
 					break;
 			}
 		}
+		#endif //BUILD_GRAPHICS
 	}
 	timer.Stop();
 	
@@ -256,6 +262,8 @@ void Game::HandleBrokenPipe(int sig)
 	if (Game::theGame->printBoard)
 		Game::theGame->theBoard.PrintPretty(stdout, Piece::BOTH);
 
+	
+	#ifdef BUILD_GRAPHICS
 	if (Game::theGame->graphicsEnabled && theGame->log == stdout)
 	{
 		theGame->logMessage("CLOSE WINDOW TO EXIT\n");
@@ -275,6 +283,7 @@ void Game::HandleBrokenPipe(int sig)
 		}
 	}
 	else
+	#endif //BUILD_GRAPHICS
 	{
 		if (theGame->log == stdout)
 		{
@@ -396,6 +405,8 @@ void Game::PrintEndMessage(const MovementResult & result)
 		theBoard.PrintPretty(stdout, Piece::BOTH);
 		fprintf(stdout, "\n");
 	}
+
+	#ifdef BUILD_GRAPHICS
 	if (graphicsEnabled && log == stdout)
 	{
 		logMessage("CLOSE WINDOW TO EXIT\n");
@@ -415,6 +426,7 @@ void Game::PrintEndMessage(const MovementResult & result)
 		}
 	}
 	else
+	#endif //BUILD_GRAPHICS
 	{
 		if (log == stdout)
 		{
@@ -459,8 +471,10 @@ MovementResult Game::Play()
 			fprintf(stdout, "\n\n");
 		}
 
+		#ifdef BUILD_GRAPHICS
 		if (graphicsEnabled)
 			theBoard.Draw(toReveal);
+		#endif //BUILD_GRAPHICS
 		
 		turn = Piece::RED;
 		logMessage( "%d RED: ", turnCount);
@@ -485,8 +499,11 @@ MovementResult Game::Play()
 			theBoard.PrintPretty(stdout, toReveal);
 			fprintf(stdout, "\n\n");
 		}
+		
+		#ifdef BUILD_GRAPHICS
 		if (graphicsEnabled)
 			theBoard.Draw(toReveal);
+		#endif //BUILD_GRAPHICS
 
 		
 		

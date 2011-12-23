@@ -110,9 +110,10 @@ MovementResult Human_Controller::QueryMove(string & buffer)
 	}
 
 	
-
+	#ifdef BUILD_GRAPHICS
 	if (graphicsEnabled)
 	{
+		
 		fprintf(stdout, "Click to move!\n");
 		SDL_Event event; int mouseClick = 0;
 
@@ -164,8 +165,10 @@ MovementResult Human_Controller::QueryMove(string & buffer)
 			}
 		}
 		fprintf(stdout, "Move complete!\n");
+		
 	}
 	else
+	#endif //BUILD_GRAPHICS
 	{
 		buffer.clear();
 		for (char in = fgetc(stdin); in != '\n'; in = fgetc(stdin))

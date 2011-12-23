@@ -6,9 +6,8 @@
 
 #include <assert.h>
 
-
-	#include "graphics.h"
-	#include "array.h"
+#include "graphics.h"
+#include "array.h"
 
 #include <vector>
 
@@ -58,6 +57,7 @@ class Piece
 
 		public:
 
+			#ifdef BUILD_GRAPHICS
 			class TextureManager : public Graphics::TextureManager<LUint>, private Array<Texture*>
 			{
 				public:
@@ -86,7 +86,7 @@ class Piece
 						break;
 				}
 			}
-
+			#endif //BUILD_GRAPHICS
 			
 			
 
@@ -108,8 +108,9 @@ class Board
 		void Print(FILE * stream, const Piece::Colour & reveal=Piece::BOTH); //Print board
 		void PrintPretty(FILE * stream, const Piece::Colour & reveal=Piece::BOTH); //Print board using colour
 		
+		#ifdef BUILD_GRAPHICS
 		void Draw(const Piece::Colour & reveal=Piece::BOTH, bool showRevealed = true); //Draw board
-		
+		#endif //BUILD_GRAPHICS
 
 		bool AddPiece(int x, int y, const Piece::Type & newType, const Piece::Colour & newColour); //Add piece to board
 

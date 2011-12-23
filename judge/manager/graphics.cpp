@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 
+#ifdef BUILD_GRAPHICS
 
 #undef DEBUG
 //#define DEBUG
@@ -125,6 +126,7 @@ void Texture::Draw(int x, int y, double angle , double scale )
 		glPopMatrix();
 
 }
+
 
 
 Font::Font(const char * filename, int newWidth, int newHeight) : Texture(filename), width(newWidth), height(newHeight)
@@ -442,8 +444,9 @@ Colour Graphics::ConvertColour(Uint8 from)
 	return result;
 }
 
+void Graphics::Wait(int n)
+{
+	SDL_Delay(n);
+}
 
-
-
-
-
+#endif //BUILD_GRAPHICS

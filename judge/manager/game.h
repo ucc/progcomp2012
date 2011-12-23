@@ -4,7 +4,7 @@
 #include "stratego.h"
 #include "ai_controller.h"
 #include "human_controller.h"
-
+#include <cstring>
 
 
 /**
