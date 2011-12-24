@@ -2,7 +2,7 @@
 # Sample C++ Stratego AI
 # UCC Programming Competition 2012 
 
-CPP = g++ -Wall -pedantic -lSDL -lGL  -g
+CPP = g++ -Wall -pedantic -g
 OBJ = basic_cpp.o
 
 BIN = basic_cpp

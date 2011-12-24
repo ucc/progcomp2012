@@ -11,7 +11,7 @@
 class AI_Controller : public Controller, private Program
 {
 	public:
-		AI_Controller(const Piece::Colour & newColour, const char * executablePath, const double newTimeout = 2.0) : Controller(newColour, executablePath), Program(executablePath), timeout(newTimeout) {}
+		AI_Controller(const Piece::Colour & newColour, const char * executablePath, const double newTimeout = 60.0) : Controller(newColour, executablePath), Program(executablePath), timeout(newTimeout) {}
 		virtual ~AI_Controller() {}
 
 		

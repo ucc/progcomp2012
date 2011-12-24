@@ -234,8 +234,8 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 						sys.stdout.write("Garbage output! \"" + outline + "\"\n")
 					red["INTERNAL_ERROR"].append((blue["name"], gameID, scores["INTERNAL_ERROR"][0]))
 					blue["INTERNAL_ERROR"].append((red["name"], gameID, scores["INTERNAL_ERROR"][0]))
-					red["ALL"].append((blue["name"], gameID, scores["INTERNAL_ERROR"][0], "INTERNAL_ERROR"))
-					blue["ALL"].append((red["name"], gameID, scores["INTERNAL_ERROR"][0], "INTERNAL_ERROR"))
+					red["ALL"].append((blue["name"], gameID, scores["INTERNAL_ERROR"][0], "INTERNAL_ERROR", "RED"))
+					blue["ALL"].append((red["name"], gameID, scores["INTERNAL_ERROR"][0], "INTERNAL_ERROR", "BLUE"))
 					managerErrors += 1
 				else:
 
