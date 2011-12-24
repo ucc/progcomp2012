@@ -62,8 +62,8 @@ int main(int argc, char ** argv)
 
 Piece::Colour SetupGame(int argc, char ** argv)
 {
-	char * red = NULL; char * blue = NULL; double timeout = 0.00001; bool graphics = false; bool allowIllegal = false; FILE * log = NULL;
-	Piece::Colour reveal = Piece::BOTH; char * inputFile = NULL; int maxTurns = 5000; bool printBoard = false;
+	char * red = NULL; char * blue = NULL; double stallTime = 0.0; bool graphics = false; bool allowIllegal = false; FILE * log = NULL;
+	Piece::Colour reveal = Piece::BOTH; char * inputFile = NULL; int maxTurns = 5000; bool printBoard = false; double timeoutTime = 2.0;
 	for (int ii=1; ii < argc; ++ii)
 	{
 		if (argv[ii][0] == '-')
@@ -73,15 +73,29 @@ Piece::Colour SetupGame(int argc, char ** argv)
 				case 't':
 					if (argc - ii <= 1)
 					{
-						fprintf(stderr, "ARGUMENT_ERROR - Expected timeout value after -t switch!\n");
+						fprintf(stderr, "ARGUMENT_ERROR - Expected stall time value after -t switch!\n");
 						exit(EXIT_FAILURE);
 					}
 					if (strcmp(argv[ii+1], "inf") == 0)
-						timeout = -1;
+						stallTime = -1;
 					else
-						timeout = atof(argv[ii+1]);
+						stallTime = atof(argv[ii+1]);
 					++ii;
 					break;
+
+				case 'T':
+					if (argc - ii <= 1)
+					{
+						fprintf(stderr, "ARGUMENT_ERROR - Expected timeout value after -T switch!\n");
+						exit(EXIT_FAILURE);
+					}
+					if (strcmp(argv[ii+1], "inf") == 0)
+						timeoutTime = -1;
+					else
+						timeoutTime = atof(argv[ii+1]);
+					++ii;
+					break;
+
 				case 'g':
 					#ifdef BUILD_GRAPHICS
 					graphics = !graphics;
@@ -192,7 +206,8 @@ Piece::Colour SetupGame(int argc, char ** argv)
 		}
 	}
 
-
+	if (graphics && stallTime == 0.0)
+		stallTime = 0.00001; //Hack so that SDL events (ie SDL_QUIT) will have time to be captured when graphics are enabled
 
 	if (inputFile == NULL)
 	{
@@ -201,11 +216,11 @@ Piece::Colour SetupGame(int argc, char ** argv)
 			fprintf(stderr, "ARGUMENT_ERROR - Did not recieve enough players (did you mean to use the -f switch?)\n");	
 			exit(EXIT_FAILURE);	
 		}
-		Game::theGame = new Game(red,blue, graphics, timeout, allowIllegal,log, reveal,maxTurns, printBoard);
+		Game::theGame = new Game(red,blue, graphics, stallTime, allowIllegal,log, reveal,maxTurns, printBoard, timeoutTime);
 	}
 	else
 	{
-		Game::theGame = new Game(inputFile, graphics, timeout, allowIllegal,log, reveal,maxTurns, printBoard);
+		Game::theGame = new Game(inputFile, graphics, stallTime, allowIllegal,log, reveal,maxTurns, printBoard, timeoutTime);
 	}
 
 	if (Game::theGame == NULL)
@@ -247,7 +262,8 @@ void PrintResults(const MovementResult & result, string & buffer)
 	{
 		switch (result.type)
 		{
-			case MovementResult::VICTORY:
+			case MovementResult::VICTORY_FLAG:
+			case MovementResult::VICTORY_ATTRITION: //It does not matter how you win, it just matters that you won!
 				s <<  "VICTORY ";
 				break;
 			case MovementResult::SURRENDER:

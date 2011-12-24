@@ -5,7 +5,7 @@ WARNING
 	This program is still a work in progress. Consider it a Beta version.
 
 SYNOPSIS
-	stratego {[-gpirb] [-o output_file ] [-t stall_time] [-m max_turns] {red_player blue_player | -f input_file} | {-h | --help} }
+	stratego {[-gpirb] [-o output_file ] [-t stall_time] [-T timeout_time] [-m max_turns] {red_player blue_player | -f input_file} | {-h | --help} }
 
 DESCRIPTION
 	stratego manages a game of Stratego. It stores the state of the board, and uses a simple protocol to interface with AI programs.
@@ -69,6 +69,15 @@ OPTIONS
 		
 		It is tentatively planned to allow the user to enter various commands to alter the game or proceed to specified turns.
 		However this is slightly complicated. So it might never be done.
+
+	-T
+		By default, stratego allows AI programs 2 seconds to respond before declaring their move ILLEGAL due to a timeout.
+		If the -T switch is present, AI programs will be allowed timeout_time to respond before their move is declared ILLEGAL.
+
+		If timeout_time is negative or "inf", stratego will never declare moves illegal due to timeouts.
+	
+		Human players are never subject to timeouts.
+		
 	-m
 		By default, the game is declared a Draw after 5000 turns have ellapsed.
 		Use this option to change the maximum number of turns.
@@ -116,10 +125,11 @@ GAME RULES
 
 		Each player's pieces are hidden from the other player. When two pieces encounter each other, the ranks will be revealed.
 
-		The objective is to destroy all Enemy Pieces (#) or capture the Enemy Flag (also #).
+		The objective is to either destroy all enemy pieces except the Bombs and Flag, or to capture the Flag.
 
 		Since 20/12 Bombs reflect the traditional rules; they are only destroyed by Miners.
 		In previous versions contact of an attacker other than a Miner with a Bomb destroyed the Bomb as well as the attacking piece.
+		
 		
 
 PROTOCOL
@@ -181,8 +191,10 @@ PROTOCOL
 		
 	
 	4. TIMEOUTS
-		If a program fails to respond to a query within 2 (two) seconds, the game will end and that AI will be sent the ILLEGAL result.
+		If a program fails to respond to a query, the game will end and that AI will be sent the ILLEGAL result.
 		Human players are not subject to the timeout restriction.
+
+		Please see the information on the -T switch.
 		
 			
 

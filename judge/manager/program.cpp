@@ -140,12 +140,13 @@ bool Program::SendMessage(const char * print, ...)
  */
 bool Program::GetMessage(string & buffer, double timeout)
 {
-	if (!Running())
+	if (!Running() || timeout == 0)
 		return false;
 
 	assert(&buffer != NULL);
 	GetterThread getterThread(input, buffer);
 	assert(&(getterThread.buffer) != NULL);
+
 	TimerThread timerThread(timeout*1000000);
 
 	getterThread.Start();
@@ -164,7 +165,8 @@ bool Program::GetMessage(string & buffer, double timeout)
 	}
 
 	getterThread.Stop();
-	timerThread.Stop();
+	if (timeout > 0)
+		timerThread.Stop();
 
 	
 

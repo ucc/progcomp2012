@@ -27,6 +27,8 @@ baseDirectory = "../.." #Base directory for results, logs, agents
 nGames = 2 #Number of games played by each agent against each opponent. Half will be played as RED, half as BLUE. If nGames <= 1, then no games will be played (useful for dry run?)
 nRounds = 1
 
+timeoutValue = 2
+
 if len(sys.argv) >= 2:
 	nRounds = int(sys.argv[1])
 if len(sys.argv) >= 3:
@@ -226,7 +228,7 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 				if verbose:
 					sys.stdout.write("Agents: \""+red["name"]+"\" and \""+blue["name"]+"\" playing game (ID: " + gameID + ") ... ")
 				logFile = logDirectory + "round"+str(roundNumber) + "/"+red["name"]+".vs."+blue["name"]+"."+str(gameID)
-				outline = os.popen(managerPath + " -o " + logFile + " " + red["path"] + " " + blue["path"], "r").read()
+				outline = os.popen(managerPath + " -o " + logFile + " -T " + str(timeoutValue) + " " + red["path"] + " " + blue["path"], "r").read()
 				results = outline.split(' ')
 			
 				if len(results) != 6:

@@ -375,7 +375,7 @@ MovementResult Board::MovePiece(int x, int y, const Direction & direction, int m
 		if (defender->type == Piece::FLAG)
 		{
 			winner = target->colour;
-			return MovementResult(MovementResult::VICTORY);
+			return MovementResult(MovementResult::VICTORY_FLAG);
 		}
 		else if (defender->type == Piece::BOMB)
 		{

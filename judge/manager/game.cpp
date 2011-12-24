@@ -7,7 +7,7 @@ using namespace std;
 Game* Game::theGame = NULL;
 bool Game::gameCreated = false;
 
-Game::Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard)
+Game::Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard, double newTimeoutTime) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard), timeoutTime(newTimeoutTime)
 {
 	gameCreated = false;
 	if (gameCreated)
@@ -28,18 +28,18 @@ Game::Game(const char * redPath, const char * bluePath, const bool enableGraphic
 	if (strcmp(redPath, "human") == 0)
 		red = new Human_Controller(Piece::RED, graphicsEnabled);
 	else
-		red = new AI_Controller(Piece::RED, redPath);
+		red = new AI_Controller(Piece::RED, redPath, timeoutTime);
 	
 	
 	if (strcmp(bluePath, "human") == 0)
 		blue = new Human_Controller(Piece::BLUE, graphicsEnabled);
 	else
-		blue = new AI_Controller(Piece::BLUE, bluePath);
+		blue = new AI_Controller(Piece::BLUE, bluePath, timeoutTime);
 
 
 }
 
-Game::Game(const char * fromFile, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard)
+Game::Game(const char * fromFile, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard, double newTimeoutTime) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard), timeoutTime(newTimeoutTime)
 {
 	gameCreated = false;
 	if (gameCreated)
@@ -93,13 +93,13 @@ Piece::Colour Game::Setup(const char * redName, const char * blueName)
 	{
 		logMessage("Controller for Player RED is invalid!\n");
 		if (!red->HumanController())
-			logMessage("Check that program \"%s\" exists and has executable permissions set.\n", redName);
+			logMessage("Check that executable \"%s\" exists and has executable permissions set.\n", redName);
 	}
 	if (!blue->Valid())
 	{
 		logMessage("Controller for Player BLUE is invalid!\n");
 		if (!blue->HumanController())
-			logMessage("Check that program \"%s\" exists and has executable permissions set.\n", blueName);
+			logMessage("Check that executable \"%s\" exists and has executable permissions set.\n", blueName);
 	}
 	if (!red->Valid())
 	{
@@ -243,13 +243,15 @@ void Game::HandleBrokenPipe(int sig)
 	if (theGame->turn == Piece::RED)
 	{
 		theGame->logMessage("Game ends on RED's turn - REASON: ");
-		theGame->blue->Message("DEFAULT");	
+		if (theGame->blue->Valid()) //Should probably check this
+			theGame->blue->Message("DEFAULT");	
 	}
 	else if (theGame->turn == Piece::BLUE)
 	{
 	
 		theGame->logMessage("Game ends on BLUE's turn - REASON: ");
-		theGame->red->Message("DEFAULT");
+		if (theGame->red->Valid()) //Should probably check this
+			theGame->red->Message("DEFAULT");
 	}
 	else
 	{
@@ -257,7 +259,7 @@ void Game::HandleBrokenPipe(int sig)
 			
 	}
 	
-	theGame->logMessage("SIGPIPE - Broken pipe (AI program may have segfaulted)\n");
+	theGame->logMessage("SIGPIPE - Broken pipe (AI program no longer running)\n");
 
 	if (Game::theGame->printBoard)
 		Game::theGame->theBoard.PrintPretty(stdout, Piece::BOTH);
@@ -285,7 +287,7 @@ void Game::HandleBrokenPipe(int sig)
 	else
 	#endif //BUILD_GRAPHICS
 	{
-		if (theGame->log == stdout)
+		if (theGame->log == stdout || theGame->log == stderr)
 		{
 			theGame->logMessage( "PRESS ENTER TO EXIT\n");
 			theGame->theBoard.Print(theGame->log);
@@ -354,14 +356,17 @@ void Game::PrintEndMessage(const MovementResult & result)
 		case MovementResult::POSITION_FULL:
 			logMessage("Attempted move into square occupied by neutral or allied piece\n");
 			break;
-		case MovementResult::VICTORY:
+		case MovementResult::VICTORY_FLAG:
 			logMessage("Captured the flag\n");
+			break;
+		case MovementResult::VICTORY_ATTRITION:
+			logMessage("Destroyed all mobile enemy pieces\n");
 			break;
 		case MovementResult::BAD_RESPONSE:
 			logMessage("Unintelligable response\n");
 			break;
 		case MovementResult::NO_MOVE:
-			logMessage("Did not make a move (may have exited)\n");
+			logMessage("Response timeout after %2f seconds.\n", timeoutTime);
 			break;
 		case MovementResult::COLOUR_ERROR:
 			logMessage("Internal controller error - COLOUR_ERROR\n");
@@ -432,6 +437,7 @@ void Game::PrintEndMessage(const MovementResult & result)
 		{
 			logMessage("PRESS ENTER TO EXIT\n");
 			while (fgetc(stdin) != '\n');
+			exit(EXIT_SUCCESS); //Might want to actually exit, you foolish fool
 		}
 	}
 
@@ -485,7 +491,16 @@ MovementResult Game::Play()
 		if (Board::HaltResult(result))
 			break;
 
-		if (stallTime > 0)
+		if (theBoard.MobilePieces(Piece::BLUE) == 0)
+		{
+			if (theBoard.MobilePieces(Piece::RED) == 0)
+				result = MovementResult::DRAW;
+			else
+				result = MovementResult::VICTORY_ATTRITION;
+			break;			
+		}
+
+		if (stallTime >= 0)
 			Wait(stallTime);
 		else
 			ReadUserCommand();
@@ -517,17 +532,24 @@ MovementResult Game::Play()
 		if (Board::HaltResult(result))
 			break;
 
-		
+		if (theBoard.MobilePieces(Piece::RED) == 0)
+			result = MovementResult::DRAW;
 
-		
+		if (theBoard.MobilePieces(Piece::RED) == 0)
+		{
+			if (theBoard.MobilePieces(Piece::BLUE) == 0)
+				result = MovementResult::DRAW;
+			else
+				result = MovementResult::VICTORY_ATTRITION;
+			break;			
+		}
 
-		if (stallTime > 0)
+		if (stallTime >= 0)
 			Wait(stallTime);
 		else
 			ReadUserCommand();
 	
-		if (theBoard.MobilePieces(Piece::BOTH) == 0)
-			result = MovementResult::DRAW;
+		
 
 		++turnCount;
 	}
@@ -569,11 +591,17 @@ int Game::logMessage(const char * format, ...)
  */
 void Game::ReadUserCommand()
 {
-	fprintf(stdout, "Waiting for user to press enter...\n");
+	fprintf(stdout, "Waiting for user to press enter... (type QUIT to exit)\n");
 	string command("");
 	for (char c = fgetc(stdin); c != '\n' && (int)(c) != EOF; c = fgetc(stdin))
 	{
 		command += c;
+	}
+
+	if (command == "QUIT")
+	{
+		fprintf(stdout, "Ordered to quit... exiting...\n");
+		exit(EXIT_SUCCESS);
 	}
 }
 
@@ -610,17 +638,86 @@ MovementResult FileController::QuerySetup(const char * opponentName, std::string
 
 MovementResult FileController::QueryMove(std::string & buffer)
 {
+	//This bit is kind of hacky and terrible, and yes I am mixing C with C++
+	//Yes I should have used fstream for the whole thing and it would be much easier.
+	//Oh well.
+
 	char buf[BUFSIZ];
 
 	fgets(buf, sizeof(buf), file);
 	char * s = (char*)(buf);
 	while (*s != ':' && *s != '\0')
 		++s;
-
-	s += 2;
 	
+	//Move forward to the start of the move information
+	for (int i=0; i < 2; ++i)
+	{
+		if (*s != '\0' && *s != '\n')
+			++s;
+	}
+	
+	//Unfortunately we can't just copy the whole line
 	buffer = string(s);
+	//We have to remove the movement result tokens
+	
+
+	vector<string> tokens;
+	Game::Tokenise(tokens, buffer, ' ');
+	buffer.clear();
+
+	if (tokens.size() < 1)
+		return MovementResult::BAD_RESPONSE;
+	buffer += tokens[0];
+
+	
+	if (tokens[0] == "NO_MOVE") //tokens[0] is either the x coordinate, or "NO_MOVE"
+		return MovementResult::OK;
+	if (tokens.size() < 2)
+		return MovementResult::BAD_RESPONSE;
+	buffer += " ";
+	buffer += tokens[1]; //The y coordinate
+	buffer += " ";
+	buffer += tokens[2]; //The direction
+	
+	//Check for a possible multiplier. If tokens[3] is an integer it will be the multiplier, otherwise it won't be.
+	if (tokens.size() > 3 && atoi(tokens[3].c_str()) != 0)
+	{
+		buffer += " ";
+		buffer += tokens[3];
+	}
+	else
+	{
+		//(tokens[3] should include a new line)
+		//buffer += "\n";
+	}
+
+	
+
+	
+	
+	
 	return MovementResult::OK;
+}
+
+/**
+ * Tokenise a string
+ */
+int Game::Tokenise(std::vector<string> & buffer, std::string & str, char split)
+{
+	string token = "";
+	for (unsigned int x = 0; x < str.size(); ++x)
+	{
+		if (str[x] == split && token.size() > 0)
+		{
+			buffer.push_back(token);
+			token = "";
+		}
+		if (str[x] != split)
+			token += str[x];
+	}
+	if (token.size() > 0)
+		buffer.push_back(token);
+	return buffer.size();
 }
 
 

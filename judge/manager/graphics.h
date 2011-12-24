@@ -1,4 +1,4 @@
-//#define BUILD_GRAPHICS
+#define BUILD_GRAPHICS
 #ifdef BUILD_GRAPHICS
 
 #ifndef GRAPHICS_H

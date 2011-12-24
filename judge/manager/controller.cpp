@@ -138,8 +138,11 @@ MovementResult Controller::MakeMove(string & buffer)
 		case MovementResult::OK:
 			buffer += " OK";
 			break;
-		case MovementResult::VICTORY:
-			buffer += " FLAG";
+		case MovementResult::VICTORY_FLAG:
+			buffer += " VICTORY_FLAG";
+			break;
+		case MovementResult::VICTORY_ATTRITION:
+			buffer += " VICTORY_ATTRITION";
 			break;
 		case MovementResult::KILLS:
 			buffer += " KILLS ";

@@ -124,12 +124,12 @@ class Board
 		
 		static bool LegalResult(const MovementResult & result)
 		{
-			return (result == MovementResult::OK || result == MovementResult::DIES || result == MovementResult::KILLS || result == MovementResult::BOTH_DIE || result == MovementResult::VICTORY || result == MovementResult::DRAW || result == MovementResult::DRAW_DEFAULT || result == MovementResult::SURRENDER);
+			return (result == MovementResult::OK || result == MovementResult::DIES || result == MovementResult::KILLS || result == MovementResult::BOTH_DIE || result == MovementResult::VICTORY_FLAG || result == MovementResult::VICTORY_ATTRITION || result == MovementResult::DRAW || result == MovementResult::DRAW_DEFAULT || result == MovementResult::SURRENDER);
 		}
 
 		static bool HaltResult(const MovementResult & result)
 		{
-			return (result == MovementResult::VICTORY || result == MovementResult::DRAW || result == MovementResult::DRAW_DEFAULT || result == MovementResult::SURRENDER || !LegalResult(result));
+			return (result == MovementResult::VICTORY_FLAG || result == MovementResult::VICTORY_ATTRITION || result == MovementResult::DRAW || result == MovementResult::DRAW_DEFAULT || result == MovementResult::SURRENDER || !LegalResult(result));
 		}		
 
 		MovementResult MovePiece(int x, int y, const Direction & direction, int multiplier=1,const Piece::Colour & colour=Piece::NONE); //Move piece from position in direction

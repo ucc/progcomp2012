@@ -9,12 +9,13 @@
 
 /**
  * Class to manage the game
+ * Bit messy since I keep adding on parameters :P
  */
 class Game
 {
 	public:
-		Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime = 1.0, const bool allowIllegal=false, FILE * newLog = NULL, const Piece::Colour & newRevealed = Piece::BOTH, int maxTurns = 5000, const bool printBoard = false);
-		Game(const char * fromFile, const bool enableGraphics, double newStallTime = 1.0, const bool allowIllegal=false, FILE * newLog = NULL, const Piece::Colour & newRevealed = Piece::BOTH, int maxTurns = 5000, const bool printBoard = false);
+		Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime = 1.0, const bool allowIllegal=false, FILE * newLog = NULL, const Piece::Colour & newRevealed = Piece::BOTH, int maxTurns = 5000, const bool printBoard = false, double newTimeoutTime = 2.0);
+		Game(const char * fromFile, const bool enableGraphics, double newStallTime = 1.0, const bool allowIllegal=false, FILE * newLog = NULL, const Piece::Colour & newRevealed = Piece::BOTH, int maxTurns = 5000, const bool printBoard = false, double newTimeoutTime = 2.0);
 		virtual ~Game();
 
 		
@@ -34,6 +35,7 @@ class Game
 		int TurnCount() const {return turnCount;}
 
 		static Game * theGame;
+		static int Tokenise(std::vector<std::string> & buffer, std::string & str, char split = ' '); //Helper - Split a string into tokens
 	public:
 		int logMessage(const char * format, ...);
 		FILE * GetLogFile() const {return log;}
@@ -63,6 +65,9 @@ class Game
 
 		int maxTurns;
 		const bool printBoard;
+
+	private:
+		double timeoutTime;
 		
 };
 
