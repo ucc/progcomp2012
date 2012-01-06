@@ -39,42 +39,31 @@
 <h3> Protocol </h3>
 <p> For the sake of simplicity and keeping things in one place, the protocol is now entirely described in the <a href="doc/manager_manual.txt"/>manual page</a> of the manager program. All updates to the protocol will be reflected in that file. </p>
 
+<p> Major updates to the manager program or protocol will be accompanied by an email to the mailing list. However, it is probably a good idea to clone the git repository, and regularly pull from it. </p>
 
-<p> <b> Warning:</b> The accuracy of the above file depends on how recently I pulled it from git. To ensure you get the latest version, find it under "web/doc/manager_manual.txt" in the <a href="http://git.ucc.asn.au/?p=progcomp2012.git;a=summary"/>git repository</a> </p>
+<p> <b> Warning:</b> AI programs <b>must</b> unbuffer stdin and stdout themselves. This is explained in the manual page, but I figured no one would read it. It is fairly simple to unbuffer stdin/stdout in C/C++ and python, I have not investigated other languages yet. </p>
 
-<p> <b> Another Warning:</b> AI programs <b>must</b> unbuffer stdin and stdout themselves. This is explained in the manual page, but I figured no one would read it. It is fairly simple to unbuffer stdin/stdout in C/C++ and python, I have not investigated other languages yet. </p>
+<h2> Scoring and Results </h2>
+<p> The competition will be a round robin, with every AI playing three (3) games against each possible opponent. A points system is used to score each AI, 3 points for a Win, 2 for a Draw, 1 for a Loss or -1 for an Illegal response (counts as a Win for the opponent). Scores accumulate between rounds. </p>
+<p> The winning AI will be the AI with the highest score after all games have been played. In the event of a tied score, the two highest scoring AI's will play one more round consisting of three games. If the scores are still tied, the official outcome will be a Draw. </p>
+<p> When the competition officially runs, results will appear <a href="results"/>here</a>. There may (or may not) be test results there now. </p> <p> 
 
-<h2> Long Term Scoring </h2>
-<p> Several rounds will be played (depending on the number of entries), with contestants given time to improve their entries between rounds. </p>
-<p> Each round is a round robin, with every AI playing several games against each possible opponent. A points system is used to score each AI, 3 points for a Win, 2 for a Draw, 1 for a Loss or -1 for an Illegal response (counts as a Win for the opponent). Scores accumulate between rounds. </p>
-<p> The winning AI will be the AI with the highest score after all rounds have been played. In the event of a tied score, the two highest scoring AI's will play one more round consisting of three games. If the scores are still tied, the official outcome will be a Draw. </p>
-<p> When the competition officially runs, results will appear <a href="results"/>here</a>. Preliminary test results might occasionally appear there for the next few weeks. </p> <p> 
-
-<h2> Sample AI Programs </h2>>
-<p> The following sample programs are currently available (and in a semi-working state - refer to the git repository): </p>
-<table border="0">
-<tr> <th>Name</th> <th>Language</th> <th> Moves </th> <th> Considers... </th> </tr>
-<tr> <td>basic_python</td> <td>Python</td> <td>Randomised</td> </tr>
-<tr> <td>basic_cpp</td> <td>C++</td> <td>Randomised</td> </tr>
-<tr> <td>asmodeus</td> <td>Python</td> <td>Scored</td> <td>Path finding, known combat results, piece values</td> </th> 
-<tr> <td>vixen</td> <td>Python</td> <td>Scored</td> <td>Asmodeus + Probabilities for unknown combat results </td> </th>
-</table> 
-<p> It is planned to implement the equivelants of these samples in C++ and Python at least, possibly other languages later. </p>
+<h2> Sample AI Programs </h2>
+<p> Several sample AI programs are currently available. No guarantees are provided about the functioning of these programs. The sample programs can be downloaded from the <a href="http://git.ucc.asn.au/?p=progcomp2012.git;a=summary"/>git repository </a>
 
 <h2> Submissions </h2>
 <p> You must submit the full source code, and build instructions or makefile(s) for your program. </p>
 <p> Also include the name of the executable or script, the name of the AI, your name, and optionally a description of your AI and its tactics. </p>
 <p> Please email matches@ if you have a submission. </p>
-<p> <b> Code which attempts to comprimise the host machine, or interfere directly with the functioning of other programs will be disqualified. </b> </p>
+<p> <b> Code which attempts to comprimise the host machine, or interfere interfere either directly or indirectly with the functioning of other programs will be disqualified. </b> </p>
 
 <h2> Dates </h2>
-<p> The competition will run in 2012. The exact dates have not been determined. An email will be sent to the list and messages sent to the irc channel. </p>
+<p> The competition is now officially open. Submissions will be accepted until midday, Saturday the 10th of March, 2012. Results will be announced as soon as they are available (depending on the number of entries it may take several days to simulate the competition). </p>
 
-<h2> Involvement </h2>
-<p> If you want to help set up the competition, email matches@ </p>
+<h2> FAQ </h2>
+<p> No one has asked any questions yet. If there is anything not covered or vague on this page, please email matches@ </p>
 
-
-<p> <b>Last webpage update: 22/12/11</b></p>
+<p> <b>Last webpage update: 06/01/12</b></p>
 </body>
 
 </html>

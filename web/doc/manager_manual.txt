@@ -157,16 +157,14 @@ PROTOCOL
 			as described in the GAME_RULES section. Each line ends with the newline character.
 			
 
-		RESPONSE: X Y DIRECTION [MULTIPLIER=1] | NO_MOVE
+		RESPONSE: X Y DIRECTION [MULTIPLIER=1] 
 			X and Y are the coords (starting from 0) of the piece to move
 			DIRECTION is either UP, DOWN, LEFT or RIGHT
 			MULTIPLIER is optional and only valid for units of type Scout. Scouts may move through any number of unblocked squares
 			in one direction.
 
-			The AI program should print "NO_MOVE" if it is unable to determine a move.
-			This will typically occur when the only pieces belonging to the AI program are Bombs and the Flag.
 
-		CONFIRMATION: X Y DIRECTION [MULTIPLIER=1] OUTCOME | NO_MOVE {OK | ILLEGAL} | QUIT [RESULT]
+		CONFIRMATION: X Y DIRECTION [MULTIPLIER=1] OUTCOME | QUIT [RESULT]
 
 			OUTCOME may be either OK, ILLEGAL, KILLS or DIES
 				OK - Move was successful
@@ -174,14 +172,7 @@ PROTOCOL
 				KILLS ATTACKER_RANK DEFENDER_RANK - The piece moved into an occupied square and killed the defender.
 				DIES ATTACKER_RANK DEFENDER_RANK - The piece moved into an occupied square and was killed by the defender.
 
-			Most turns will be confirmed with: "X Y DIRECTION [MULTIPLIER=1] OUTCOME"
-
-			A confirmation of "NO_MOVE OK" occurs when the AI program made no move for a legitimate reason.
-			"NO_MOVE ILLEGAL" is printed if the AI program made no move for an illegitimate reason.
-
-			If both AI programs successively make a "NO_MOVE" response, then the game will end.
-			The player with the highest piece value will win, or a draw will be declared if the values are equal.
-
+			QUIT will only be sent when the game is about to end.
 	3. END GAME
 		If the CONFIRMATION line is of the form:
 			QUIT [RESULT]
@@ -277,5 +268,5 @@ NOTES
 	   irc://irc.ucc.asn.au #progcomp
 
 THIS PAGE LAST UPDATED
-	23/12/11 by Sam Moore
+	3/01/12 by Sam Moore
 	

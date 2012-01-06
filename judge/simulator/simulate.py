@@ -328,10 +328,10 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 		print "RESULTS FOR ROUND " + str(roundNumber)
 
 	#totalFile = open(resultsDirectory+"total.scores", "w") #Recreate the file
-		for agent in agents:	
+		#for agent in agents:	
 		#totalFile.write(agent["name"] + " " + str(agent["totalScore"]) +"\n") #Write the total scores in descending order
 		#if verbose:
-				print "Agent: " + str(agent)
+		#		print "Agent: " + str(agent)
 	
 
 	if verbose:
@@ -356,9 +356,9 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 
 		for index in range(0, len(agent["ALL"])):
 			if agent["ALL"][index][4] == "RED":
-				logFile = logDirectory + "round"+str(roundNumber) + "/"+agent["name"]+".vs."+agent["ALL"][index][0]+"."+str(agent["ALL"][index][1])
+				logFile = "log/round"+str(roundNumber) + "/"+agent["name"]+".vs."+agent["ALL"][index][0]+"."+str(agent["ALL"][index][1])
 			else:
-				logFile = logDirectory + "round"+str(roundNumber) + "/"+agent["ALL"][index][0]+".vs."+agent["name"]+"."+str(agent["ALL"][index][1])
+				logFile = "log/round"+str(roundNumber) + "/"+agent["ALL"][index][0]+".vs."+agent["name"]+"."+str(agent["ALL"][index][1])
 			agentFile.write("<tr> <td> <a href="+logFile+">" + str(agent["ALL"][index][1]) + " </a> </td> <td> <a href="+agent["ALL"][index][0]+".html>"+agent["ALL"][index][0] + " </a> </td> <td> " + agent["ALL"][index][4] + " </td> <td> " + agent["ALL"][index][3] + " </td> <td> " + str(agent["ALL"][index][2]) + "</td> <td> " + str(agent["score"][len(agent["score"])-index -2]) + " </td> </tr> </th>\n")
 		agentFile.write("</table>\n")
 		

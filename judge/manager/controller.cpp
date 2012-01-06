@@ -80,6 +80,8 @@ MovementResult Controller::MakeMove(string & buffer)
 	if (query != MovementResult::OK)
 		return query;
 
+	/* 
+	//Removed 3/01/12 NO_MOVE now not allowed, SURRENDER is undocumented and not necessary
 	if (buffer == "NO_MOVE")
 	{
 		buffer += " OK";
@@ -90,6 +92,7 @@ MovementResult Controller::MakeMove(string & buffer)
 		buffer += " OK";
 		return MovementResult::SURRENDER;
 	}
+	*/
 	
 	int x; int y; string direction="";
 	stringstream s(buffer);

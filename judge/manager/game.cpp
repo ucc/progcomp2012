@@ -442,9 +442,24 @@ void Game::PrintEndMessage(const MovementResult & result)
 	}
 
 }
+/** Checks for victory by attrition (destroying all mobile pieces)
+ *
+ *  @returns OK for no victory, 
+ *	DRAW if both players have no pieces, or 
+ *	VICTORY_ATTRITION  if the current player has won by attrition
+ */
+MovementResult Game::CheckVictoryAttrition()
+{
+        if (theBoard.MobilePieces(Piece::OppositeColour(turn)) == 0)
+	{
+		if (theBoard.MobilePieces(turn) == 0)
+	                return MovementResult::DRAW;
+	        else
+		        return MovementResult::VICTORY_ATTRITION;
+	}
+	return MovementResult::OK;
 
-
-
+}
 MovementResult Game::Play()
 {
 
@@ -483,22 +498,26 @@ MovementResult Game::Play()
 		#endif //BUILD_GRAPHICS
 		
 		turn = Piece::RED;
+
+		if (!Board::HaltResult(result))
+		{
+			result = CheckVictoryAttrition();
+		}
+		if (Board::HaltResult(result))
+			break;
+
 		logMessage( "%d RED: ", turnCount);
 		result = red->MakeMove(buffer);
 		red->Message(buffer);
 		blue->Message(buffer);
 		logMessage( "%s\n", buffer.c_str());
+
+		if (!Board::HaltResult(result))
+		{
+			result = CheckVictoryAttrition();
+		}
 		if (Board::HaltResult(result))
 			break;
-
-		if (theBoard.MobilePieces(Piece::BLUE) == 0)
-		{
-			if (theBoard.MobilePieces(Piece::RED) == 0)
-				result = MovementResult::DRAW;
-			else
-				result = MovementResult::VICTORY_ATTRITION;
-			break;			
-		}
 
 		if (stallTime >= 0)
 			Wait(stallTime);
@@ -523,12 +542,24 @@ MovementResult Game::Play()
 		
 		
 		turn = Piece::BLUE;
+
+		if (!Board::HaltResult(result))
+		{
+			result = CheckVictoryAttrition();
+		}
+		if (Board::HaltResult(result))
+			break;
+
 		logMessage( "%d BLU: ", turnCount);
 		result = blue->MakeMove(buffer);
 		blue->Message(buffer);
 		red->Message(buffer);
 		logMessage( "%s\n", buffer.c_str());
 
+		if (!Board::HaltResult(result))
+		{
+			result = CheckVictoryAttrition();
+		}
 		if (Board::HaltResult(result))
 			break;
 

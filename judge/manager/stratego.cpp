@@ -58,6 +58,27 @@ Piece::Type Piece::GetType(char fromToken)
 }
 
 /**
+ * Gets the opposite to the indicated colour
+ */
+Piece::Colour Piece::OppositeColour(const Colour & colour)
+{
+	switch (colour)
+	{
+		case Piece::RED:
+			return Piece::BLUE;
+			break;
+		case Piece::BLUE:
+			return Piece::RED;
+			break;
+		case Piece::BOTH:
+			return Piece::BOTH;
+			break;
+		case Piece::NONE:
+			return Piece::NONE;
+	}
+}
+
+/**
  * Construct a new, empty board
  * @param newWidth - the width of the board
  * @param newHeight - the height of the board

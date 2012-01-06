@@ -28,6 +28,9 @@ class Piece
 	
 		typedef enum {RED=0, BLUE=1, NONE=2, BOTH=3} Colour; //Used for the allegiance of the pieces - terrain counts as NONE.
 
+		static Colour OppositeColour(const Colour & compare);
+	
+
 		Piece(const Type & newType, const Colour & newColour) : type(newType), colour(newColour), beenRevealed(false) {}
 		virtual ~Piece() {}
 

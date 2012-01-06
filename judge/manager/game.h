@@ -23,6 +23,7 @@ class Game
 		void Wait(double wait); 
 
 		Piece::Colour Setup(const char * redName, const char * blueName);
+		MovementResult CheckVictoryAttrition();
 		MovementResult Play();
 		void PrintEndMessage(const MovementResult & result);
 		
