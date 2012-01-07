@@ -14,13 +14,10 @@
 <p> We will use the same mailing list as last year (progcomp). </p>
 
 <h2> irc channel </h2>
-<p> There is a #progcomp irc channel on the ucc irc server (irc.ucc.asn.au) where you can ask questions or help with setting things up. </p>
+<p> There is a #progcomp irc channel on the ucc irc server (irc.ucc.asn.au) where you can ask questions, and someone might even answer them! </p>
 
 <h1> Stratego </h1>
 <p> <a href="http://www.edcollins.com/stratego/"/>This site</a> explains what Stratego is. </p>
-
-<p> Short Version: It is a board game in which all pieces have a value that is, initially, unknown to the opponent player. The objective is to destroy all enemy pieces, or capture the enemy "Flag". Pieces with higher values destroy pieces with lower values. There are several special pieces/rules. </p>
-
 
 <h1> Programming Competition </h1>
 <p> Create an AI to play Stratego. </p>
@@ -49,21 +46,35 @@
 <p> When the competition officially runs, results will appear <a href="results"/>here</a>. There may (or may not) be test results there now. </p> <p> 
 
 <h2> Sample AI Programs </h2>
-<p> Several sample AI programs are currently available. No guarantees are provided about the functioning of these programs. The sample programs can be downloaded from the <a href="http://git.ucc.asn.au/?p=progcomp2012.git;a=summary"/>git repository </a>
-
+<p> Several sample AI programs are currently available. The sample programs can be downloaded from the <a href="http://git.ucc.asn.au/?p=progcomp2012.git;a=summary"/>git repository </a>
+<p> <b> Warning: </b> No guarantees are provided about the functioning of these programs. It is your own responsibility to ensure that your submission obeys the protocol correctly. If you have based your program off a sample, please double check that it obeys the protocol. </p>
 <h2> Submissions </h2>
 <p> You must submit the full source code, and build instructions or makefile(s) for your program. </p>
 <p> Also include the name of the executable or script, the name of the AI, your name, and optionally a description of your AI and its tactics. </p>
 <p> Please email matches@ if you have a submission. </p>
-<p> <b> Code which attempts to comprimise the host machine, or interfere interfere either directly or indirectly with the functioning of other programs will be disqualified. </b> </p>
+<p> <b> Code which attempts to comprimise the host machine, or interfere either directly or indirectly with the functioning of other programs will be disqualified. </b> </p>
 
 <h2> Dates </h2>
 <p> The competition is now officially open. Submissions will be accepted until midday, Saturday the 10th of March, 2012. Results will be announced as soon as they are available (depending on the number of entries it may take several days to simulate the competition). </p>
 
-<h2> FAQ </h2>
-<p> No one has asked any questions yet. If there is anything not covered or vague on this page, please email matches@ </p>
+<h2> Clarifications </h2>
 
-<p> <b>Last webpage update: 06/01/12</b></p>
+<ul>
+	<li> We are using the newer rules described <a href="http://www.edcollins.com/stratego/stratego-rules-later.htm"/>here</a>. </li>
+	<li> Scouts may move multiple spaces and attack in the same turn (in some versions they cannot). </li>
+	<li> Bombs remain in place until destroyed by a Miner (some versions incorporate "single-use" Bombs). </li>
+	<li> Victory is possible by either capturing the enemy Flag, or destroying all mobile enemy pieces.
+	AI programs do not have to "surrender" (as stated in the rules) if they have no mobile pieces. The manager program should end the game (if it does not, please report the bug)! </li>
+	<li> The newest versions of the physical board game reverse the numbers of the ranks (10 is the Marshal, 1 is the Spy). Our system uses the original numbering (1 is the Marshal, 9 is the Scout and s is the Spy). </li>
+	
+	<li> You must always make a move. </li>
+	<li> <b>Remember to unbuffer stdin/stdout!</b> </li>
+</ul>
+
+<h2> FAQ </h2>
+<p> If you have a question which is not covered by this page, or about a topic that is vague on this page, please email matches@ </p>
+
+<p> <b>Last webpage update: 07/01/12</b></p>
 </body>
 
 </html>
