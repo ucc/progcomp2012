@@ -1,0 +1,88 @@
+<html>
+<head>
+  <title>Frequently Asked Questions</title>
+</head>
+
+<body>
+
+<h1> Frequently Asked Questions </h1>
+
+<p> Frequently is a bit misleading, since most of these have only been asked once. Some of them are questions that I predict will be asked. </p>
+
+<ol>
+	<li> 
+	<p> <b>Q: How can I test my AI? </b></p>
+	<p> A: The manager program doesn't just play the games and print results. It includes features that let you play against your own AI, or watch it play against others, log games to files and replay them. The best way to test your AI is to play against it. Another good way to test your AI is to have it play against one of the sample AIs. </p>
+	</li>
+
+	<li> 
+	<p> <b>Q: Where can I get the sample AI programs? </b></p>
+	<p> A: Download the newest versions from the <a href="http://git.ucc.asn.au/?p=progcomp2012.git;a=summary"/>git repository</a>. The sample AI programs should be located in the subdirectory "agents", with one directory for each agent, containing the full source. </p> 
+	</li>
+
+	<li>
+	<p><b> Q: Where is the manager program? </b></p>
+	<p> A: The manager program is available in the <a href=http://git.ucc.asn.au/?p=progcomp2012.git;a=summary"/a>git repository</a>. It is located in the subdirectory "judge/manager". The executable name is "stratego" (<i>not</i> "manager"). </p>
+	</li>
+
+	<li>
+	<p> <b>Q: How do I compile the manager program / The manager program will not compile, what do I do? </b></p>
+	<p> A: The manager program is compiled by running "make" in the directory "judge/manager". </p>
+	<p> If the manager program fails to compile, it is probably because you do not have the SDL and OpenGL libraries, and are compiling with graphics enabled. You can either obtain SDL and OpenGL developement libraries, or disable graphics and compile the program without them. </p>
+	<p> These processes are described in the <a href="doc/manager_manual.txt"/>manual page</a> of the manager program. The manual page can also be found as "web/doc/manager_manual.txt" or "judge/manager/manual.txt" (the latter is a symlink). </p>
+	<li> 
+	<p> <b>Q: What the hell is git, and how do I use it? </b></p>
+	<p> A: git is version control software. Every time any of the programs (including samples) or documentation files for the competition are altered, the changes will be "committed" to git. git allows programmers to revert any changes which break things horribly and go back to their last working version, among other things. </p>
+
+	<p> As a contestant, all you really need to do is obtain the manager program and sample AI programs from the <a href=http://git.ucc.asn.au/?p=progcomp2012.git;a=summary"/a>git repository</a>. This page should give you a list of all the changes to the competition. Next to the most recent, click on the "snapshot" link to download an archive of the most recent version of every file. </p>
+
+	<p> Of course, if the competition is updated, you will then have an out of date version. It is far better to "clone" the git repository, and periodically run "git pull" to download any changes. Since the purpose of this page is not to be a reference manual for git, learning how to do this is left as an excercise for the reader. </p>
+	</li>
+	<li> 
+	<p> <b>Q: Do I have to keep checking the git repository for updates? </b></p>
+	<p> A: No, the mailing list will be emailed every time there is a major change. </p>
+	</li>
+
+	<li>
+	<p> <b>Q: I don't know anything about AI programs, where should I start? </b></p>
+	<p> A: The sample AI programs provide a fairly basic strategy; perhaps start by copying a sample AI program and altering it slightly to see if you can improve it. </p>
+
+	<p> Generally AI programs for board games play by always choosing an optimal move. The sample AI programs adopt this approach by allocating scores to various moves, with the score indicating how "good" the move is. They then sort the moves by score, and choose the move with the highest score. </p>
+	<p> Of course, then the problem becomes "What scoring algorithm should I use?", which you will have to find out for yourself. </p>
+
+	<p> Chess AIs usually look at many future possible board states as a result of each move. In stratego, this approach is less likely to be effective since the strength/abilities of opponent pieces is not known, and must be determined. There is also a time limit to responses by AI programs. </p>
+
+
+
+	</li>
+
+	<li>
+	<p><b> Q: What is in "judge/simulator"? </b></p>
+	<p> A: "judge/simulator/simulate.py" will be used to run the competition. You can use it yourself if you want to run a mock competition between various sample AIs and your own AI. </p>
+	<p> The script generates html files containing the results, in the directory "web/results". It also stores log files of every game played in "web/log", which you can replay at your leisure using the manager program. </p>
+
+	</li>
+	<li>
+	<p> <b> Q: The language I want to write in does not have any sample AIs, or does not have as advanced sample AIs as other langauges. </b> </p>
+	<p> A: Try and rewrite a sample from another AI in your chosen language, or, if you really don't know any other langauges, email matches@ (and be <b>very</b> nice) and ask for him to write a sample in your chosen language. </p>
+
+	</li>
+
+	<li>
+	<p><b> Q: I don't know how to program, but am interested in the competition, what should I do? </b> </p>
+	<p> A: You will have to learn how to program; the best way to do this is by a combination of the internet and trial and error. Look at the sample AI programs for a reference. </p>
+	</li>
+
+</ol>
+
+<h1> General tips and Advice </h1>
+
+<ol>
+	<li> Print your debug information to stderr to allow your AI to be debugged whilst playing a game </li>
+</ol>
+
+
+<p> Return to the <a href="index.html"/>main page</a>. </p>
+
+</body>
+</html>
