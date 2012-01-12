@@ -30,6 +30,17 @@
 <p> Human players are also supported, although the interface is minimal, as this feature is meant for testing. </p>
 <p> If you just want to play a game, without having to write your own AI, try <a href="http://www.probe.imersatz.com/"/>Probe</a> </p>
 
+<h4> Windows Support </h4>
+<p> Windows is not supported at this stage. </p>
+<p> Why? Because windows doesn't have fork, or pthread, which I used to write the program because they work on linux, and I use debian. </p>
+
+<h4> Bug reports </h4>
+<p> Please report bugs to matches@ with a detailed description, and if possible, the output of gdb, valgrind, or both :) </p>
+<h5> Known Bugs </h5>
+<ol>
+	<li> Ash reported a segfault upon every program start, running under Ubuntu. I can't replicate this bug, and don't have any other information. </li>
+</ol>
+
 <h4> Screenshot </h4>
 <img border="0" src="screenshot.png" alt="Graphical output of 'stratego' manager program." title="Graphical output of 'stratego' manager program. Options '-g' for graphics and '-b' to hide Blue pieces that have not taken part in combat yet. Red and Blue are both linked to the 'asmodeus' AI. Taken with scrot on 7/12/11." width="327" height="344" />
 

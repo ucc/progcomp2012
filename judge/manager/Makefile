@@ -1,9 +1,10 @@
 #Makefile for Stratego
 
 #Use this to build with graphics
-#CPP = g++ -Wall -pedantic -lSDL -lGL -lpthread -g
+#LIBRARIES = -lSDL -lGL -lpthread
 #Use this to build without graphics
-CPP = g++ -Wall -pedantic -lpthread -g
+LIBRARIES = -lpthread
+CPP = g++ -Wall -pedantic -g
 OBJ = main.o controller.o ai_controller.o human_controller.o program.o thread_util.o stratego.o graphics.o game.o
 
 BIN = stratego
@@ -11,7 +12,7 @@ BIN = stratego
 
 
 $(BIN) : $(OBJ) 
-	$(CPP) -o $(BIN) $(OBJ)
+	$(CPP) -o $(BIN) $(OBJ) $(LIBRARIES)
 
 
 

@@ -231,12 +231,14 @@ BUILDING
 	To enable graphics:
 	1. Ensure that the first line of the source file "graphics.h" reads:
 		#define BUILD_GRAPHICS
-	2. In "Makefile", uncomment the line "CPP = g++ -Wall -pedantic -lSDL -lGL  -g" and comment out the line "CPP = g++ -Wall -pedantic -g"
+	2. In "Makefile", uncomment the line "LIBRARIES = -lSDL -lGL -lpthread" 
+		and comment out the line "LIBRARIES = -lpthread"
 
 	To disable graphics:
 	1. Comment out the first line of "graphics.h" i.e ensure that it reads:
 		//#define BUILD_GRAPHICS
-	2. In "Makefile", uncomment the line "CPP = g++ -Wall -pedantic -g" and comment out the line "CPP = g++ -Wall -pedantic -lSDL -lGL  -g"
+	2. In "Makefile", uncomment the line "LIBRARIES = -lpthread" 
+		and comment out the line "LIBRARIES = -lSDL -lGL -lpthread"
 
 	If you intend to build with graphics enabled, you will need the SDL and OpenGL developement libraries installed first.
 	If you intend to use graphics, please ensure the "images" directory is located in the executable's run directory.
