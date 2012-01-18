@@ -7,7 +7,7 @@ using namespace std;
 Game* Game::theGame = NULL;
 bool Game::gameCreated = false;
 
-Game::Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard, double newTimeoutTime) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard), timeoutTime(newTimeoutTime)
+Game::Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard, double newTimeoutTime, bool server, bool client) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard), timeoutTime(newTimeoutTime)
 {
 	gameCreated = false;
 	if (gameCreated)
@@ -25,16 +25,33 @@ Game::Game(const char * redPath, const char * bluePath, const bool enableGraphic
 			Graphics::Initialise("Stratego", theBoard.Width()*32, theBoard.Height()*32);
 	#endif //BUILD_GRAPHICS
 
-	if (strcmp(redPath, "human") == 0)
-		red = new Human_Controller(Piece::RED, graphicsEnabled);
+
+	if (client)
+	{
+		red = new Client(Piece::RED, "server", redPath); //TODO: Retrieve server address
+	}
 	else
-		red = new AI_Controller(Piece::RED, redPath, timeoutTime);
+	{
+		assert(redPath != NULL);
+		if (strcmp(redPath, "human") == 0)
+			red = new Human_Controller(Piece::RED, graphicsEnabled);
+		else
+			red = new AI_Controller(Piece::RED, redPath, timeoutTime);
+	}
 	
 	
-	if (strcmp(bluePath, "human") == 0)
-		blue = new Human_Controller(Piece::BLUE, graphicsEnabled);
+	if (server)
+	{
+		blue = new Server(Piece::BLUE, "client");
+	}
 	else
-		blue = new AI_Controller(Piece::BLUE, bluePath, timeoutTime);
+	{
+		assert(bluePath != NULL);
+		if (strcmp(bluePath, "human") == 0)
+			blue = new Human_Controller(Piece::BLUE, graphicsEnabled);
+		else
+			blue = new AI_Controller(Piece::BLUE, bluePath, timeoutTime);
+	}
 
 
 }

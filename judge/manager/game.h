@@ -4,6 +4,7 @@
 #include "stratego.h"
 #include "ai_controller.h"
 #include "human_controller.h"
+#include "network_controller.h"
 #include <cstring>
 
 
@@ -14,7 +15,7 @@
 class Game
 {
 	public:
-		Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime = 1.0, const bool allowIllegal=false, FILE * newLog = NULL, const Piece::Colour & newRevealed = Piece::BOTH, int maxTurns = 5000, const bool printBoard = false, double newTimeoutTime = 2.0);
+		Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime = 1.0, const bool allowIllegal=false, FILE * newLog = NULL, const Piece::Colour & newRevealed = Piece::BOTH, int maxTurns = 5000, const bool printBoard = false, double newTimeoutTime = 2.0, bool server=false, bool client=false);
 		Game(const char * fromFile, const bool enableGraphics, double newStallTime = 1.0, const bool allowIllegal=false, FILE * newLog = NULL, const Piece::Colour & newRevealed = Piece::BOTH, int maxTurns = 5000, const bool printBoard = false, double newTimeoutTime = 2.0);
 		virtual ~Game();
 

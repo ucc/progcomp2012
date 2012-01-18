@@ -64,6 +64,7 @@ Piece::Colour SetupGame(int argc, char ** argv)
 {
 	char * red = NULL; char * blue = NULL; double stallTime = 0.0; bool graphics = false; bool allowIllegal = false; FILE * log = NULL;
 	Piece::Colour reveal = Piece::BOTH; char * inputFile = NULL; int maxTurns = 5000; bool printBoard = false; double timeoutTime = 2.0;
+	bool server = false; bool client = false;
 	for (int ii=1; ii < argc; ++ii)
 	{
 		if (argv[ii][0] == '-')
@@ -184,6 +185,26 @@ Piece::Colour SetupGame(int argc, char ** argv)
 						system("less manual.txt");
 						exit(EXIT_SUCCESS);
 					}
+					else if (strcmp(argv[ii]+2, "server") == 0)
+					{
+						if (client == true)
+						{
+							fprintf(stderr, "ARGUMENT_ERROR - Can't be both a server and a client!\n");
+							exit(EXIT_FAILURE);
+						}
+						server = true;
+						
+					}
+					else if (strcmp(argv[ii]+2, "client") == 0)
+					{
+						if (server == true)
+						{
+							fprintf(stderr, "ARGUMENT_ERROR - Can't be both a server and a client!\n");
+							exit(EXIT_FAILURE);
+						}
+						client = true;	
+						
+					}
 					else
 					{
 						fprintf(stderr, "ARGUMENT_ERROR - Unrecognised switch \"%s\"...\n", argv[ii]);
@@ -211,15 +232,34 @@ Piece::Colour SetupGame(int argc, char ** argv)
 
 	if (inputFile == NULL)
 	{
-		if (red == NULL || blue == NULL) //Not enough arguments
+		if (server)  
+		{
+			if (red != NULL && blue != NULL)
+			{
+				fprintf(stderr, "ARGUMENT_ERROR - When using the --server switch, only supply ONE (1) player.\n");
+				exit(EXIT_FAILURE);
+			}
+		}
+		else if (red == NULL || blue == NULL) //Not enough players
 		{
 			fprintf(stderr, "ARGUMENT_ERROR - Did not recieve enough players (did you mean to use the -f switch?)\n");	
 			exit(EXIT_FAILURE);	
 		}
-		Game::theGame = new Game(red,blue, graphics, stallTime, allowIllegal,log, reveal,maxTurns, printBoard, timeoutTime);
+		
+		if (client)
+		{
+			blue = red; red = NULL;
+		}
+
+		Game::theGame = new Game(red,blue, graphics, stallTime, allowIllegal,log, reveal,maxTurns, printBoard, timeoutTime, server, client);
 	}
 	else
 	{
+		if (server || client)
+		{
+			fprintf(stderr, "ARGUMENT_ERROR - The -f switch is incompatable with the --server or --client switches!\n");
+			exit(EXIT_FAILURE);
+		}
 		Game::theGame = new Game(inputFile, graphics, stallTime, allowIllegal,log, reveal,maxTurns, printBoard, timeoutTime);
 	}
 
