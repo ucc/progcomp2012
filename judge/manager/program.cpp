@@ -20,7 +20,7 @@ using namespace std;
  *	The child process closes unused sides of the pipe, and then calls exec to replace itself with the AI program
  *	The parent process closes unused sides of the pipe, and sets up member variables - associates streams with the pipe fd's for convenience.
  */
-Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0)
+Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0), paused(false)
 {
 	//See if file exists and is executable...
 	if (access(executablePath, X_OK) != 0)
@@ -100,8 +100,42 @@ Program::~Program()
 	
 }
 
+/**
+ * Forces the program to pause by sending SIGSTOP
+ * Program can be resumed by calling Continue() (which sends SIGCONT)
+ * @returns true if the program could be paused, false if it couldn't (probably because it wasn't running)
+ */
+bool Program::Pause()
+{
+	if (pid > 0 && kill(pid,SIGSTOP) == 0)
+	{
+		paused = true;
+		return true;
+	}
+	return false;
+}
 
+/**
+ * Causes a paused program to continue
+ * @returns true if the program could be continued, false if it couldn't (probably because it wasn't running)
+ */
+bool Program::Continue()
+{
+	if (pid > 0 && kill(pid,SIGCONT) == 0)
+	{
+		paused = false;
+		return true;
+	}
+	return false;
+}
 
+/**
+ * @returns true iff the program is paused
+ */
+bool Program::Paused() const
+{
+	return paused;
+}
 
 
 /**

@@ -498,7 +498,8 @@ MovementResult Game::Play()
 		#endif //BUILD_GRAPHICS
 		
 		turn = Piece::RED;
-
+		blue->Pause();
+		red->Continue();
 		if (!Board::HaltResult(result))
 		{
 			result = CheckVictoryAttrition();
@@ -542,7 +543,8 @@ MovementResult Game::Play()
 		
 		
 		turn = Piece::BLUE;
-
+		red->Pause();
+		blue->Continue();
 		if (!Board::HaltResult(result))
 		{
 			result = CheckVictoryAttrition();

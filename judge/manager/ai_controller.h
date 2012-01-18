@@ -20,6 +20,8 @@ class AI_Controller : public Controller, private Program
 		virtual MovementResult QueryMove(std::string & buffer);
 
 		virtual void Message(const char * message) {Program::SendMessage(message);}
+		virtual void Pause() {Program::Pause();} //Hack wrapper
+		virtual void Continue() {Program::Continue();} //Hack wrapper
 
 		virtual bool Valid() const {return Program::Running();}
 

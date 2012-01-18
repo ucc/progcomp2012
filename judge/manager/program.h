@@ -24,7 +24,9 @@ class Program
 		bool GetMessage(std::string & buffer, double timeout=-1); //Retrieves a message, or waits for a timeout (if positive)
 
 		bool Running() const;
-
+		bool Paused() const;
+		bool Pause();
+		bool Continue();
 		
 
 	protected:
@@ -33,6 +35,7 @@ class Program
 
 	private:
 		pid_t pid; //Process ID of the program wrapped
+		bool paused;
 		
 };
 

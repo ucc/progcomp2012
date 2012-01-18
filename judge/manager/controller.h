@@ -28,6 +28,10 @@ class Controller
 		virtual MovementResult QueryMove(std::string & buffer) = 0;
 		virtual bool Valid() const {return true;}
 
+
+		virtual void Pause() {} 	// Hack function (AI_Controller ONLY will overwrite with wrapper to Program::Pause)
+		virtual void Continue() {}	// Hack function (AI_Controller '' '' wrapper to Program::Continue)
+
 		const Piece::Colour colour; 
 
 		std::string name;
