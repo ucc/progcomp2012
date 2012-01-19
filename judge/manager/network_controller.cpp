@@ -2,13 +2,12 @@
 
 NetworkController::NetworkController(const Piece::Colour & newColour, const char * newName) : Controller(newColour, newName), sfd(-1)
 {
-	struct protoent * tcp = getprotobyname("tcp");
+	//struct protoent * tcp = getprotobyname("tcp");
  
-    	sfd = socket(PF_INET, SOCK_STREAM, tcp->p_proto);
+    	sfd = socket(PF_INET, SOCK_STREAM, 0);
 	if (sfd < 0)
 	{
-	//	fprintf(stderr, "NetworkController::NetworkController - couldn't create a TCP socket!");
-		perror("NetworkController::NetworkController - creating TCP socket... ");
+		perror("NetworkController::NetworkController - Error creating TCP socket");
 		return;
 	}
 }
@@ -19,7 +18,6 @@ NetworkController::~NetworkController()
 	{
 		if (shutdown(sfd, SHUT_RDWR) == -1)
 		{
-		//	fprintf(stderr, "NetworkController::~NetworkController - Can't shutdown socket %d!", sfd);
 			perror("NetworkController::~NetworkController - shutting down socket... ");
 			close(sfd);
 			sfd = -1;
@@ -28,77 +26,76 @@ NetworkController::~NetworkController()
 	close(sfd);
 }
 
+void NetworkController::Message(const char * string)
+{
+	
+}
+
 Server::Server(const Piece::Colour & newColour, const char * newName) : NetworkController(newColour, newName)
 {
-	struct sockaddr_in ipa;
-	ipa.sin_family = AF_INET;
-	ipa.sin_port = htons(NetworkController::port);	
-	ipa.sin_addr.s_addr = INADDR_ANY;
-	memset(&ipa,0, sizeof ipa);
+	struct   sockaddr_in name;
+	char   buf[1024];
+	int    cc;
 
-	if (bind(sfd, (struct sockaddr*)&ipa, sizeof (ipa)) == -1) //dERP DERP DERP
+	
+	name.sin_family = AF_INET;
+	name.sin_addr.s_addr = htonl(INADDR_ANY);
+	name.sin_port = htons(NetworkController::port);
+
+	if (bind( sfd, (struct sockaddr *) &name, sizeof(name) ) < 0)
 	{
-	//	fprintf(stderr, "Server::Server - Couldn't bind to socket! Abort\n");
-		perror("Server::Server - binding to socket... ");
-		close(sfd);
-		sfd = -1;
-		return;
+		perror("Server::Server - Error binding socket");
+		close(sfd); sfd = -1; return;
 	}
 
-	//Listen for at most 1 connection
-	if (listen(sfd, 1) == -1)
+	if (listen(sfd,1) < 0)
 	{
-		fprintf(stderr, "Server::Server - listening failed.\n");
-		close(sfd);
-		sfd = -1;
-		return;
-	}	
-
-	//Accept the connection
-	sfd = accept(sfd, NULL, NULL);
+		perror("Server::Server - Error listening on socket");
+		close(sfd); sfd = -1; return;
+	}
+	int psd = accept(sfd, 0, 0);
+	close(sfd);
+	sfd = psd;
 	if (sfd < 0)
 	{
-		fprintf(stderr, "Server::Server - couldn't accept connection.\n");
-		close(sfd);
-		sfd = -1;
-		return;
+		perror("Server::Server - Error accepting connection");
+		close(sfd); sfd = -1; return;
 	}
 
-	//We are now ready to play!
+
+	for(;;) 
+	{
+		cc=recv(sfd,buf,sizeof(buf), 0) ;
+		if (cc == 0) exit (0);
+		buf[cc] = '\0';
+		printf("message received: %s\n", buf);
+	}
 }
 
 
-Client::Client(const Piece::Colour & newColour, const char * newName, const char * server) : NetworkController(newColour, newName)
+Client::Client(const Piece::Colour & newColour, const char * newName, const char * address) : NetworkController(newColour, newName)
 {
-	struct sockaddr_in ipa;
-	ipa.sin_family = AF_INET;
-	ipa.sin_port = htons(NetworkController::port);	
-	int Res = inet_pton(AF_INET, server, &ipa.sin_addr);
+	struct	sockaddr_in server;
+	struct  hostent *hp;
 
-	if (Res < 0)
+
+	server.sin_family = AF_INET;
+	hp = gethostbyname("127.0.0.1");
+	bcopy ( hp->h_addr, &(server.sin_addr.s_addr), hp->h_length);
+	server.sin_port = htons(NetworkController::port);
+
+	if (connect(sfd, (struct sockaddr *) &server, sizeof(server)) < 0)
 	{
-		fprintf(stderr, "Client::Client - First parameter is not a valid address family!\n");
-		close(sfd);
-		sfd = -1;
-		return;
-	}
-	else if (Res == 0)
-	{
-		fprintf(stderr, "Client::Client - Second parameter does not contain a valid IP Address!\n");
-		close(sfd);
-		sfd = -1;
-		return;
-	}
-	
-	if (connect(sfd, (struct sockaddr*)&sfd, sizeof sfd) == -1)
-	{
-		fprintf(stderr, "Client::Client - Connection to server at \"%s\" failed.\n", server);
-		close(sfd);
-		sfd = -1;
+		perror("Client::Client - Error connecting to server at address %s");
+		close(sfd); sfd = -1;
 		return;
 	}
 
-	//We are now ready to play!
+        for (;;) {
+	   send(sfd, "HI", 2,0 );
+           sleep(2);
+        }
+
 }
 //EOF
 

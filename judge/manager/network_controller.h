@@ -25,13 +25,13 @@ class NetworkController : public Controller
 
 		virtual bool Valid() {return sfd != -1;}
 
-		virtual void Message(const char * string) {fprintf(stderr, "NetworkController unimplemented!\n"); assert(false);}
+		virtual void Message(const char * string);
 		virtual MovementResult QuerySetup(const char * opponentName, std::string setup[]) {fprintf(stderr, "NetworkController unimplemented!\n"); assert(false);}
 		virtual MovementResult QueryMove(std::string & buffer) {fprintf(stderr, "NetworkController unimplemented!\n"); assert(false);}
 
 	protected:
 		int sfd; int cfd;
-		static const int port = 666;	
+		static const int port = 4950;	
 };
 
 class Server : public NetworkController

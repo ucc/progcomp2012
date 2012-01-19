@@ -242,7 +242,10 @@ Piece::Colour SetupGame(int argc, char ** argv)
 		}
 		else if (red == NULL || blue == NULL) //Not enough players
 		{
-			fprintf(stderr, "ARGUMENT_ERROR - Did not recieve enough players (did you mean to use the -f switch?)\n");	
+			if (client)
+				fprintf(stderr, "ARGUMENT_ERROR - When using the --client switch, supply an IP for the Red player.\n");
+			else			
+				fprintf(stderr, "ARGUMENT_ERROR - Did not recieve enough players (did you mean to use the -f switch?)\n");	
 			exit(EXIT_FAILURE);	
 		}
 		
