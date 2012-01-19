@@ -5,9 +5,10 @@ NetworkController::NetworkController(const Piece::Colour & newColour, const char
 	struct protoent * tcp = getprotobyname("tcp");
  
     	sfd = socket(PF_INET, SOCK_STREAM, tcp->p_proto);
-	if (sfd == -1)
+	if (sfd < 0)
 	{
-		fprintf(stderr, "NetworkController::NetworkController - couldn't create a TCP socket!");
+	//	fprintf(stderr, "NetworkController::NetworkController - couldn't create a TCP socket!");
+		perror("NetworkController::NetworkController - creating TCP socket... ");
 		return;
 	}
 }
@@ -18,7 +19,8 @@ NetworkController::~NetworkController()
 	{
 		if (shutdown(sfd, SHUT_RDWR) == -1)
 		{
-			fprintf(stderr, "NetworkController::~NetworkController - Can't shutdown socket %d!", sfd);
+		//	fprintf(stderr, "NetworkController::~NetworkController - Can't shutdown socket %d!", sfd);
+			perror("NetworkController::~NetworkController - shutting down socket... ");
 			close(sfd);
 			sfd = -1;
 		}
@@ -34,9 +36,10 @@ Server::Server(const Piece::Colour & newColour, const char * newName) : NetworkC
 	ipa.sin_addr.s_addr = INADDR_ANY;
 	memset(&ipa,0, sizeof ipa);
 
-	if (bind(sfd, (struct sockaddr*)&sfd, sizeof sfd) == -1)
+	if (bind(sfd, (struct sockaddr*)&ipa, sizeof (ipa)) == -1) //dERP DERP DERP
 	{
-		fprintf(stderr, "Server::Server - Couldn't bind to socket! Abort\n");
+	//	fprintf(stderr, "Server::Server - Couldn't bind to socket! Abort\n");
+		perror("Server::Server - binding to socket... ");
 		close(sfd);
 		sfd = -1;
 		return;

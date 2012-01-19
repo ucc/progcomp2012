@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <fcntl.h>
-
+#include <errno.h>
 
 
 #include "controller.h"

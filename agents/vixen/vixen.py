@@ -67,9 +67,9 @@ class Vixen(BasicAI):
 
 		moveList.sort(key = lambda e : e["score"], reverse=True)
 		#sys.stderr.write("vixen - best move: " + str(moveList[0]["unit"].x) + " " + str(moveList[0]["unit"].y) + " " + moveList[0]["direction"] + " [ score = " + str(moveList[0]["score"]) + " ]\n")
-		if moveList[0]["score"] == 0:
-			print "NO_MOVE"
-			return True
+		#if moveList[0]["score"] == 0:
+		#	print "NO_MOVE"
+		#	return True
 
 		
 		print str(moveList[0]["unit"].x) + " " + str(moveList[0]["unit"].y) + " " + moveList[0]["direction"]
