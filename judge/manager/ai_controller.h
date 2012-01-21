@@ -19,7 +19,11 @@ class AI_Controller : public Controller, private Program
 		virtual MovementResult QuerySetup(const char * opponentName,std::string setup[]);
 		virtual MovementResult QueryMove(std::string & buffer);
 
-		virtual void Message(const char * message) {Program::SendMessage(message);}
+		virtual void Message(const char * message) 
+		{
+			//fprintf(stderr, "Sending message \"%s\" to AI program...\n", message);
+			Program::SendMessage(message);
+		}
 		virtual void Pause() {Program::Pause();} //Hack wrapper
 		virtual void Continue() {Program::Continue();} //Hack wrapper
 

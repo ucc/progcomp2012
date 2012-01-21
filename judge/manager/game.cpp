@@ -7,7 +7,7 @@ using namespace std;
 Game* Game::theGame = NULL;
 bool Game::gameCreated = false;
 
-Game::Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard, double newTimeoutTime, bool server, bool client) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard), timeoutTime(newTimeoutTime)
+Game::Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard, double newTimeoutTime) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard), timeoutTime(newTimeoutTime)
 {
 	gameCreated = false;
 	if (gameCreated)
@@ -26,34 +26,24 @@ Game::Game(const char * redPath, const char * bluePath, const bool enableGraphic
 	#endif //BUILD_GRAPHICS
 
 
-	if (client)
-	{
-		red = new Client(Piece::RED, "server", redPath); //TODO: Retrieve server address
-	}
-	else
-	{
-		assert(redPath != NULL);
-		if (strcmp(redPath, "human") == 0)
-			red = new Human_Controller(Piece::RED, graphicsEnabled);
-		else
-			red = new AI_Controller(Piece::RED, redPath, timeoutTime);
-	}
-	
-	
-	if (server)
-	{
-		blue = new Server(Piece::BLUE, "client");
-	}
-	else
-	{
-		assert(bluePath != NULL);
-		if (strcmp(bluePath, "human") == 0)
-			blue = new Human_Controller(Piece::BLUE, graphicsEnabled);
-		else
-			blue = new AI_Controller(Piece::BLUE, bluePath, timeoutTime);
-	}
 
+	MakeControllers(redPath, bluePath);
 
+	if (red == NULL || blue == NULL)
+	{
+		fprintf(stderr, "Game::Game - Error creating controller: ");
+		if (red == NULL)
+		{
+			if (blue == NULL)
+				fprintf(stderr, " BOTH! (red: \"%s\", blue: \"%s\"\n", redPath, bluePath);
+			else
+				fprintf(stderr, " RED! (red: \"%s\")\n", redPath);
+		}
+		else
+			fprintf(stderr, "BLUE! (blue: \"%s\")\n", bluePath);
+		exit(EXIT_FAILURE);
+	}
+	logMessage("Game initialised.\n");
 }
 
 Game::Game(const char * fromFile, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard, double newTimeoutTime) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard), timeoutTime(newTimeoutTime)
@@ -489,7 +479,7 @@ MovementResult Game::Play()
 	
 	
 
-
+	logMessage("Messaging red with \"START\"\n");
 	red->Message("START");
 	
 
@@ -770,4 +760,101 @@ int Game::Tokenise(std::vector<string> & buffer, std::string & str, char split)
 	return buffer.size();
 }
 
+/**
+ * Creates Controller baseds off strings. Takes into account controllers other than AI_Controller.
+ * @param redPath - Either the path to an AI_Controller compatable executable, or one of %human or %network or %network:[IP_ADDRESS]
+ * @param bluePath - Ditto
+ * Sets this->red to a controller using redPath, and this->blue to a controller using bluePath
+ * TODO: Make nicer (this function should be ~half the length)
+ */
+void Game::MakeControllers(const char * redPath, const char * bluePath)
+{
+	Network * redNetwork = NULL;
+	Network * blueNetwork = NULL;
+
+	if (redPath[0] == '@')
+	{
+		if (strcmp(redPath, "@human") == 0)
+			red = new Human_Controller(Piece::RED, graphicsEnabled);
+		else
+		{
+			const char * network = strstr(redPath, "@network");
+			if (network == NULL)
+			{
+				red = NULL;
+				return;
+			}
+			network = strstr(network, ":");
+		
+			if (network == NULL)
+			{
+				logMessage("Creating server for red AI... ");
+				redNetwork = new Server();
+				logMessage("Successful!\n");
+
+			}
+			else
+			{
+				network = (const char*)(network+1);
+				logMessage("Creating client for red AI... ");
+				redNetwork = new Client(network);
+				logMessage("Connected to address %s\n", network);
+			}
+
+			logMessage("	(Red's responses will be received over the connection)\n");
+			red = new NetworkReceiver(Piece::RED, redNetwork);
+		}		
+	}
+	else
+		red = new AI_Controller(Piece::RED, redPath, timeoutTime);
+
+	if (bluePath[0] == '@')
+	{
+		if (strcmp(bluePath, "@human") == 0)
+			blue = new Human_Controller(Piece::BLUE, graphicsEnabled);
+		else
+		{
+			const char * network = strstr(bluePath, "@network");
+			if (network == NULL)
+			{
+				blue = NULL;
+				return;
+			}
+			network = strstr(network, ":");
+		
+			if (network == NULL)
+			{
+				logMessage("Creating server for blue AI... ");
+				blueNetwork = new Server();
+				logMessage("Successful!\n");
+
+			}
+			else
+			{
+				network = (const char*)(network+1);
+				logMessage("Creating client for blue AI... ");
+				blueNetwork = new Client(network);
+				logMessage("Connected to address %s\n", network);
+			}
+			logMessage("	(Blue's responses will be received over the connection)\n");
+			blue = new NetworkReceiver(Piece::BLUE, blueNetwork);
+		}		
+	}
+	else
+		blue = new AI_Controller(Piece::BLUE, bluePath, timeoutTime);
+
+	if (redNetwork != NULL)
+	{
+		
+		blue = new NetworkSender(Piece::BLUE,blue, redNetwork);
+		logMessage("	(Blue's responses will be copied over the connection)\n");
+	}
+	if (blueNetwork != NULL)
+	{
+		
+		red = new NetworkSender(Piece::RED, red, blueNetwork);
+		logMessage("	(Red's responses will be copied over the connection)\n");
+	}
+	
+}
 

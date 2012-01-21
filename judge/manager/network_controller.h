@@ -1,51 +1,57 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <netdb.h>
-#include <fcntl.h>
-#include <errno.h>
-
-
 #include "controller.h"
+#include "ai_controller.h"
+#include "human_controller.h"
+#include "network.h"
 
 #ifndef NETWORK_CONTROLLER_H
 #define NETWORK_CONTROLLER_H
 
-
 class NetworkController : public Controller
 {
 	public:
-		NetworkController(const Piece::Colour & newColour, const char * newName = "no-name");
-		virtual ~NetworkController();
+		NetworkController(const Piece::Colour & colour, Network * newNetwork) : Controller(colour), network(newNetwork) {}
+		virtual ~NetworkController() {}
 
-		virtual bool Valid() {return sfd != -1;}
-
-		virtual void Message(const char * string);
-		virtual MovementResult QuerySetup(const char * opponentName, std::string setup[]) {fprintf(stderr, "NetworkController unimplemented!\n"); assert(false);}
-		virtual MovementResult QueryMove(std::string & buffer) {fprintf(stderr, "NetworkController unimplemented!\n"); assert(false);}
+		//virtual void Message(const char * message) = 0; 
+		virtual bool Valid() const {return network->Valid();}
 
 	protected:
-		int sfd; int cfd;
-		static const int port = 4950;	
+		Network * network;
 };
 
-class Server : public NetworkController
+class NetworkSender : public NetworkController
 {
 	public:
-		Server(const Piece::Colour & newColour, const char * newName = "no-name");
-		virtual ~Server() {}
+		NetworkSender(const Piece::Colour & colour, Controller * newController, Network * newNetwork) : NetworkController(colour, newNetwork), controller(newController) {}
+		virtual ~NetworkSender() {delete controller;}
+
+		virtual bool Valid() const {return NetworkController::Valid() && controller->Valid();}
+
+		virtual void Message(const char * message) 
+		{
+			//fprintf(stderr,"NetworkSender sending message %s to underlying controller\n", message);
+			controller->Message(message);
+		}
+
+		virtual MovementResult QuerySetup(const char * opponentName, std::string setup[]);
+		virtual MovementResult QueryMove(std::string & buffer);
+
+	private:
+		Controller * controller;
+
 };
 
-class Client : public NetworkController
+class NetworkReceiver : public NetworkController
 {
 	public:
-		Client(const Piece::Colour & newColour, const char * newName = "no-name", const char * server="127.0.0.1");
-		virtual ~Client() {}
+		NetworkReceiver(const Piece::Colour & colour, Network * newNetwork) : NetworkController(colour, newNetwork) {}
+		virtual ~NetworkReceiver() {}
+
+		virtual void Message(const char * message) {} //Do nothing (Counter intuitive much)
+		virtual MovementResult QuerySetup(const char * opponentName, std::string setup[]);
+		virtual MovementResult QueryMove(std::string & buffer);
+		
+
 };
 
 #endif //NETWORK_CONTROLLER_H
