@@ -771,6 +771,9 @@ void Game::MakeControllers(const char * redPath, const char * bluePath)
 {
 	Network * redNetwork = NULL;
 	Network * blueNetwork = NULL;
+	//To allow for running two network controllers (I don't know why you would, but beside the point...) use two ports
+	static const int port1 = 4560;
+	static const int port2 = 4561;
 
 	if (redPath[0] == '@')
 	{
@@ -789,7 +792,7 @@ void Game::MakeControllers(const char * redPath, const char * bluePath)
 			if (network == NULL)
 			{
 				logMessage("Creating server for red AI... ");
-				redNetwork = new Server();
+				redNetwork = new Server(port1);
 				logMessage("Successful!\n");
 
 			}
@@ -797,7 +800,7 @@ void Game::MakeControllers(const char * redPath, const char * bluePath)
 			{
 				network = (const char*)(network+1);
 				logMessage("Creating client for red AI... ");
-				redNetwork = new Client(network);
+				redNetwork = new Client(network, port2);
 				logMessage("Connected to address %s\n", network);
 			}
 
@@ -825,7 +828,7 @@ void Game::MakeControllers(const char * redPath, const char * bluePath)
 			if (network == NULL)
 			{
 				logMessage("Creating server for blue AI... ");
-				blueNetwork = new Server();
+				blueNetwork = new Server(port2);
 				logMessage("Successful!\n");
 
 			}
@@ -833,7 +836,7 @@ void Game::MakeControllers(const char * redPath, const char * bluePath)
 			{
 				network = (const char*)(network+1);
 				logMessage("Creating client for blue AI... ");
-				blueNetwork = new Client(network);
+				blueNetwork = new Client(network, port1);
 				logMessage("Connected to address %s\n", network);
 			}
 			logMessage("	(Blue's responses will be received over the connection)\n");

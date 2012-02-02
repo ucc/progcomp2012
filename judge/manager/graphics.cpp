@@ -215,7 +215,7 @@ void Graphics::Initialise(const char * caption, int newWidth, int newHeight)
 
 	//COMES AFTER SETVIDEO MODE
 	glEnable(GL_TEXTURE_2D);
-	glClearColor(1,1,1,0); //Set clear colour (white) here
+	glClearColor(0,0,0,0); //Set clear colour (white) here
 	glViewport(0,0,screenWidth,screenHeight);	//DOES matter
 	glClear(GL_COLOR_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);

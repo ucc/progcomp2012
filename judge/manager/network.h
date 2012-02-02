@@ -20,7 +20,7 @@
 class Network
 {
 	public:
-		Network(int newPort = 666);
+		Network(int newPort = 4560);
 		virtual ~Network();
 		bool Valid() const {return sfd != -1;}
 
