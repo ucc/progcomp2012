@@ -15,11 +15,18 @@ DESCRIPTION
 	Unless the -h (--help) or -f switch is given, both red_player and blue_player must be supplied.
 
 	red_player
-		Should be either a path to an executable file which will control the Red player, or "human".
-		If set to "human", stratego will request the user to make moves for the Red player using stdin.
-		NOTES
-			1. There is no plan to support AI programs named "human". Deal with it.
-			2. The graphical interface for human players is... basic. Deal with it.
+		Should be either a path to an executable file which will control the Red player, or "@human" or "@network[:IP_ADDRESS]"
+
+		If player is @human, then control will be given to a human, via stdin if graphics is disabled, or via "point and click" if graphics is enabled.
+		
+		If player is @network, then commands will be read from another copy of stratego accross the network.
+		In addition, commands from the other player will be sent accross the network to the connected stratego program.
+		
+		If no IP_ADDRESS is given, the program acts as the server, and accepts the first connection it receives.
+		If an IP_ADDRESS is given, the program attempts to connect as the client to the specified address.
+
+		Each player uses a different port; both players may be network controlled.
+			
 	blue_player
 		As red_player, except for controlling the Blue player.
 
@@ -136,6 +143,10 @@ PROTOCOL
 	In order to interface with stratego, an AI program must satisfy the following protocol. 
 	Each query is followed by a newline, and responses are expected to be followed with a newline.
 	The queries are recieved through stdin, and responses should be written to stdout.
+
+	"QUERY" describes the information sent to a program's stdin stream.
+	"RESPONSE" describes the form of the information that the program should immediately respond with, to stdout.
+	"CONFIRMATION" describes more information sent to the program's stdin stream, that the program should NOT respond to.
 	
 	1. SETUP
 		QUERY: YOUR_COLOUR OPPONENT_ID BOARD_WIDTH BOARD_HEIGHT
@@ -260,7 +271,7 @@ NOTES
 	0. This program is still a work in progress and subject to changes.
 	
 	1. UCC Programming Competition 2012 Description
-	   http://matches.ucc.asn.au/stratego/
+	   http://progcomp.ucc.asn.au
 
 	2. UCC Programming Competition 2012 Git repository
 	   git://git.ucc.asn.au/progcomp2012.git
@@ -270,5 +281,5 @@ NOTES
 	   irc://irc.ucc.asn.au #progcomp
 
 THIS PAGE LAST UPDATED
-	3/01/12 by Sam Moore
+	2/02/12 by Sam Moore
 	
