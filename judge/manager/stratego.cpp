@@ -343,6 +343,8 @@ MovementResult Board::MovePiece(int x, int y, const Direction & direction, int m
 	{
 		return MovementResult(MovementResult::IMMOBILE_UNIT);
 	}
+	if (multiplier < 1)
+		return MovementResult(MovementResult::INVALID_DIRECTION); //Don't allow moves that don't actually move forward
 	if (multiplier > 1 && target->type != Piece::SCOUT)
 	{
 		return MovementResult(MovementResult::INVALID_DIRECTION); //Can only move a scout multiple times.
