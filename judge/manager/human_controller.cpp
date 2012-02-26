@@ -145,6 +145,7 @@ MovementResult Human_Controller::QueryMove(string & buffer)
 							{
 								int xDist = x[1] - x[0];
 								int yDist = y[1] - y[0];
+								int magnitude = max(abs(xDist), abs(yDist));
 								if (abs(xDist) > abs(yDist))
 								{
 									if (xDist < 0)
@@ -156,6 +157,13 @@ MovementResult Human_Controller::QueryMove(string & buffer)
 									buffer += "UP";
 								else
 									buffer += "DOWN";
+
+								if (magnitude > 1)
+								{
+									stringstream s("");
+									s << " " << magnitude;
+									buffer += s.str();
+								}
 							}
 							mouseClick++;
 							break;
