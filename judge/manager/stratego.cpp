@@ -157,7 +157,7 @@ void Board::Print(FILE * stream, const Piece::Colour & reveal)
  * @param stream - the stream to print information to
  * @param reveal - Pieces matching this colour will have their identify revealed, other pieces will be shown as '#'
  */
-void Board::PrintPretty(FILE * stream, const Piece::Colour & reveal)
+void Board::PrintPretty(FILE * stream, const Piece::Colour & reveal, bool showRevealed)
 {
 	for (int y=0; y < height; ++y)
 	{
@@ -168,7 +168,8 @@ void Board::PrintPretty(FILE * stream, const Piece::Colour & reveal)
 			{
 				fprintf(stream, ".");
 			}
-			else if (piece->colour != Piece::NONE && (piece->colour == reveal || reveal == Piece::BOTH))
+			else if ((piece->colour != Piece::NONE && (piece->colour == reveal || reveal == Piece::BOTH))
+					|| (piece->beenRevealed && showRevealed))
 			{
 				switch (piece->colour)	
 				{

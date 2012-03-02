@@ -109,7 +109,7 @@ class Board
 		virtual ~Board(); //Destructor
 
 		void Print(FILE * stream, const Piece::Colour & reveal=Piece::BOTH); //Print board
-		void PrintPretty(FILE * stream, const Piece::Colour & reveal=Piece::BOTH); //Print board using colour
+		void PrintPretty(FILE * stream, const Piece::Colour & reveal=Piece::BOTH, bool showRevealed=true); //Print board using colour
 		
 		#ifdef BUILD_GRAPHICS
 		void Draw(const Piece::Colour & reveal=Piece::BOTH, bool showRevealed = true); //Draw board
