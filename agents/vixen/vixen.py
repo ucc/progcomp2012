@@ -61,7 +61,7 @@ class Vixen(BasicAI):
 			moveList.append({"unit":unit, "direction":bestScore[0], "score":bestScore[1]})
 			
 
-		if len(moveList) == 0:
+		if len(moveList) <= 0:
 			print "NO_MOVE"
 			return True
 
@@ -86,7 +86,8 @@ class Vixen(BasicAI):
 
 	def CalculateScore(self, attacker, defender, path):
 		p = move(attacker.x, attacker.y, path[0], 1)
-		
+		if p[0] < 0 or p[0] >= len(self.board) or p[1] < 0 or p[1] >= len(self.board[p[0]]):
+			return -100.0
 
 		total = 0.0
 		count = 0.0

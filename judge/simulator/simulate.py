@@ -221,13 +221,16 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 		for blue in agents: #against each other agent, playing as blue
 			if red == blue:
 				continue #Exclude battles against self
-			gameNumber += 1
-			gameID = str(roundNumber) + "." + str(gameNumber)
+			
+			
 			for i in range(1, nGames/2 + 1):
+				gameNumber += 1
+				gameID = str(roundNumber) + "." + str(gameNumber)
 				#Play a game and read the result. Note the game is logged to a file based on the agent's names
 				if verbose:
 					sys.stdout.write("Agents: \""+red["name"]+"\" and \""+blue["name"]+"\" playing game (ID: " + gameID + ") ... ")
 				logFile = logDirectory + "round"+str(roundNumber) + "/"+red["name"]+".vs."+blue["name"]+"."+str(gameID)
+				errorLog = [logDirectory + "error/" + red["name"] + "."+str(gameID), logDirectory + "error/" + blue["name"] + "."+str(gameID)]
 				outline = os.popen(managerPath + " -o " + logFile + " -T " + str(timeoutValue) + " " + red["path"] + " " + blue["path"], "r").read()
 				results = outline.split(' ')
 			
