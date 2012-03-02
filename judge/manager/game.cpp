@@ -43,7 +43,7 @@ Game::Game(const char * redPath, const char * bluePath, const bool enableGraphic
 			fprintf(stderr, "BLUE! (blue: \"%s\")\n", bluePath);
 		exit(EXIT_FAILURE);
 	}
-	logMessage("Game initialised.\n");
+//	logMessage("Game initialised.\n");
 }
 
 Game::Game(const char * fromFile, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard, double newTimeoutTime) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard), timeoutTime(newTimeoutTime)
@@ -479,7 +479,7 @@ MovementResult Game::Play()
 	
 	
 
-	logMessage("Messaging red with \"START\"\n");
+//	logMessage("Messaging red with \"START\"\n");
 	red->Message("START");
 	
 
