@@ -127,7 +127,7 @@ for name in agentNames:
 			break
 	infoFile.close()
 	
-	if os.path.exists(agentExecutable) == False:
+	if os.path.exists(agentExecutable.split(" ")[0]) == False:
 		if verbose:
 			sys.stdout.write(" Invalid! (Path: \""+agentExecutable+"\" does not exist!)\n")
 		continue
@@ -210,7 +210,7 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 
 	
 	print "Commencing ROUND " + str(roundNumber) + " combat!"
-	print "Total: " + str(totalGames) + " games to be played. This could take a while... (Estimate 60s/game)"
+	print "Total: " + str(totalGames) + " games to be played. This could take a while..."
 
 
 
@@ -231,7 +231,12 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 					sys.stdout.write("Agents: \""+red["name"]+"\" and \""+blue["name"]+"\" playing game (ID: " + gameID + ") ... ")
 				logFile = logDirectory + "round"+str(roundNumber) + "/"+red["name"]+".vs."+blue["name"]+"."+str(gameID)
 				errorLog = [logDirectory + "error/" + red["name"] + "."+str(gameID), logDirectory + "error/" + blue["name"] + "."+str(gameID)]
-				outline = os.popen(managerPath + " -o " + logFile + " -T " + str(timeoutValue) + " " + red["path"] + " " + blue["path"], "r").read()
+				#Run the game, outputting to logFile; stderr of (both) AI programs is directed to logFile.stderr
+				outline = os.popen(managerPath + " -o " + logFile + " -T " + str(timeoutValue) + " \"" + red["path"] + "\" \"" + blue["path"] + "\" 2>> " + logFile+".stderr", "r").read()
+				
+				#If there were no errors, get rid of the stderr file
+				if os.stat(logFile+".stderr").st_size <= 0:
+					os.remove(logFile+".stderr")
 				results = outline.split(' ')
 			
 				if len(results) != 6:
@@ -287,46 +292,6 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 	if verbose:
 		print "" 
 	#We should now have complete score values.
-		
-	'''
-		Obselete, non prettified results
-	if verbose:
-		sys.stdout.write("Creating raw results files for ROUND " + str(roundNumber) + "... ")
-
-	agents.sort(key = lambda e : e["score"], reverse=True) #Sort the agents based on score
-	
-	resultsFile = open(resultsDirectory+"round"+str(roundNumber)+".results", "w") #Create a file to store all the scores for this round
-	for agent in agents:
-		resultsFile.write(agent["name"] + " " + str(agent["score"]) +"\n") #Write the agent names and scores into the file, in descending order
-
-	if verbose:
-		sys.stdout.write(" Complete!\n")
-		sys.stdout.write("Updating total scores... ");
-	
-	#Now update the total scores
-	if os.path.exists(resultsDirectory+"total.scores"):
-		if verbose:
-			sys.stdout.write(" Reading from \""+resultsDirectory+"total.scores\" to update scores... ")
-		totalFile = open(resultsDirectory+"total.scores", "r") #Try to open the total.scores file
-		for line in totalFile: #For all entries, 
-			data = line.split(' ')
-			for agent in agents:
-				if agent["name"] == data[0]:
-					agent["totalScore"] = int(data[1]) + agent["score"][0] #Simply increment the current score by the recorded total score of the matching file entry
-					break
-		totalFile.close() #Close the file, so we can delete it
-		os.remove(resultsDirectory+"total.scores") #Delete the file
-		#Sort the agents again
-		agents.sort(key = lambda e : e["totalScore"], reverse=True)
-
-	else:
-		if verbose:
-			sys.stdout.write(" First round - creating \""+resultsDirectory+"total.scores\"... ")
-	if verbose:
-		sys.stdout.write(" Complete!\n")
-		print "Finished writing results for ROUND " + str(roundNumber)
-		print ""
-	'''
 	if verbose:	
 		print "RESULTS FOR ROUND " + str(roundNumber)
 
@@ -359,9 +324,9 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 
 		for index in range(0, len(agent["ALL"])):
 			if agent["ALL"][index][4] == "RED":
-				logFile = "log/round"+str(roundNumber) + "/"+agent["name"]+".vs."+agent["ALL"][index][0]+"."+str(agent["ALL"][index][1])
+				logFile = "../log/round"+str(roundNumber) + "/"+agent["name"]+".vs."+agent["ALL"][index][0]+"."+str(agent["ALL"][index][1])
 			else:
-				logFile = "log/round"+str(roundNumber) + "/"+agent["ALL"][index][0]+".vs."+agent["name"]+"."+str(agent["ALL"][index][1])
+				logFile = "../log/round"+str(roundNumber) + "/"+agent["ALL"][index][0]+".vs."+agent["name"]+"."+str(agent["ALL"][index][1])
 			agentFile.write("<tr> <td> <a href="+logFile+">" + str(agent["ALL"][index][1]) + " </a> </td> <td> <a href="+agent["ALL"][index][0]+".html>"+agent["ALL"][index][0] + " </a> </td> <td> " + agent["ALL"][index][4] + " </td> <td> " + agent["ALL"][index][3] + " </td> <td> " + str(agent["ALL"][index][2]) + "</td> <td> " + str(agent["score"][len(agent["score"])-index -2]) + " </td> </tr> </th>\n")
 		agentFile.write("</table>\n")
 		

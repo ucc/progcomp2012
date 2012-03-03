@@ -1,11 +1,16 @@
 NAME
 	stratego - Interface to manage games of stratego between AI programs and/or human players
 	
-WARNING
-	This program is still a work in progress. Consider it a Beta version.
+
 
 SYNOPSIS
 	stratego {[-gpirb] [-o output_file ] [-t stall_time] [-T timeout_time] [-m max_turns] {red_player blue_player | -f input_file} | {-h | --help} }
+
+QUICK EXAMPLE - Play against a sample AI, using graphics, hiding the AI's pieces
+	stratego -g -b @human ../../agents/vixen/vixen.py
+
+QUICK EXAMPLE - Play two sample AI, using graphics, and a delay of 1 second between moves
+	stratego -g -t 1 ../../agents/vixen/vixen.py ../../agents/basic_python/basic_python.py
 
 DESCRIPTION
 	stratego manages a game of Stratego. It stores the state of the board, and uses a simple protocol to interface with AI programs.
@@ -140,74 +145,263 @@ GAME RULES
 		
 
 PROTOCOL
+	WARNING: This is quite a wordy section. To avoid being scared off, try just copying a sample AI program. They obey the protocol already.
+
 	In order to interface with stratego, an AI program must satisfy the following protocol. 
-	Each query is followed by a newline, and responses are expected to be followed with a newline.
-	The queries are recieved through stdin, and responses should be written to stdout.
+	The protocol has been grouped into several sections. It is suggested that you read and implement the below sections in order.
 
-	"QUERY" describes the information sent to a program's stdin stream.
-	"RESPONSE" describes the form of the information that the program should immediately respond with, to stdout.
-	"CONFIRMATION" describes more information sent to the program's stdin stream, that the program should NOT respond to.
+	In the "Synopsis" of each section, a line beginning with the three characters ">> " indicates information sent to the AI.
+			  a line beginning with the three characters "<< " indicates the form of the expected response.
+	Each line is always terminated with a new line character '\n'.
+
+	A vertical bar '|' indicates that the line may have the form shown either to the left, or the right.
+	Fields in square brackets '[' and ']' are optional. The default value will be shown within the brackets after a '=' character.
+
+	Any words preceeded by a '$' character are not to be interpreted literally; in the actual protocol, these words are replaced with information.
+	The information will not contain any whitespace unless otherwise stated.
+	The meaning of these words is explained below the "Synopsis" under the "Explanation" subheading for each section of the protocol.
+
+	Words not preceeded by a '$' character should be interpreted literally;
+		>> START
+	Means that "START", followed by a new line, is printed to the AI.
 	
-	1. SETUP
-		QUERY: YOUR_COLOUR OPPONENT_ID BOARD_WIDTH BOARD_HEIGHT
+	
+	1. Setup
+		---------------------------------------------------
+		Description
+		---------------------------------------------------
+		Setup only occurs once; during the setup phase, AI are provided with information about their colour and opponent.
+		They must then respond with four lines detailing their setup.
 
-		RESPONSE: 4 lines, each of length BOARD_WIDTH, of characters. Each character represents a piece. The characters are shown above.
+		Setup occurs before the first move; your AI should expect to recieve and respond to Setup messages immediately after starting.
+		Immediately after the setup phase, the AI should expect to recieve messages desribed by the Turn section of the protocol.
+		---------------------------------------------------
+		Synopsis:
+		---------------------------------------------------
+		>> $COLOUR $OPPONENT $WIDTH $HEIGHT
+		<< $ROW1
+		<< $ROW2
+		<< $ROW3
+		<< $ROW4
+		---------------------------------------------------
+		Explanation:
+		---------------------------------------------------
 
-		RED's pieces are placed at the top of the board, and BLUE's pieces are placed at the bottom.
+		COLOUR - The colour assigned to the AI. Will be either "RED" or "BLUE"
+			    - Colour is important, because "RED" is always at the top of the board, and "BLUE" at the bottom.
+
+		OPPONENT - Your AI may identify its opponents through this string
+
+		WIDTH - The width of the board. This will always be 10
+		HEIGHT - The height of the board. This will always be 10
+
+		ROW1 - The highest row on the board of the AI's setup.
+		     - For RED, this is the back row, but for BLUE, it is the front row.
+		ROW2 - The next highest row
+		ROW3 - The next highest row
+		ROW4 - The lowest row on the board of the AI's setup
+		     - For RED, this is the front row, but for BLUE, it is the back row.
+	
+		Each row, ROW1 -> ROW4, should consist of WIDTH characters. Each character identifies a piece, as shown under "GAME RULES" above.
 
 		An AI program does not have to place all 40 pieces, but must at least place the flag ('F').
+		However, note that an AI program with no mobile pieces will immediately lose.
+		---------------------------------------------------
+		Example:
+		---------------------------------------------------
+		>> RED ../../agents/vixen/vixen.py 10 10
+		<< FB8sB479B8
+		<< BB31555583
+		<< 6724898974
+		<< 967B669999
 
-	2. TURN
-		QUERY: 	START | CONFIRMATION
-			BOARD_STATE
-
-			On the first turn, "START" is printed to the Red player.
-			On subsequent turns, the CONFIRMATION of the opponent's last turn is printed (see below).
-
-			BOARD_STATE consists of a BOARD_HEIGHT lines of length BOARD_WIDTH characters, each of which represents a single piece
-			as described in the GAME_RULES section. Each line ends with the newline character.
-			
-
-		RESPONSE: X Y DIRECTION [MULTIPLIER=1] 
-			X and Y are the coords (starting from 0) of the piece to move
-			DIRECTION is either UP, DOWN, LEFT or RIGHT
-			MULTIPLIER is optional and only valid for units of type Scout. Scouts may move through any number of unblocked squares
-			in one direction.
-
-
-		CONFIRMATION: X Y DIRECTION [MULTIPLIER=1] OUTCOME | QUIT [RESULT]
-
-			OUTCOME may be either OK, ILLEGAL, KILLS or DIES
-				OK - Move was successful
-				ILLEGAL - Move was not allowed. If stratego was not started with the -i switch, the game will end.
-				KILLS ATTACKER_RANK DEFENDER_RANK - The piece moved into an occupied square and killed the defender.
-				DIES ATTACKER_RANK DEFENDER_RANK - The piece moved into an occupied square and was killed by the defender.
-
-			QUIT will only be sent when the game is about to end.
-	3. END GAME
-		If the CONFIRMATION line is of the form:
-			QUIT [RESULT]
-		Then the game is about to end.
-	
-		If present, RESULT will be a direct copy of the message to stdout described in the EXIT/OUTPUT section below.
+		In this example, the AI will be playing as "RED". It's opponent is the "vixen" sample AI.
+		The board width and height will always be 10.
 		
+		The AI responds with a sensible setup for the "RED" player, putting the flag in the back corner.
+
+	2. Turn
+		---------------------------------------------------
+		Description
+		---------------------------------------------------
+		After the Setup phase, a number of Turns occur, until the game ends.
+
+		Warning: The game may end between turns, in which case a "QUIT" message is sent. 
+			The "QUIT" message will be sent in place of the first line in the synopsis shown below.
+			Read "3. End Game" below.
+		---------------------------------------------------
+		Synopsis
+		---------------------------------------------------
+		For the AI with colour "RED" only, and only on the very first turn:
+		>> START
+		>> $ROW1
+		>> $ROW2
+		>> $ROW3
+		>> $ROW4
+		>> $ROW5
+		>> $ROW6
+		>> $ROW7
+		>> $ROW8
+		>> $ROW9
+		>> $ROW10
+		<< $X $Y $DIRECTION [$MULTIPLIER=1]
+		>> $X $Y $DIRECTION [$MULTIPLIER=1] $OUTCOME
+
+		For the AI with colour "RED" on every subsequent turn, and the AI with colour "BLUE" on all turns:
+		>> $LASTMOVE $OUTCOME
+		>> $ROW1
+		>> $ROW2
+		>> $ROW3
+		>> $ROW4
+		>> $ROW5
+		>> $ROW6
+		>> $ROW7
+		>> $ROW8
+		>> $ROW9
+		>> $ROW10
+		<< $X $Y $DIRECTION [$MULTIPLIER=1]
+		>> $X $Y $DIRECTION [$MULTIPLIER=1] $OUTCOME | QUIT [$RESULT]
+		---------------------------------------------------
+		Explanation:
+		---------------------------------------------------
+
+		[Recieved data 1]
+
+		LASTMOVE - The last move made
+			 - That is, the move made by the opponent AI, immediately before this move
+			 - It is a direct copy of the opponent AI's response
+			 - On the very first turn, since no move has been made, "START" is printed to the RED AI
+		
+		OUTCOME - The interpretation of the move by the manager program; will be one of the following
+			- Successful, uneventful move: "OK"
+			- Illegal move: "ILLEGAL"
+			- The moved piece attacked and destroyed an opponent piece: "KILLS $ATTACKER_RANK $DEFENDER_RANK"
+				- ATTACKER_RANK and DEFENDER_RANK are the ranks of the attacking and defending piece respectively
+			- The moved piece was destroyed by an opponent piece that it attacked: "DIES $ATTACKER_RANK $DEFENDER_RANK"
+				- ATTACKER_RANK and DEFENDER_RANK are the ranks of the attacking and defending piece respectively
+			- The moved piece attacked an opponent piece, and both pieces were destroyed: "BOTHDIE $ATTACKER_RANK $DEFENDER_RANK"
+				- ATTACKER_RANK and DEFENDER_RANK are the ranks of the attacking and defending piece respectively
+
+		ROW1 -> ROW10 - The state of the board will be printed
+			      - Each line represents a row on the board, from the top downwards
+			      - The characters are as desribed above in "GAME RULES"
+			      - Enemy pieces will NOT be revealed, even if they have been involved in combat. They are always shown as '#'.
+			      - It is recommended that AI's rely on the LASTMOVE and OUTCOME results to keep state
+			      - Interpreting these lines is not necessary, or recommended
+			      - They still exist because I say so. GET OVER IT.
+
+		[Sent data]
+
+		X - The x coordinate of the piece to be moved. Ranges from 0 (zero) to 9 (nine) (left to right)
+		Y - The y coordinate of the piece to be moved. Ranges from 0 (zero) to 9 (nine) (top to bottom)
+		DIRECTION - The direction to move the piece in. May be either "LEFT", "RIGHT", "UP" or "DOWN"		
+		MULTIPLIER - Scouts may move more than one square.
+			   - To move a scout multiple spaces, print an integer indicating the number of spaces immediately after DIRECTION
+
+		[Recieved data 2]
+
+		The manager program will check the validity of the move, and respond by repeating it back to the AI, followed by OUTCOME.
+		OUTCOME is as described above.
+		---------------------------------------------------
+		Example:
+		---------------------------------------------------
+
+		First turn for RED:
+		-------------------
+		>> START
+		>> FB8sB479B8
+		>> BB31555583
+		>> 6724898974
+		>> 967B669999
+		>> ..++..++..
+		>> ..++..++..
+		>> ##########
+		>> ##########
+		>> ##########
+		>> ##########
+		<< 0 3 DOWN
+		>> 0 3 DOWN OK
+		-------------------
+		Continuing from the Setup example, the RED AI is told to start, and then the board is printed.
+		Note that only RED's pieces are revealed. The obstacles are always in the same place, as shown.
+		Refer to the "GAME RULES" section for an explanation of each piece character.
+
+		The AI decides to move its scout (9) at (0,3) downwards by one place.
+		
+		The manager reports that this move was successful.
+
+		Second Turn for RED:
+		-------------------
+		>> 9 6 UP 3 BOTHDIE 9 9
+		>> FB8sB479B8
+		>> BB31555583
+		>> 6724898974
+		>> .67B66999.
+		>> 9.++..++..
+		>> ..++..++..
+		>> #########.
+		>> ##########
+		>> ##########
+		>> ##########
+		<< 9 2 DOWN
+		>> 9 2 DOWN OK
+		-------------------
+		The next message recieved by the RED AI tells it that BLUE has moved its piece at (9,6) up by 3.
+		This brought the piece into contact with RED's scout (9) at (9,3)
+		Since BLUE's piece was also a scout (9), both pieces die, indicated by "BOTHDIE" followed by their ranks (9 and 9)
+		
+		The board is printed again. Note that RED's first move is reflected 
+			(the scout (9) at (0,4)), and BLUE's last move (both (9,6) and (9,3) are now empty).
 	
-	4. TIMEOUTS
+		The RED AI decides to move its major (4) at (9,2) downwards. This move is OK, because there is now nothing occupying (9,3).
+		---------------------------------------------------
+		WARNING:
+		---------------------------------------------------
+		It is recommended that you ignore the board state lines, except for the first turn.
+		Remember that an AI may not place all its pieces, so assuming its initial setup is a bad idea.
+		On subsequent turns, the board state lines provide no information that can't be processed from the move confirmation lines.
+		---------------------------------------------------
+
+	3. End Game
+		---------------------------------------------------
+		Description:
+		---------------------------------------------------
+		A message of "QUIT" at any time signals to an AI that the game is about to end.
+		This will be sent immediately after an AI makes a move of the form "$X $Y $DIRECTION [$MULTIPLIER=1]" which ends the game
+		It may also be sent at any time in case of errors
+		
+		The AI should immediately exit if a QUIT message is recieved.
+		---------------------------------------------------
+		Synopsis:
+		---------------------------------------------------
+		>> QUIT [RESULT]
+		---------------------------------------------------
+		Explanation:
+		---------------------------------------------------
+		RESULT - Usually not present; it may contain debug information if it is.
+		---------------------------------------------------		
+	
+	4. Timeouts
+		---------------------------------------------------
+		Description:
+		---------------------------------------------------
 		If a program fails to respond to a query, the game will end and that AI will be sent the ILLEGAL result.
 		Human players are not subject to the timeout restriction.
-
-		Please see the information on the -T switch.
+		---------------------------------------------------
+		Please see the information on the -T switch, and the "End Game" section above.
 		
 			
 
 EXIT/OUTPUT
-	If the game ends due to a player either winning, or making an illegal move, stratego will print one of the following result messages to stdout.
+	If the game ends due to a player either winning, or making an illegal move, stratego will print one the following result message to stdout.
 
-	NAME COLOUR OUTCOME TURN_NUMBER OUTCOME RED_PIECE_VALUE BLUE_PIECE_VALUE
+	$NAME $COLOUR $OUTCOME $TURN  $RED_PIECE_VALUE $BLUE_PIECE_VALUE
 
 	Where:
 		NAME is the name of the player on whose turn the game ended,
+
 		COLOUR is the colour of that player,
+
 		OUTCOME is one of the following:
 			VICTORY - The indicated player won
 			DEFEAT - The indicated player lost
@@ -216,10 +410,11 @@ EXIT/OUTPUT
 			DRAW_DEFAULT - The game ended in a draw because the maximum number of moves was exceeded
 			ILLEGAL - The indicated player loses due to an Illegal move/response
 			DEFAULT - The indicated player wins by default due to the other player making an Illegal move/response
-			BOTH_ILLEGAL - Both players made an Illegal move/response. Usually occurs due to simultaneous setup errors, or bad executable paths.
-			INTERNAL_ERROR - The game ended, even though it shouldn't have.
-			
-		TURN_NUMBER is the number of turns that elapsed before the game ended
+			BOTH_ILLEGAL - Both players made an Illegal move/response. Usually occurs due to simultaneous setup errors.			
+					- May occur due to bad AI path names
+			INTERNAL_ERROR - The game ended, even though it shouldn't have.	
+
+		TURN is the number of turns that elapsed before the game ended
 
 		RED_PIECE_VALUE and BLUE_PIECE_VALUE are the summed piece values of the pieces of RED and BLUE respectively.
 		Bombs and Flags are worth zero, and the ranked pieces (Spys -> Marshal) are worth (11 - rank).
@@ -281,5 +476,5 @@ NOTES
 	   irc://irc.ucc.asn.au #progcomp
 
 THIS PAGE LAST UPDATED
-	2/02/12 by Sam Moore
+	3/03/12 by Sam Moore
 	

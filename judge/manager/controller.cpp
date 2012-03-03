@@ -189,4 +189,23 @@ MovementResult Controller::MakeMove(string & buffer)
 
 }
 
+/**
+ * Fixes the name of the controller
+ * Should be called AFTER the constructor, since it modifies the name string, which might be used in the constructor
+ */
+void Controller::FixName()
+{
+	for (unsigned int ii=0; ii < name.size(); ++ii)
+	{
+		if (name[ii] == ' ')
+		{
+			name.erase(ii); //Just erase everything after the first whitespace
+			break;
+		}
+	}
+	//This is kind of hacky; I added it so that I could pass arguments to the AIs
+	//Because simulate.py doesn't like extra arguments showing up in the AI name at the end of the game (its fine until then)
+	//So I'll just remove them, after they have been passed! What could possibly go wrong?
+	// - Last entry in Sam Moore's diary, 2012
+}
 

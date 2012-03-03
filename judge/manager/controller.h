@@ -34,6 +34,8 @@ class Controller
 
 		const Piece::Colour colour; 
 
+		virtual void FixName(); //Should be called after setup, sets the name of the controller
+
 		std::string name;
 
 

@@ -22,7 +22,6 @@ from path import *
 class Vixen(BasicAI):
 	" Python based AI, improves upon Asmodeus by taking into account probabilities, and common paths "
 	def __init__(self):
-		#sys.stderr.write("Vixen initialised...\n")
 		BasicAI.__init__(self)
 		
 		
@@ -58,7 +57,9 @@ class Vixen(BasicAI):
 				scores[path[0]] += self.CalculateScore(unit, target, path)
 
 			bestScore = sorted(scores.items(), key = lambda e : e[1], reverse=True)[0]
-			moveList.append({"unit":unit, "direction":bestScore[0], "score":bestScore[1]})
+			if bestScore[1] > -100.0:
+				moveList.append({"unit":unit, "direction":bestScore[0], "score":bestScore[1]})
+			
 			
 
 		if len(moveList) <= 0:
@@ -87,7 +88,7 @@ class Vixen(BasicAI):
 	def CalculateScore(self, attacker, defender, path):
 		p = move(attacker.x, attacker.y, path[0], 1)
 		if p[0] < 0 or p[0] >= len(self.board) or p[1] < 0 or p[1] >= len(self.board[p[0]]):
-			return -100.0
+			return -1000.0
 
 		total = 0.0
 		count = 0.0

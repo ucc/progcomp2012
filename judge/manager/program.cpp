@@ -6,7 +6,8 @@
 
 #include "thread_util.h"
 #include "program.h"
-
+#include <vector>
+#include <string.h>
 
 using namespace std;
 
@@ -22,6 +23,43 @@ using namespace std;
  */
 Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0), paused(false)
 {
+	
+		
+	
+	vector<char*> args;
+	if (executablePath[0] != '"')
+		args.push_back((char*)executablePath);
+	else
+		args.push_back((char*)(executablePath)+1);
+	char * token = NULL;
+	do
+	{
+		token = strstr(args[args.size()-1], " ");
+		if (token == NULL)
+			break;
+
+		*token = '\0';
+		do
+		{
+			++token;
+			if (*token == '"')
+				*token = '\0';
+		}
+		while (*token != '\0' && iswspace(*token));
+
+		if (*token != '\0' && !iswspace(*token))
+		{
+			args.push_back(token);
+		}
+		else
+			break;
+	}
+	while (token != NULL);
+
+	char **  arguments = new char*[args.size()+2];
+	for (unsigned int i=0; i < args.size(); ++i)
+		arguments[i] = args[i];
+
 	//See if file exists and is executable...
 	if (access(executablePath, X_OK) != 0)
 	{
@@ -51,7 +89,7 @@ Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0
 				
 
 		if (access(executablePath, X_OK) == 0) //Check we STILL have permissions to start the file
-			execl(executablePath, executablePath, (char*)(NULL)); ///Replace process with desired executable
+			execv(executablePath,arguments); ///Replace process with desired executable
 		
 		fprintf(stderr, "Program::Program - Could not run program \"%s\"!\n", executablePath);
 		exit(EXIT_FAILURE); //We will probably have to terminate the whole program if this happens

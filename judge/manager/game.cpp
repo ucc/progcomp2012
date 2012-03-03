@@ -858,6 +858,8 @@ void Game::MakeControllers(const char * redPath, const char * bluePath)
 		red = new NetworkSender(Piece::RED, red, blueNetwork);
 		logMessage("	(Red's responses will be copied over the connection)\n");
 	}
+
+	red->FixName(); blue->FixName();
 	
 }
 
