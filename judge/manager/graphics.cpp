@@ -449,4 +449,80 @@ void Graphics::Wait(int n)
 	SDL_Delay(n);
 }
 
+/* Writes an upside down image???
+void Graphics::ScreenShot(const char * fileName)
+{
+
+	std::vector< GLubyte > pixeldata;
+
+	pixeldata.resize( swidth * sheight * 3 );
+
+	SDL_Surface* image = SDL_CreateRGBSurface(SDL_SWSURFACE, screenWidth, screenHeight, 24,255U << (16),255 << (8),255 << (0),0);
+
+	SDL_LockSurface( image );
+
+	glReadPixels(0, 0, swidth, sheight, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid *)image->pixels);
+
+
+
+	SDL_UnlockSurface( image );
+		
+	SDL_SaveBMP(image, fileName);
+	SDL_FreeSurface( image );
+
+
+}
+*/
+
+
+// Hacky code from http://www.gamedev.net/topic/389159-bitmap-file-saving-problem/
+// Should probably make it nicer
+
+void Graphics::ScreenShot(const char * fileName)
+{
+
+	unsigned char *pixels = (unsigned char*)(malloc (screenWidth * screenHeight * 3));
+		
+	SDL_Surface* reversed_image = SDL_CreateRGBSurface(SDL_SWSURFACE, screenWidth, screenHeight, 24,
+		255U << (0), // Blue channel
+		255 << (8), // Green channel
+		255 << (16), // Red channel
+		0 /* no alpha! */);
+
+	SDL_LockSurface( reversed_image );
+
+	// Read in the pixel data
+	glReadPixels(0, 0, screenWidth, screenHeight, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
+	SDL_UnlockSurface( reversed_image );
+
+	/* At this point the image has been reversed, so we need to re-reverse it so that
+	it is the correct way around. We do this by copying the "image" pixels to another
+	surface in reverse order */
+	SDL_Surface* image = SDL_CreateRGBSurface(SDL_SWSURFACE, screenWidth, screenHeight, 24,
+		255U << (0), // Blue channel
+		255 << (8), // Green channel
+		255 << (16), // Red channel
+		0 /* no alpha! */);
+
+	uint8_t *imagepixels = reinterpret_cast<uint8_t*>(image->pixels);
+	// Copy the "reversed_image" memory to the "image" memory
+	for (int y = (screenHeight - 1); y >= 0; --y) {
+		uint8_t *row_begin = pixels + y * screenWidth * 3;
+		uint8_t *row_end = row_begin + screenWidth * 3;
+
+		std::copy(row_begin, row_end, imagepixels);
+
+		// Advance a row in the output surface.
+		imagepixels += image->pitch;
+	}
+		
+	// Save file
+	SDL_SaveBMP(image, fileName);
+		
+	// Clear memory
+	SDL_FreeSurface( reversed_image );
+	SDL_FreeSurface( image );
+}
+
 #endif //BUILD_GRAPHICS

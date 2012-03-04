@@ -7,7 +7,7 @@ using namespace std;
 Game* Game::theGame = NULL;
 bool Game::gameCreated = false;
 
-Game::Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard, double newTimeoutTime) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard), timeoutTime(newTimeoutTime)
+Game::Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard, double newTimeoutTime, const char * newImageOutput) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard), timeoutTime(newTimeoutTime), imageOutput(newImageOutput)
 {
 	gameCreated = false;
 	if (gameCreated)
@@ -46,7 +46,7 @@ Game::Game(const char * redPath, const char * bluePath, const bool enableGraphic
 //	logMessage("Game initialised.\n");
 }
 
-Game::Game(const char * fromFile, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard, double newTimeoutTime) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard), timeoutTime(newTimeoutTime)
+Game::Game(const char * fromFile, const bool enableGraphics, double newStallTime, const bool allowIllegal, FILE * newLog, const  Piece::Colour & newReveal, int newMaxTurns, bool newPrintBoard, double newTimeoutTime,const char * newImageOutput) : red(NULL), blue(NULL), turn(Piece::RED), theBoard(10,10), graphicsEnabled(enableGraphics), stallTime(newStallTime), allowIllegalMoves(allowIllegal), log(newLog), reveal(newReveal), turnCount(0), input(NULL), maxTurns(newMaxTurns), printBoard(newPrintBoard), timeoutTime(newTimeoutTime), imageOutput(newImageOutput)
 {
 	gameCreated = false;
 	if (gameCreated)
@@ -482,7 +482,7 @@ MovementResult Game::Play()
 //	logMessage("Messaging red with \"START\"\n");
 	red->Message("START");
 	
-
+	int moveCount = 0;
 
 	while (!Board::HaltResult(result) && (turnCount < maxTurns || maxTurns < 0))
 	{
@@ -501,7 +501,15 @@ MovementResult Game::Play()
 
 		#ifdef BUILD_GRAPHICS
 		if (graphicsEnabled)
+		{
 			theBoard.Draw(toReveal);
+			if (imageOutput != "")
+			{
+				string imageFile = "" + imageOutput + "/"+ itostr(moveCount) + ".bmp";
+				Graphics::ScreenShot(imageFile.c_str());
+			}
+
+		}
 		#endif //BUILD_GRAPHICS
 		
 		turn = Piece::RED;
@@ -541,10 +549,19 @@ MovementResult Game::Play()
 			theBoard.PrintPretty(stdout, toReveal);
 			fprintf(stdout, "\n\n");
 		}
+
+		++moveCount;
 		
 		#ifdef BUILD_GRAPHICS
 		if (graphicsEnabled)
+		{
 			theBoard.Draw(toReveal);
+			if (imageOutput != "")
+			{
+				string imageFile = "" + imageOutput + "/" + itostr(moveCount) + ".bmp";
+				Graphics::ScreenShot(imageFile.c_str());
+			}
+		}
 		#endif //BUILD_GRAPHICS
 
 		
@@ -589,7 +606,7 @@ MovementResult Game::Play()
 		else
 			ReadUserCommand();
 	
-		
+		++moveCount;
 
 		++turnCount;
 	}
@@ -861,5 +878,12 @@ void Game::MakeControllers(const char * redPath, const char * bluePath)
 
 	red->FixName(); blue->FixName();
 	
+}
+
+string itostr(int i)
+{
+	stringstream s;
+	s << i;
+	return s.str();
 }
 

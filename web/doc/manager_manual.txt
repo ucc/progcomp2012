@@ -4,7 +4,7 @@ NAME
 
 
 SYNOPSIS
-	stratego {[-gpirb] [-o output_file ] [-t stall_time] [-T timeout_time] [-m max_turns] {red_player blue_player | -f input_file} | {-h | --help} }
+	stratego {[-gpirb] [-o output_file ] [-t stall_time] [-T timeout_time] [-m max_turns] [-I image_directory] {red_player blue_player | -f input_file} | {-h | --help} }
 
 QUICK EXAMPLE - Play against a sample AI, using graphics, hiding the AI's pieces
 	stratego -g -b @human ../../agents/vixen/vixen.py
@@ -100,6 +100,24 @@ OPTIONS
 		If this option is supplied, a file previously produced by using the -o switch is read, and the game reenacted.
 		All switches function as normal with -f.
 		NOTE: It is recommended that -g is used with -f.
+
+	-I
+		stratego can output image files in the BMP format, when built with graphics.
+		If this option is supplied, a directory indicated will be used, and a .bmp image will be saved to the directory after each move.
+		The images will be numbered from 0.bmp (before the game starts) with increasing integers for each move.
+		Note that the image number corresponds to the move number, not the turn number. 
+		The move number is odd after RED has moved, and even after BLUE has moved.
+
+		NOTE: The -I switch will automatically enable graphics, even if the -g switch is not supplied.
+
+	-v
+		If you have ffmpeg on your system, you can use this to quickly create a video.
+		When this option is supplied, stratego first outputs image files to a temporary directory in BMP format.
+		After the game is finished, these files are used to create an mp4 movie with the specified name:
+			
+		$ ffmpeg -r 10 -b 1024k -i tmp/%d.bmp filename
+		
+		The temporary images will then be deleted.
 
 	-h, --help
 		If the -h switch is used, this page will be printed and stratego will exit.

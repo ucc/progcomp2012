@@ -15,8 +15,8 @@
 class Game
 {
 	public:
-		Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime = 1.0, const bool allowIllegal=false, FILE * newLog = NULL, const Piece::Colour & newRevealed = Piece::BOTH, int maxTurns = 5000, const bool printBoard = false, double newTimeoutTime = 2.0);
-		Game(const char * fromFile, const bool enableGraphics, double newStallTime = 1.0, const bool allowIllegal=false, FILE * newLog = NULL, const Piece::Colour & newRevealed = Piece::BOTH, int maxTurns = 5000, const bool printBoard = false, double newTimeoutTime = 2.0);
+		Game(const char * redPath, const char * bluePath, const bool enableGraphics, double newStallTime = 1.0, const bool allowIllegal=false, FILE * newLog = NULL, const Piece::Colour & newRevealed = Piece::BOTH, int maxTurns = 5000, const bool printBoard = false, double newTimeoutTime = 2.0, const char * newImageOutput = "");
+		Game(const char * fromFile, const bool enableGraphics, double newStallTime = 1.0, const bool allowIllegal=false, FILE * newLog = NULL, const Piece::Colour & newRevealed = Piece::BOTH, int maxTurns = 5000, const bool printBoard = false, double newTimeoutTime = 2.0, const char * newImageOutput = "");
 		virtual ~Game();
 
 		
@@ -73,6 +73,7 @@ class Game
 
 	private:
 		double timeoutTime;
+		std::string imageOutput;
 		
 };
 
@@ -93,6 +94,7 @@ class FileController : public Controller
 
 };
 
+std::string itostr(int i);
 
 
 #endif //MAIN_H

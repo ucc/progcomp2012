@@ -18,6 +18,7 @@ typedef unsigned char Uint8;
 
 
 
+#include <fstream>
 
 
 
@@ -93,7 +94,7 @@ class Graphics
 		};
 
 		static bool Initialised() {return initialised;}
-
+		static void ScreenShot(const char * fileName);
 	protected:
 		static void DrawColourData(SDL_Surface * dest, int destX, int destY, std::vector<SUint> * R, std::vector<SUint> * G, std::vector<SUint> * B, std::vector<SUint> * A = NULL);
 		static void DrawColourData(SDL_Surface * dest, int destX, int destY, std::vector<std::vector<SUint> > * R, std::vector<std::vector<SUint> > * G, std::vector<std::vector<SUint> > * B, std::vector<std::vector<SUint> > * A = NULL);
@@ -149,6 +150,8 @@ class Font : private Texture
 		int width;
 		int height;
 };
+
+
 
 
 #endif //GRAPHICS_H

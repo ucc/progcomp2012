@@ -15,6 +15,8 @@ Piece::Colour SetupGame(int argc, char ** argv);
 void DestroyGame();
 void PrintResults(const MovementResult & result, string & buffer);
 
+char * video = NULL;
+
 int main(int argc, char ** argv)
 {
 	
@@ -50,11 +52,20 @@ int main(int argc, char ** argv)
 	Game::theGame->red->Message("QUIT " + buffer);
 	Game::theGame->blue->Message("QUIT " + buffer);
 
+	if (video != NULL)
+	{
+		string command = "mv "; command += video; command += " tmp; cd tmp; ffmpeg -r 10 -b 1024k -i %d.bmp "; command += video;
+		command += ";mv "; command += video; command += " ../; cd ../; rm -rf tmp;";
+		system(command.c_str());		
+	}
+
 	//Log the message
 	if (Game::theGame->GetLogFile() != stdout)
 		Game::theGame->logMessage("%s\n", buffer.c_str());
 
 	fprintf(stdout, "%s\n", buffer.c_str());
+
+
 
 	exit(EXIT_SUCCESS);
 	return 0;
@@ -64,6 +75,8 @@ Piece::Colour SetupGame(int argc, char ** argv)
 {
 	char * red = NULL; char * blue = NULL; double stallTime = 0.0; bool graphics = false; bool allowIllegal = false; FILE * log = NULL;
 	Piece::Colour reveal = Piece::BOTH; char * inputFile = NULL; int maxTurns = 5000; bool printBoard = false; double timeoutTime = 2.0;
+	char * imageOutput = (char*)"";
+
 
 	for (int ii=1; ii < argc; ++ii)
 	{
@@ -99,7 +112,7 @@ Piece::Colour SetupGame(int argc, char ** argv)
 
 				case 'g':
 					#ifdef BUILD_GRAPHICS
-					graphics = !graphics;
+					graphics = true;
 					#else
 					fprintf(stderr, "ERROR: -g switch supplied, but the program was not built with graphics.\n Please do not use the -g switch.");
 					exit(EXIT_FAILURE);
@@ -173,6 +186,34 @@ Piece::Colour SetupGame(int argc, char ** argv)
 					inputFile = argv[ii+1];
 					++ii;
 					break;
+				case 'v':
+					#ifdef BUILD_GRAPHICS
+					video = argv[ii+1];
+					#endif //BUILD_GRAPHICS
+				case 'I':
+				{
+					#ifdef BUILD_GRAPHICS
+					graphics = true;
+					if (argc - ii <= 1)
+					{
+						fprintf(stderr, "ARGUMENT_ERROR - Expected filename after -I switch!\n");
+						exit(EXIT_FAILURE);
+					}
+					imageOutput = argv[ii+1];
+					string m("mkdir -p "); m += imageOutput;
+					system(m.c_str());
+					++ii;
+					#else
+						fprintf(stderr, "ERROR: -%c switch supplied, but the program was not built with graphics.");
+						exit(EXIT_FAILURE);
+					#endif //BUILD_GRAPHICS
+					
+					break;
+
+				}
+
+				
+			
 				case 'h':
 					system("clear");	
 					system("less manual.txt");
@@ -218,11 +259,11 @@ Piece::Colour SetupGame(int argc, char ** argv)
 			exit(EXIT_FAILURE);	
 		}
 
-		Game::theGame = new Game(red,blue, graphics, stallTime, allowIllegal,log, reveal,maxTurns, printBoard, timeoutTime);
+		Game::theGame = new Game(red,blue, graphics, stallTime, allowIllegal,log, reveal,maxTurns, printBoard, timeoutTime, imageOutput);
 	}
 	else
 	{
-		Game::theGame = new Game(inputFile, graphics, stallTime, allowIllegal,log, reveal,maxTurns, printBoard, timeoutTime);
+		Game::theGame = new Game(inputFile, graphics, stallTime, allowIllegal,log, reveal,maxTurns, printBoard, timeoutTime, imageOutput);
 	}
 
 	if (Game::theGame == NULL)
