@@ -274,7 +274,7 @@ class BasicAI
 		{
 			if (removeFrom.elementAt(ii) == kill)
 			{
-				removeFrom.eraseAt(ii);
+				removeFrom.remove(ii);
 				return;
 			}				
 		}
