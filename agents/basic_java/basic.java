@@ -256,18 +256,29 @@ class BasicAI
 	 */
 	private void KillUnit(Piece kill) throws Exception
 	{
+		Vector<Piece> removeFrom = null;
 		if (kill.colour.compareTo(colour) == 0)
 		{
 			totalAllies[Piece.Index(kill.rank)] -= 1;
-			if (units.remove(kill) == false)
-				throw new Exception("BasicAI.KillUnit - Couldn't remove allied Piece from units Vector!");
+			removeFrom = units;
 		}
 		else if (kill.colour.compareTo(OppositeColour(colour)) == 0)
 		{
 			totalEnemies[Piece.Index(kill.rank)] -= 1;
-			if (enemyUnits.remove(kill) == false)
-				throw new Exception("BasicAI.KillUnit - Couldn't remove enemy Piece from enemyUnits Vector!");
+			removeFrom = enemyUnits;
 		}
+		if (removeFrom == null)
+			throw new Exception("BasicAI.KillUnit - Can't identify unit with colour " + kill.colour + "!");
+
+		for (int ii=0; ii < removeFrom.size(); ++ii)
+		{
+			if (removeFrom.elementAt(ii) == kill)
+			{
+				removeFrom.remove(ii);
+				return;
+			}				
+		}
+		throw new Exception("BasicAI.KillUnit - Couldn't find unit in unit list.");
 	}
 
 	/**
