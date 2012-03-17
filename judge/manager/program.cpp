@@ -8,6 +8,7 @@
 #include "program.h"
 #include <vector>
 #include <string.h>
+#include <stdio.h>
 
 using namespace std;
 
@@ -56,10 +57,13 @@ Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0
 	}
 	while (token != NULL);
 
-	char **  arguments = new char*[args.size()+2];
-	for (unsigned int i=0; i < args.size(); ++i)
-		arguments[i] = args[i];
-
+	char **  arguments = NULL;
+        if (args.size() > 0)
+	{
+		arguments = new char*[args.size()+2];
+		for (unsigned int i=0; i < args.size(); ++i)
+			arguments[i] = args[i];
+	}
 	//See if file exists and is executable...
 	if (access(executablePath, X_OK) != 0)
 	{
@@ -89,8 +93,10 @@ Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0
 				
 
 		if (access(executablePath, X_OK) == 0) //Check we STILL have permissions to start the file
+		{
 			execv(executablePath,arguments); ///Replace process with desired executable
-		
+		}
+		perror("execv error:\n");
 		fprintf(stderr, "Program::Program - Could not run program \"%s\"!\n", executablePath);
 		exit(EXIT_FAILURE); //We will probably have to terminate the whole program if this happens
 	}
