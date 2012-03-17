@@ -10,6 +10,12 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <stdio.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+
 using namespace std;
 
 
@@ -60,7 +66,7 @@ Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0
 	char **  arguments = NULL;
         if (args.size() > 0)
 	{
-		arguments = new char*[args.size()+2];
+		arguments = new char*[args.size()];
 		for (unsigned int i=0; i < args.size(); ++i)
 			arguments[i] = args[i];
 	}
@@ -221,6 +227,31 @@ bool Program::GetMessage(string & buffer, double timeout)
 	if (!Running() || timeout == 0)
 		return false;
 
+	struct timeval tv;
+	fd_set readfds;
+	
+	tv.tv_sec = (int)(timeout);
+	tv.tv_usec = (timeout - (double)((int)timeout)) * 1000000;
+	
+	int fd = fileno(input);
+
+	FD_ZERO(&readfds);
+	FD_SET(fd, &readfds);
+
+	select(fd+1, &readfds, NULL, NULL, &tv);
+
+	if (!FD_ISSET(fd, &readfds))
+		return false; //Timed out
+	//fprintf(stderr, "Got message!\n");
+	for (char c = fgetc(input); c != '\n' && (int)(c) != EOF; c = fgetc(input))
+	{	
+		//fprintf(stderr, "%c", c);
+		buffer += c;
+	}
+	//fprintf(stderr, "%s\n", buffer.c_str());
+	return true;
+
+	/* Old way, using threads, which apparently is terrible
 	assert(&buffer != NULL);
 	GetterThread getterThread(input, buffer);
 	assert(&(getterThread.buffer) != NULL);
@@ -251,7 +282,7 @@ bool Program::GetMessage(string & buffer, double timeout)
 	if (buffer.size() == 1 && buffer[0] == EOF)
 		return false;
 	return true;
-
+	*/
 
 }
 

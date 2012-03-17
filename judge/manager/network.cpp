@@ -150,6 +150,31 @@ bool Network::GetMessage(string & buffer, double timeout)
 		setbuf(file, NULL);
 	}
 
+	struct timeval tv;
+	fd_set readfds;
+	
+	tv.tv_sec = (int)(timeout);
+	tv.tv_usec = (timeout - (double)((int)timeout)) * 1000000;
+
+	FD_ZERO(&readfds);
+	FD_SET(sfd, &readfds);
+
+	select(sfd+1, &readfds, NULL, NULL, &tv);
+
+	if (!FD_ISSET(sfd, &readfds))
+		return false; //Timed out
+	//fprintf(stderr, "Got message!\n");
+	for (char c = fgetc(file); c != '\n' && (int)(c) != EOF; c = fgetc(file))
+	{	
+		//fprintf(stderr, "%c", c);
+		buffer += c;
+	}
+	//fprintf(stderr, "%s\n", buffer.c_str());
+	return true;
+
+
+	/* Old way, which is apparently terrible
+
 	assert(&buffer != NULL);
 	GetterThread getterThread(file, buffer);
 	assert(&(getterThread.buffer) != NULL);
@@ -180,6 +205,7 @@ bool Network::GetMessage(string & buffer, double timeout)
 	if (buffer.size() == 1 && buffer[0] == EOF)
 		return false;
 	return true;
+	*/
 
 
 }

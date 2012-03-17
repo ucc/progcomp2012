@@ -208,21 +208,23 @@ void Game::Wait(double wait)
 	if (wait <= 0)
 		return;
 
-	TimerThread timer(wait*1000000); //Wait in seconds
-	timer.Start();
+
+
 
 	#ifdef BUILD_GRAPHICS
+
+
 	if (!graphicsEnabled)
 	{
-		while (!timer.Finished());
-		timer.Stop();
+		usleep(1000000*wait); //Wait in seconds
 		return;
 	}
-	#endif //BUILD_GRAPHICS
 
+	TimerThread timer(wait*1000000); //Wait in seconds
+	timer.Start();
 	while (!timer.Finished())
 	{
-		#ifdef BUILD_GRAPHICS
+	
 		SDL_Event  event;
 		while (SDL_PollEvent(&event))
 		{
@@ -234,9 +236,12 @@ void Game::Wait(double wait)
 					break;
 			}
 		}
-		#endif //BUILD_GRAPHICS
 	}
 	timer.Stop();
+
+	#else
+	usleep(wait*1000000); //Wait in seconds
+	#endif //BUILD_GRAPHICS
 	
 }
 
