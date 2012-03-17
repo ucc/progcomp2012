@@ -71,9 +71,9 @@ void Texture::DrawColour(int x, int y, double angle, double scale, Colour colour
 	}
 	else
 	{
-		glColor3f(colour.r,colour.g,colour.b);	
+		glColor4f(colour.r,colour.g,colour.b,1);	
 		Draw(x,y,angle,scale);
-		glColor3f(1,1,1);
+		glColor4f(1,1,1,1);
 	}
 }
 
