@@ -62,6 +62,14 @@ MovementResult Controller::Setup(const char * opponentName)
 	{
 		return MovementResult::BAD_RESPONSE; //You need to include a flag!
 	}
+	
+	//Added 9/04/12 - Check all pieces that can be placed are placed
+	for (int ii = 0; ii <= (int)(Piece::BOMB); ++ii)
+	{
+		if (usedUnits[ii] != Piece::maxUnits[ii])
+			return MovementResult::BAD_RESPONSE; //You must place ALL possible pieces
+	}
+	
 
 	return MovementResult::OK;
 
@@ -87,12 +95,15 @@ MovementResult Controller::MakeMove(string & buffer)
 		buffer += " OK";
 		return MovementResult::OK;
 	}
+	*/
+	//Restored SURRENDER 9/04/12, because... it kind of seems necessary?	
 	if (buffer == "SURRENDER")
 	{
 		buffer += " OK";
 		return MovementResult::SURRENDER;
 	}
-	*/
+
+
 	
 	int x; int y; string direction="";
 	stringstream s(buffer);

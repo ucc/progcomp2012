@@ -125,7 +125,7 @@ OPTIONS
 		
 
 GAME RULES
-		Each player controls up to 40 pieces on the Board. The pieces are represented by the following characters:
+		Each player controls 40 pieces on the Board. The pieces are represented by the following characters:
 
 		Piece	Name		Rank	Number	Abilities
 		1	Marshal		1	1	Dies if attacked by Spy
@@ -152,13 +152,16 @@ GAME RULES
 		Pieces may only move one square horizontally or vertically unless otherwise stated.
 		Pieces may not move through squares occupied by allied pieces, or Obstacle (+) pieces.
 		Pieces may move into squares occupied by Enemy Pieces (#), in which case the piece with the lower rank (higher number) is destroyed.
+		If the moved piece (attacker) has the lower rank, the stationary piece (defender) does _not_ move into the attacker's square.
 
 		Each player's pieces are hidden from the other player. When two pieces encounter each other, the ranks will be revealed.
 
 		The objective is to either destroy all enemy pieces except the Bombs and Flag, or to capture the Flag.
 
-		Since 20/12 Bombs reflect the traditional rules; they are only destroyed by Miners.
+		Since 20/12/2011 Bombs reflect the traditional rules; they are only destroyed by Miners.
 		In previous versions contact of an attacker other than a Miner with a Bomb destroyed the Bomb as well as the attacking piece.
+
+		Since 9/04/2012 An AI must place ALL 40 pieces listed above, or its setup will be declared illegal
 		
 		
 
@@ -299,6 +302,8 @@ PROTOCOL
 				- ATTACKER_RANK and DEFENDER_RANK are the ranks of the attacking and defending piece respectively
 			- The moved piece attacked an opponent piece, and both pieces were destroyed: "BOTHDIE $ATTACKER_RANK $DEFENDER_RANK"
 				- ATTACKER_RANK and DEFENDER_RANK are the ranks of the attacking and defending piece respectively
+			- Game ended due to the attacker capturing a flag: "VICTORY_FLAG"
+			- Game ended due to the destruction of a player's last mobile piece (either attacker or defender): " 
 
 		ROW1 -> ROW10 - The state of the board will be printed
 			      - Each line represents a row on the board, from the top downwards
@@ -392,7 +397,7 @@ PROTOCOL
 		---------------------------------------------------
 		Synopsis:
 		---------------------------------------------------
-		>> QUIT [RESULT]
+		>> QUIT [$RESULT]
 		---------------------------------------------------
 		Explanation:
 		---------------------------------------------------
@@ -407,7 +412,22 @@ PROTOCOL
 		Human players are not subject to the timeout restriction.
 		---------------------------------------------------
 		Please see the information on the -T switch, and the "End Game" section above.
+
+	5. Resignation
+		---------------------------------------------------
+		Description:
+		---------------------------------------------------	
+		Instead of making a move, an AI program may resign.
+		---------------------------------------------------
+		Synopsis:
+		---------------------------------------------------
+		<< SURRENDER
+		>> QUIT SURRENDER
+		---------------------------------------------------
+		Explanation:
+		---------------------------------------------------
 		
+		---------------------------------------------------		
 			
 
 EXIT/OUTPUT
@@ -494,5 +514,5 @@ NOTES
 	   irc://irc.ucc.asn.au #progcomp
 
 THIS PAGE LAST UPDATED
-	3/03/12 by Sam Moore
+	09/04/12 by Sam Moore
 	

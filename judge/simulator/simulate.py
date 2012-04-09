@@ -51,7 +51,7 @@ if len(sys.argv) >= 5:
 
 
 #Score dictionary - Tuple is of the form: (end score, other score, other result) where end is the player on whose turn the result occurs, other is the other player, other result indicates what to record the outcome as for the other player.
-scores = {"VICTORY":(3,1, "DEFEAT"), "DEFEAT":(1,3, "VICTORY"), "SURRENDER":(1,3, "VICTORY"), "DRAW":(2,2, "DRAW"), "DRAW_DEFAULT":(1,1, "DRAW_DEFAULT"), "ILLEGAL":(-1,2, "DEFAULT"), "DEFAULT":(2,-1, "ILLEGAL"), "BOTH_ILLEGAL":(-1,-1, "BOTH_ILLEGAL"), "INTERNAL_ERROR":(0,0, "INTERNAL_ERROR"), "BAD_SETUP":(0,0,"BAD_SETUP")}
+scores = {"VICTORY":(3,1, "DEFEAT"), "DEFEAT":(1,3, "VICTORY"), "SURRENDER":(0,3, "VICTORY"), "DRAW":(2,2, "DRAW"), "DRAW_DEFAULT":(1,1, "DRAW_DEFAULT"), "ILLEGAL":(-1,2, "DEFAULT"), "DEFAULT":(2,-1, "ILLEGAL"), "BOTH_ILLEGAL":(-1,-1, "BOTH_ILLEGAL"), "INTERNAL_ERROR":(0,0, "INTERNAL_ERROR"), "BAD_SETUP":(0,0,"BAD_SETUP")}
 
 
 #Verbose - print lots of useless stuff about what you are doing (kind of like matches talking on irc...)

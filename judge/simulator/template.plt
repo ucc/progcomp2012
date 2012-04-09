@@ -1,7 +1,7 @@
 set term png size 640,480
 set output "[NAME].png"
-set xtics 1
-set ytics 1
+#set xtics 1
+#set ytics 1
 set xrange [1:]
 set xlabel "Games Played"
 set ylabel "Score"
