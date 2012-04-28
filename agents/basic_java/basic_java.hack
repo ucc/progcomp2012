@@ -1,2 +1,4 @@
 #!/bin/bash
-exec java BasicAI.class
+CANNONPATH=`readlink -f "$0"`
+cd "`dirname "$CANNONPATH"`"
+exec java BasicAI

@@ -258,7 +258,8 @@ for roundNumber in range(totalRounds, totalRounds + nRounds):
 				logFile = logDirectory + "round"+str(roundNumber) + "/"+red["name"]+".vs."+blue["name"]+"."+str(gameID)
 				errorLog = [logDirectory + "error/" + red["name"] + "."+str(gameID), logDirectory + "error/" + blue["name"] + "."+str(gameID)]
 				#Run the game, outputting to logFile; stderr of (both) AI programs is directed to logFile.stderr
-				outline = os.popen(managerPath + " -o " + logFile + " -T " + str(timeoutValue) + " \"" + red["path"] + "\" \"" + blue["path"] + "\" 2>> " + logFile+".stderr", "r").read()
+				outline = os.popen(managerPath + " -m 1000 -o " + logFile + " -T " + str(timeoutValue) + " \"" + red["path"] + "\" \"" + blue["path"] + "\" 2>> " + logFile+".stderr", "r").read()
+				
 				#os.system("mv tmp.mp4 " + logFile + ".mp4")
 				
 				#If there were no errors, get rid of the stderr file
