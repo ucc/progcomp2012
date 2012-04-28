@@ -152,6 +152,9 @@ if verbose:
 if verbose:
 	print "Preparing .html results files..."
 
+#BACKUP THE RESULTS DIRECTORY GOD DAMMIT
+os.system("mkdir .before_round"+str(totalRounds)+"_BACKUP/; cp " + resultsDirectory+"*" + " .before_round"+str(totalRounds)+"_BACKUP/")
+
 
 if os.path.exists(resultsDirectory + "index.html") == True:
 	os.remove(resultsDirectory + "index.html") #Delete the file
