@@ -206,7 +206,7 @@ for agent in agents:
 				agentFile.write(line)
 				line = oldFile.readline()
 				values = line.split(' ')
-				agent["totalScore"] += int(values[2].strip())
+				agent["totalScore"] += float(values[2].strip())
 				agent["Wins"] += int(values[5].strip())
 				agent["Losses"] += int(values[8].strip())
 				agent["Draws"] += int(values[11].strip())
