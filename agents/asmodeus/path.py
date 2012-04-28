@@ -32,7 +32,7 @@ class PathFinder:
 		up = (start[0], start[1]-1)
 		down = (start[0], start[1]+1)
 		choices = [left, right, up, down]
-		choices.sort(key = lambda e : random.randint(0,5))
+		choices.sort(key = lambda e : (e[0] - end[0])**2.0 + (e[1] - end[1])**2.0 )
 		options = []
 		for point in choices:
 			option = [point, self.pathFind(point,end,board)]

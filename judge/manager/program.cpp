@@ -32,7 +32,7 @@ Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0
 {
 	
 		
-	
+	/*
 	vector<char*> args;
 	if (executablePath[0] != '"')
 		args.push_back((char*)executablePath);
@@ -70,6 +70,7 @@ Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0
 		for (unsigned int i=0; i < args.size(); ++i)
 			arguments[i] = args[i];
 	}
+	*/
 	//See if file exists and is executable...
 	if (access(executablePath, X_OK) != 0)
 	{
@@ -100,7 +101,8 @@ Program::Program(const char * executablePath) : input(NULL), output(NULL), pid(0
 
 		if (access(executablePath, X_OK) == 0) //Check we STILL have permissions to start the file
 		{
-			execv(executablePath,arguments); ///Replace process with desired executable
+			execl(executablePath, executablePath, (char*)(NULL)); ///Replace process with desired executable
+			//execv(executablePath,arguments); ///Replace process with desired executable
 		}
 		perror("execv error:\n");
 		fprintf(stderr, "Program::Program - Could not run program \"%s\"!\n", executablePath);

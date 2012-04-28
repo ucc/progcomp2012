@@ -44,20 +44,25 @@ class Vixen(BasicAI):
 			if unit.mobile() == False:
 				continue
 
-			scores = {"LEFT":0, "RIGHT":0, "UP":0, "DOWN":0}
+			scores = {"LEFT":None, "RIGHT":None, "UP":None, "DOWN":None}
 			
-
 			for target in self.enemyUnits:
 				if target == unit:
 					continue
 				path = PathFinder().pathFind((unit.x, unit.y), (target.x, target.y), self.board)
 				if path == False or len(path) == 0:
 					continue
-				#moveList.append({"unit":unit, "direction":path[0], "score":self.CalculateScore(unit, target, path)})
+				if scores[path[0]] == None:
+					scores[path[0]] = 0 
+
 				scores[path[0]] += self.CalculateScore(unit, target, path)
 
-			bestScore = sorted(scores.items(), key = lambda e : e[1], reverse=True)[0]
-			if bestScore[1] > -100.0:
+			for d in scores.keys():
+				if scores[d] == None:
+					del scores[d]
+
+			if len(scores.items()) > 0: 
+				bestScore = sorted(scores.items(), key = lambda e : e[1], reverse=True)[0]
 				moveList.append({"unit":unit, "direction":bestScore[0], "score":bestScore[1]})
 			
 			
