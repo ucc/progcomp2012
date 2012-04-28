@@ -82,7 +82,7 @@ class Piece
 						#ifdef __MACOSX__ //Horrible HACK to make pieces green on Mac OSX, because Blue doesn't exist on this operating system.
 							return Graphics::Colour(0,1.0,0);
 						#else
-							return Graphics::Colour(0,0,1.0);
+							return Graphics::Colour(0.5,0.5,1.0);
 						#endif //__MACOSX__
 						break;
 					case NONE:

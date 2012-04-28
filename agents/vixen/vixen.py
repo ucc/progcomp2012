@@ -17,6 +17,7 @@
 from basic_python import *
 from path import *
 
+import random
 
 
 class Vixen(BasicAI):
@@ -32,7 +33,28 @@ class Vixen(BasicAI):
 		self.riskScores = {'1' : -0.3, '2' : -0.3, '3' : 0.0, '4': 0.4, '5': 0.6, '6': 0.7, '7':0.8, '8': 0.0, '9' : 1.0, 's' : 0.1}
 
 
+	def Setup(self):
+		""" Implements Setup part of protocol. Always uses the same setup. Override to create custom setups """
+		#sys.stderr.write("BasicAI Setup here...\n");
+		setup = sys.stdin.readline().split(' ')
+		if len(setup) != 4:
+			sys.stderr.write("BasicAI setup fails, expected 4 tokens, got " + str(len(setup)) + " "+str(setup) + "\n")
+		self.colour = setup[0]
+		self.opponentName = setup[1]
+		self.width = int(setup[2])
+		self.height = int(setup[3])
+		for x in range(0, self.width):
+			self.board.append([])
+			for y in range(0, self.height):		
+				self.board[x].append(None)
 
+		#flagPosition = random.choice((
+		#fakeFlag = random.choice((
+		if self.colour == "RED":
+			print "FB8sB479B8\nBB31555583\n6724898974\n967B669999"
+		elif self.colour == "BLUE":
+			print "967B669999\n6724898974\nBB31555583\nFB8sB479B8"
+		return True
 			
 
 	def MakeMove(self):
