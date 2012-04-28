@@ -76,7 +76,7 @@ class Piece
 				switch (colour)
 				{
 					case RED:
-						return Graphics::Colour(1.0,0,0);
+						return Graphics::Colour(1.0,0.5,0.5);
 						break;
 					case BLUE:
 						#ifdef __MACOSX__ //Horrible HACK to make pieces green on Mac OSX, because Blue doesn't exist on this operating system.
