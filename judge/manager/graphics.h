@@ -8,6 +8,8 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
 
+#define GRID_SIZE 64.0
+
 typedef SDL_Surface Screen;
 typedef SDL_Rect Rectangle;
 typedef short unsigned int SUint;

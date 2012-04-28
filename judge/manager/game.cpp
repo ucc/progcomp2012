@@ -1,5 +1,7 @@
 #include "game.h"
 #include <stdarg.h>
+#include <string>
+
 using namespace std;
 
 
@@ -22,7 +24,13 @@ Game::Game(const char * redPath, const char * bluePath, const bool enableGraphic
 
 	#ifdef BUILD_GRAPHICS
 	if (graphicsEnabled && (!Graphics::Initialised()))
-			Graphics::Initialise("Stratego", theBoard.Width()*32, theBoard.Height()*32);
+	{
+			string s = "Stratego: ";
+			s += string(redPath);
+			s += " ";
+			s += string(bluePath);
+			Graphics::Initialise(s.c_str(), theBoard.Width()*GRID_SIZE, theBoard.Height()*GRID_SIZE);
+	}
 	#endif //BUILD_GRAPHICS
 
 
@@ -60,7 +68,11 @@ Game::Game(const char * fromFile, const bool enableGraphics, double newStallTime
 
 	#ifdef BUILD_GRAPHICS
 	if (graphicsEnabled && (!Graphics::Initialised()))
-			Graphics::Initialise("Stratego", theBoard.Width()*32, theBoard.Height()*32);
+	{
+			string s = "Stratego: (file) ";
+			s += string(fromFile);
+			Graphics::Initialise(s.c_str(), theBoard.Width()*GRID_SIZE, theBoard.Height()*GRID_SIZE);
+	}
 	#endif //BUILD_GRAPHICS
 
 	input = fopen(fromFile, "r");

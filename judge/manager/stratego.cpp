@@ -234,7 +234,7 @@ void Board::Draw(const Piece::Colour & reveal, bool showRevealed)
 	}
 
 	Graphics::ClearScreen();
-	
+	float scale = (float)(Piece::textures[(int)(Piece::NOTHING)].width()) / (float)(GRID_SIZE);
 	for (int y=0; y < height; ++y)
 	{
 		for (int x=0; x < width; ++x)
@@ -249,7 +249,8 @@ void Board::Draw(const Piece::Colour & reveal, bool showRevealed)
 					|| (piece->beenRevealed && showRevealed))
 			{
 				//Display the piece
-				Piece::textures[(int)(piece->type)].DrawColour(x*32,y*32,0,1, Piece::GetGraphicsColour(piece->colour));
+				
+				Piece::textures[(int)(piece->type)].DrawColour(x*GRID_SIZE*scale,y*GRID_SIZE*scale,0,scale, Piece::GetGraphicsColour(piece->colour));
 				
 			}
 			else
@@ -257,16 +258,16 @@ void Board::Draw(const Piece::Colour & reveal, bool showRevealed)
 				switch (piece->colour)
 				{
 					case Piece::RED:
-						Piece::textures[(int)(Piece::NOTHING)].DrawColour(x*32,y*32,0,1, Piece::GetGraphicsColour(piece->colour));
+						Piece::textures[(int)(Piece::NOTHING)].DrawColour(x*GRID_SIZE*scale,y*GRID_SIZE*scale,0,scale, Piece::GetGraphicsColour(piece->colour));
 						break;
 					case Piece::BLUE:
-						Piece::textures[(int)(Piece::NOTHING)].DrawColour(x*32,y*32,0,1, Piece::GetGraphicsColour(piece->colour));
+						Piece::textures[(int)(Piece::NOTHING)].DrawColour(x*GRID_SIZE*scale,y*GRID_SIZE*scale,0,scale, Piece::GetGraphicsColour(piece->colour));
 						break;
 					case Piece::NONE:
-						Piece::textures[(int)(Piece::BOULDER)].DrawColour(x*32,y*32,0,1, Piece::GetGraphicsColour(piece->colour));
+						Piece::textures[(int)(Piece::BOULDER)].DrawColour(x*GRID_SIZE*scale,y*GRID_SIZE*scale,0,scale, Piece::GetGraphicsColour(piece->colour));
 						break;
 					case Piece::BOTH:
-						Piece::textures[(int)(Piece::BOULDER)].DrawColour(x*32,y*32,0,1, Piece::GetGraphicsColour(piece->colour));
+						Piece::textures[(int)(Piece::BOULDER)].DrawColour(x*GRID_SIZE*scale,y*GRID_SIZE*scale,0,scale, Piece::GetGraphicsColour(piece->colour));
 						break;
 				}
 			}
