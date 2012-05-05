@@ -13,7 +13,7 @@ using namespace std;
 
 Piece::Colour SetupGame(int argc, char ** argv);
 void DestroyGame();
-void PrintResults(const MovementResult & result, string & buffer);
+
 
 char * video = NULL;
 
@@ -46,7 +46,7 @@ int main(int argc, char ** argv)
 	Game::theGame->PrintEndMessage(result);
 
 	string buffer = "";
-	PrintResults(result, buffer);
+	Game::PrintResults(result, buffer);
 
 	//Message the AI's the quit message
 	Game::theGame->red->Message("QUIT " + buffer);
@@ -278,61 +278,6 @@ Piece::Colour SetupGame(int argc, char ** argv)
 
 }
 
-void PrintResults(const MovementResult & result, string & buffer)
-{
-	stringstream s("");
-	switch (Game::theGame->Turn())
-	{
-		case Piece::RED:
-			s << Game::theGame->red->name << " RED ";
-			break;
-		case Piece::BLUE:
-			s << Game::theGame->blue->name << " BLUE ";
-			break;
-		case Piece::BOTH:
-			s << "neither BOTH ";
-			break;
-		case Piece::NONE:
-			s << "neither NONE ";
-			break;
-	}
-
-	if (!Board::LegalResult(result) && result != MovementResult::BAD_SETUP)
-		s << "ILLEGAL ";
-	else if (!Board::HaltResult(result))
-		s << "INTERNAL_ERROR ";
-	else
-	{
-		switch (result.type)
-		{
-			case MovementResult::VICTORY_FLAG:
-			case MovementResult::VICTORY_ATTRITION: //It does not matter how you win, it just matters that you won!
-				s <<  "VICTORY ";
-				break;
-			case MovementResult::SURRENDER:
-				s << "SURRENDER ";
-				break;
-			case MovementResult::DRAW:
-				s << "DRAW ";
-				break;
-			case MovementResult::DRAW_DEFAULT:
-				s << "DRAW_DEFAULT ";
-				break;
-			case MovementResult::BAD_SETUP:
-				s << "BAD_SETUP ";
-				break;	
-			default:
-				s << "INTERNAL_ERROR ";
-				break;	
-		}
-	}
-	
-	s << Game::theGame->TurnCount() << " " << Game::theGame->theBoard.TotalPieceValue(Piece::RED) << " " << Game::theGame->theBoard.TotalPieceValue(Piece::BLUE);
-
-	buffer = s.str();
-	
-
-}
 
 void DestroyGame()
 {

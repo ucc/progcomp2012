@@ -264,62 +264,61 @@ void Game::HandleBrokenPipe(int sig)
 		fprintf(stderr, "ERROR - Recieved SIGPIPE during game exit!\n");
 		exit(EXIT_FAILURE);
 	}
-	if (theGame->turn == Piece::RED)
-	{
-		theGame->logMessage("Game ends on RED's turn - REASON: ");
-		if (theGame->blue->Valid()) //Should probably check this
-			theGame->blue->Message("DEFAULT");	
-	}
-	else if (theGame->turn == Piece::BLUE)
-	{
-	
-		theGame->logMessage("Game ends on BLUE's turn - REASON: ");
-		if (theGame->red->Valid()) //Should probably check this
-			theGame->red->Message("DEFAULT");
-	}
-	else
-	{
-		theGame->logMessage("Game ends on ERROR's turn - REASON: ");
-			
-	}
 	
 	theGame->logMessage("SIGPIPE - Broken pipe (AI program no longer running)\n");
 
-	if (Game::theGame->printBoard)
-		Game::theGame->theBoard.PrintPretty(stdout, Piece::BOTH);
+	MovementResult result = MovementResult::BAD_RESPONSE; 
 
-	
-	#ifdef BUILD_GRAPHICS
-	if (Game::theGame->graphicsEnabled && theGame->log == stdout)
+	if (theGame->turn == Piece::RED)
 	{
-		theGame->logMessage("CLOSE WINDOW TO EXIT\n");
-		Game::theGame->theBoard.Draw(Piece::BOTH);
-		while (true)
+		if (theGame->red->Valid())
 		{
-			SDL_Event  event;
-			while (SDL_PollEvent(&event))
+			theGame->logMessage("	Strange; RED still appears valid.\n");
+			if (theGame->blue->Valid())
 			{
-				switch (event.type)
-				{
-					case SDL_QUIT:
-						exit(EXIT_SUCCESS);
-						break;
-				}
-			}			
+				theGame->logMessage("	BLUE also appears valid. Exiting with ERROR.\n");
+				result = MovementResult::ERROR;
+			}
+			else
+			{
+				theGame->logMessage("BLUE is invalid. Wait for BLUE's turn to exit.\n");
+				return;
+			}
 		}
 	}
-	else
-	#endif //BUILD_GRAPHICS
+	if (theGame->turn == Piece::BLUE)
 	{
-		if (theGame->log == stdout || theGame->log == stderr)
+		if (theGame->blue->Valid())
 		{
-			theGame->logMessage( "PRESS ENTER TO EXIT\n");
-			theGame->theBoard.Print(theGame->log);
-			while (fgetc(stdin) != '\n');
+			theGame->logMessage("	Strange; BLUE still appears valid.\n");
+			if (theGame->red->Valid())
+			{
+				theGame->logMessage("	RED also appears valid. Exiting with ERROR.\n");
+				result = MovementResult::ERROR;
+			}
+			else
+			{
+				theGame->logMessage("RED is invalid. Wait for RED's turn to exit.\n");
+				return;
+			}
 		}
 	}
-	
 
+
+	Game::theGame->PrintEndMessage(result);
+
+	string buffer = "";
+	PrintResults(result, buffer);
+
+	//Message the AI's the quit message
+	Game::theGame->red->Message("QUIT " + buffer);
+	Game::theGame->blue->Message("QUIT " + buffer);
+
+	//Log the message
+	if (Game::theGame->GetLogFile() != stdout)
+		Game::theGame->logMessage("%s\n", buffer.c_str());
+
+	fprintf(stdout, "%s\n", buffer.c_str());
 	exit(EXIT_SUCCESS);
 }
 
@@ -424,6 +423,7 @@ void Game::PrintEndMessage(const MovementResult & result)
 					break;
 			}
 			break;
+
 
 	}
 
@@ -541,8 +541,6 @@ MovementResult Game::Play()
 
 		logMessage( "%d RED: ", turnCount);
 		result = red->MakeMove(buffer);
-		red->Message(buffer);
-		blue->Message(buffer);
 		logMessage( "%s\n", buffer.c_str());
 
 		if (!Board::HaltResult(result))
@@ -551,6 +549,12 @@ MovementResult Game::Play()
 		}
 		if (Board::HaltResult(result))
 			break;
+
+		red->Message(buffer);
+		blue->Message(buffer);
+
+
+
 
 		if (stallTime >= 0)
 			Wait(stallTime);
@@ -595,8 +599,6 @@ MovementResult Game::Play()
 
 		logMessage( "%d BLU: ", turnCount);
 		result = blue->MakeMove(buffer);
-		blue->Message(buffer);
-		red->Message(buffer);
 		logMessage( "%s\n", buffer.c_str());
 
 		if (!Board::HaltResult(result))
@@ -605,6 +607,10 @@ MovementResult Game::Play()
 		}
 		if (Board::HaltResult(result))
 			break;
+
+		red->Message(buffer);
+		blue->Message(buffer);
+
 
 		if (theBoard.MobilePieces(Piece::RED) == 0)
 			result = MovementResult::DRAW;
@@ -902,5 +908,62 @@ string itostr(int i)
 	stringstream s;
 	s << i;
 	return s.str();
+}
+
+
+void Game::PrintResults(const MovementResult & result, string & buffer)
+{
+	stringstream s("");
+	switch (Game::theGame->Turn())
+	{
+		case Piece::RED:
+			s << Game::theGame->red->name << " RED ";
+			break;
+		case Piece::BLUE:
+			s << Game::theGame->blue->name << " BLUE ";
+			break;
+		case Piece::BOTH:
+			s << "neither BOTH ";
+			break;
+		case Piece::NONE:
+			s << "neither NONE ";
+			break;
+	}
+
+	if (!Board::LegalResult(result) && result != MovementResult::BAD_SETUP)
+		s << "ILLEGAL ";
+	else if (!Board::HaltResult(result))
+		s << "INTERNAL_ERROR ";
+	else
+	{
+		switch (result.type)
+		{
+			case MovementResult::VICTORY_FLAG:
+			case MovementResult::VICTORY_ATTRITION: //It does not matter how you win, it just matters that you won!
+				s <<  "VICTORY ";
+				break;
+			case MovementResult::SURRENDER:
+				s << "SURRENDER ";
+				break;
+			case MovementResult::DRAW:
+				s << "DRAW ";
+				break;
+			case MovementResult::DRAW_DEFAULT:
+				s << "DRAW_DEFAULT ";
+				break;
+			case MovementResult::BAD_SETUP:
+				s << "BAD_SETUP ";
+				break;	
+			default:
+				s << "INTERNAL_ERROR ";
+				break;	
+		}
+	}
+	
+	s << Game::theGame->TurnCount() << " " << Game::theGame->theBoard.TotalPieceValue(Piece::RED) << " " << Game::theGame->theBoard.TotalPieceValue(Piece::BLUE);
+
+	buffer = s.str();
+	
+
 }
 

@@ -27,10 +27,10 @@ class NetworkSender : public NetworkController
 
 		virtual bool Valid() const {return NetworkController::Valid() && controller->Valid();}
 
-		virtual void Message(const char * message) 
+		virtual bool Message(const char * message) 
 		{
 			//fprintf(stderr,"NetworkSender sending message %s to underlying controller\n", message);
-			controller->Message(message);
+			return (controller->Message(message));
 		}
 
 		virtual MovementResult QuerySetup(const char * opponentName, std::string setup[]);
@@ -47,7 +47,7 @@ class NetworkReceiver : public NetworkController
 		NetworkReceiver(const Piece::Colour & colour, Network * newNetwork) : NetworkController(colour, newNetwork) {}
 		virtual ~NetworkReceiver() {}
 
-		virtual void Message(const char * message) {} //Do nothing (Counter intuitive much)
+		virtual bool Message(const char * message) {return true;} //Do nothing (Counter intuitive much)
 		virtual MovementResult QuerySetup(const char * opponentName, std::string setup[]);
 		virtual MovementResult QueryMove(std::string & buffer);
 		

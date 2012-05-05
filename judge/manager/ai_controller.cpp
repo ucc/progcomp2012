@@ -54,11 +54,12 @@ MovementResult AI_Controller::QueryMove(string & buffer)
 	if (!Running())
 		return MovementResult::NO_MOVE; //AI has quit
 	Game::theGame->theBoard.Print(output, colour);
-
+	//Game::theGame->logMessage("DEBUG: About to get message from %d\n", colour);
 	if (!GetMessage(buffer,timeout))
 	{
 		return MovementResult::NO_MOVE; //AI did not respond (within the timeout). It will lose by default.
 	}
+	//Game::theGame->logMessage("DEBUG: Got message \"%s\" from %d\n", buffer.c_str(), colour);
 	return MovementResult::OK; //Got the message
 }
 

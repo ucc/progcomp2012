@@ -43,6 +43,7 @@ class Game
 		void MakeControllers(const char * redPath, const char * bluePath); //Create a controller based off a path
 	public:
 		int logMessage(const char * format, ...);
+		static void PrintResults(const MovementResult & result, std::string & buffer);
 		FILE * GetLogFile() const {return log;}
 		Controller * red;
 		Controller * blue;
@@ -83,7 +84,7 @@ class FileController : public Controller
 		FileController(const Piece::Colour & newColour, FILE * newFile) : Controller(newColour, "file"), file(newFile) {}
 		virtual ~FileController() {}
 
-		virtual void Message(const char * string) {} //Don't send messages
+		virtual bool Message(const char * string) {return true;} //Don't send messages
 		virtual MovementResult QuerySetup(const char * opponentName, std::string setup[]);
 		virtual MovementResult QueryMove(std::string & buffer);
 		virtual bool Valid() const {return file != NULL;}

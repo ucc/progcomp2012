@@ -104,7 +104,7 @@ MovementResult Controller::MakeMove(string & buffer)
 	}
 
 
-	
+
 	int x; int y; string direction="";
 	stringstream s(buffer);
 	s >> x;
@@ -112,6 +112,9 @@ MovementResult Controller::MakeMove(string & buffer)
 	
 
 	s >> direction;
+
+
+
 	Board::Direction dir;
 	if (direction == "UP")
 	{
@@ -131,6 +134,7 @@ MovementResult Controller::MakeMove(string & buffer)
 	}	
 	else
 	{
+
 		if (Game::theGame->allowIllegalMoves)
 			return MovementResult::OK;
 		else

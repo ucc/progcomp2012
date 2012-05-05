@@ -251,6 +251,7 @@ bool Program::GetMessage(string & buffer, double timeout)
 		buffer += c;
 	}
 	//fprintf(stderr, "%s\n", buffer.c_str());
+	//fprintf(stderr,"DONE\n");
 	return true;
 
 	/* Old way, using threads, which apparently is terrible

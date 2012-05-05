@@ -15,7 +15,7 @@ class Human_Controller : public Controller
 		virtual bool HumanController() const {return true;}
 		virtual MovementResult QuerySetup(const char * opponentName, std::string setup[]);
 		virtual MovementResult QueryMove(std::string & buffer); 
-		virtual void Message(const char * message) {fprintf(stderr, "%s\n", message);}
+		virtual bool Message(const char * message) {return (strlen(message) <= 0 || fprintf(stderr, "%s\n", message) > 0);}
 	
 	private:
 		const bool graphicsEnabled;
