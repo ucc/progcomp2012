@@ -491,7 +491,7 @@ class SulixAI:
 				self.numStillEnemies -= 1
 				#if self.numStillEnemies == 0: # There are no bombs left
 				for i in range(0,ranks['s']):
-					scaretable[i][ranks['?']] -= 2
+					scaretable[i][ranks['?']] -= 5
 
 		elif outcome == "BOTHDIE":
 			self.board[p[0]][p[1]] = None
