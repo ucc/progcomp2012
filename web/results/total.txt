@@ -1,8 +1,3 @@
-peternlewis 10.0
-hunter 9.2
-celsius 9.2
-asmodeus 8.2
-vixen 8.0
-ramen 7.7
-basic_cpp 5.0
-basic_python 4.5
+peternlewis 23.6
+celsius 21.3
+ramen 17.0
